@@ -55,22 +55,22 @@ body:not(.light) textarea {
 body:not(.light) button.bg-white,
 body:not(.light) .bg-amber-400,
 body:not(.light) .bg-yellow-400 {
-  background-color: #FF9933 !important;
-  color: #000000 !important;
+  background-color: #6366f1 !important;
+  color: #ffffff !important;
 }
 
 body:not(.light) button.bg-white:hover {
-  background-color: #ffaa44 !important;
-  box-shadow: 0 0 15px rgba(255, 153, 51, 0.45) !important;
+  background-color: #4f46e5 !important;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.45) !important;
 }
 
 body:not(.light) .text-amber-400,
 body:not(.light) .text-yellow-400 {
-  color: #FF9933 !important;
+  color: #818cf8 !important;
 }
 
 body:not(.light) .text-emerald-400 {
-  color: #138808 !important;
+  color: #10b981 !important;
 }
 
 body:not(.light) .hover\:bg-zinc-900:hover,

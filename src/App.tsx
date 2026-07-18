@@ -487,15 +487,15 @@ export default function App() {
       {/* Immersive Atmospheric Background Glows */}
       {isDarkMode && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#ff993315] rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#13880810] rounded-full blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#6366f115] rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#14b8a610] rounded-full blur-[120px]" />
         </div>
       )}
       
-      {/* Header bar styled in crisp monochrome with Indian Tricolor grading line */}
+      {/* Header bar styled in crisp premium aesthetic */}
       <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-4">
-        {/* Tricolor flag color grading line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-orange-500 via-white to-emerald-500 opacity-80" />
+        {/* Premium accent line */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-indigo-600 via-purple-500 to-teal-400 opacity-90" />
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Brand logo */}

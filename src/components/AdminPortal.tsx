@@ -256,7 +256,7 @@ export default function AdminPortal({
     } catch (err) {
       console.error(err);
       setNewCourseSpecialFeature(
-        `• ⚡ Kalu Sir's 10-Second Speed Formulas\n• 🎮 Interactive NCERT Board Game Challenges\n• 🏆 Weekly Tricolor Board Challenger Rank list`
+        `• ⚡ Kalu Sir's 10-Second Speed Formulas\n• 🎮 Interactive NCERT Board Game Challenges\n• 🏆 Weekly Academic Leaderboard & Rank list`
       );
     } finally {
       setIsGeneratingFeature(false);
@@ -1747,8 +1747,8 @@ export default function AdminPortal({
               {/* Left Side: Owner Profile Card (matches student profile style but in Super Admin Gold) */}
               <div className="space-y-6 text-left">
                 <div className="bg-zinc-950 border border-zinc-850 rounded-2xl p-6 relative overflow-hidden">
-                  {/* Decorative Golden Tricolor strip */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-zinc-100 to-emerald-500"></div>
+                  {/* Decorative Premium strip */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
                   
                   <div className="flex flex-col items-center text-center space-y-4 pt-2">
                     <div className="relative group">

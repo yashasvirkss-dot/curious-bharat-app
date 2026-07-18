@@ -457,39 +457,10 @@ export default function AIAssistant({
 
   const TricolorAshokChakra = ({ className = "w-10 h-10" }: { className?: string }) => (
     <div className="relative flex items-center justify-center select-none scale-105 my-3">
-      {/* Tricolor Ring */}
-      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] opacity-75 blur-[2px] animate-[spin_12s_linear_infinite]"></div>
-      <div className="relative bg-black p-1.5 rounded-full border border-white/20 shadow-xl">
-        <svg className={className} viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="44" stroke="#000080" strokeWidth="4.5" />
-          <circle cx="50" cy="50" r="8" fill="#000080" />
-          {Array.from({ length: 24 }).map((_, i) => {
-            const angle = (i * 360) / 24;
-            return (
-              <line
-                key={i}
-                x1="50"
-                y1="50"
-                x2={(50 + 36 * Math.cos((angle * Math.PI) / 180)).toFixed(2)}
-                y2={(50 + 36 * Math.sin((angle * Math.PI) / 180)).toFixed(2)}
-                stroke="#000080"
-                strokeWidth="2.5"
-              />
-            );
-          })}
-          {Array.from({ length: 24 }).map((_, i) => {
-            const angle = (i * 360) / 24 + 360 / 48;
-            return (
-              <circle
-                key={i}
-                cx={(50 + 40 * Math.cos((angle * Math.PI) / 180)).toFixed(2)}
-                cy={(50 + 40 * Math.sin((angle * Math.PI) / 180)).toFixed(2)}
-                r="1.8"
-                fill="#000080"
-              />
-            );
-          })}
-        </svg>
+      {/* Premium Glow Ring */}
+      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-teal-400 opacity-75 blur-[3px] animate-[spin_8s_linear_infinite]"></div>
+      <div className="relative bg-zinc-950 p-2 rounded-full border border-white/10 shadow-xl flex items-center justify-center">
+        <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" id="ai-glowing-logo-icon" />
       </div>
     </div>
   );
@@ -831,7 +802,7 @@ export default function AIAssistant({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 15 }}
-              className="absolute bottom-20 left-4 right-4 z-50 bg-[#138808] border border-[#138808]/80 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2"
+              className="absolute bottom-20 left-4 right-4 z-50 bg-indigo-600 border border-indigo-500/80 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2"
             >
               <Check className="w-4 h-4 shrink-0 text-white" />
               <span className="font-sans font-bold">{showDownloadAlert}</span>
@@ -849,14 +820,10 @@ export default function AIAssistant({
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="max-w-md w-full bg-zinc-950 border border-zinc-900 rounded-3xl p-6 text-center relative overflow-hidden shadow-2xl"
               >
-                {/* TRICOLOR HEADER STRIPE */}
-                <div className="absolute top-0 left-0 right-0 h-1 flex">
-                  <div className="w-1/3 bg-[#FF9933]"></div>
-                  <div className="w-1/3 bg-white"></div>
-                  <div className="w-1/3 bg-[#138808]"></div>
-                </div>
+                {/* PREMIUM HEADER STRIPE */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
-                <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto mb-4 text-orange-500">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4 text-indigo-400">
                   <Download className="w-7 h-7" />
                 </div>
 

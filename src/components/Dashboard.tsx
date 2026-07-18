@@ -709,16 +709,12 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl bg-gradient-to-br from-orange-500/5 via-zinc-950 to-emerald-500/5"
+            className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl bg-gradient-to-br from-indigo-500/5 via-zinc-950 to-teal-500/5"
           >
-            {/* Tricolor background accents */}
-            <div className="absolute top-0 left-0 w-full h-[3px] flex z-20">
-              <div className="flex-1 bg-amber-500"></div>
-              <div className="w-[10%] bg-white"></div>
-              <div className="flex-1 bg-emerald-500"></div>
-            </div>
-            <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-4 left-4 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Premium background accents */}
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 to-teal-400 z-20"></div>
+            <div className="absolute top-4 right-4 w-40 h-40 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-4 left-4 w-40 h-40 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 max-w-3xl space-y-4 text-left">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 font-medium">
@@ -1344,12 +1340,8 @@ export default function Dashboard({
                           ? 'bg-zinc-950/70 backdrop-blur-md border-zinc-900/80 text-white' 
                           : 'bg-white/90 backdrop-blur-md border-slate-200 text-slate-900'
                       }`}>
-                        {/* TRICOLOR TOP BORDER STRIPE */}
-                        <div className="absolute top-0 left-0 right-0 h-1 flex">
-                          <div className="w-1/3 bg-[#FF9933]"></div>
-                          <div className="w-1/3 bg-white"></div>
-                          <div className="w-1/3 bg-[#138808]"></div>
-                        </div>
+                        {/* PREMIUM TOP BORDER STRIPE */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
                         {/* Large Playlist Thumbnail Image */}
                         <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative shadow-md select-none">
@@ -1361,7 +1353,7 @@ export default function Dashboard({
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-tr from-orange-600/20 via-zinc-900 to-emerald-600/20 flex flex-col items-center justify-center p-4">
+                            <div className="w-full h-full bg-gradient-to-tr from-indigo-600/10 via-zinc-900 to-teal-600/10 flex flex-col items-center justify-center p-4">
                               <Video className="w-8 h-8 text-zinc-400 animate-pulse" />
                               <span className="text-[9px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-2">BHARAT GURUKUL</span>
                             </div>
@@ -1559,35 +1551,16 @@ export default function Dashboard({
                     className={`rounded-3xl p-6 transition relative overflow-hidden group flex flex-col justify-between h-full space-y-5 border ${
                       isDarkMode 
                         ? 'bg-zinc-950 border-zinc-900/85 hover:border-zinc-700/80 hover:shadow-2xl' 
-                        : 'bg-gradient-to-tr from-orange-50/60 via-white/90 to-teal-50/60 border-orange-100/60 hover:border-orange-300 shadow-md'
+                        : 'bg-gradient-to-tr from-indigo-50/60 via-white/90 to-teal-50/60 border-indigo-100/60 hover:border-indigo-300 shadow-md'
                     }`}
                   >
-                    {/* TOP TRICOLOR DECORATIVE ACCENT STRIPE */}
-                    <div className="absolute left-0 right-0 top-0 h-1 flex">
-                      <div className="w-1/3 bg-[#FF9933]"></div>
-                      <div className="w-1/3 bg-slate-300 dark:bg-zinc-700"></div>
-                      <div className="w-1/3 bg-[#138808]"></div>
-                    </div>
+                    {/* TOP PREMIUM DECORATIVE ACCENT STRIPE */}
+                    <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
-                    {/* SUBTLE ASHOK CHAKRA WATERMARK */}
-                    <div className="absolute bottom-4 right-4 opacity-[0.03] sm:opacity-[0.02] pointer-events-none select-none group-hover:rotate-90 group-hover:opacity-[0.06] transition-all duration-1000">
-                      <svg className="w-32 h-32 text-[#000080]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="3" />
-                        <circle cx="50" cy="50" r="8" fill="currentColor" />
-                        {Array.from({ length: 24 }).map((_, i) => {
-                          const angle = (i * 360) / 24;
-                          return (
-                            <line
-                              key={i}
-                              x1="50"
-                              y1="50"
-                              x2={(50 + 38 * Math.cos((angle * Math.PI) / 180)).toFixed(2)}
-                              y2={(50 + 38 * Math.sin((angle * Math.PI) / 180)).toFixed(2)}
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                            />
-                          );
-                        })}
+                    {/* SUBTLE BACKGROUND WATERMARK */}
+                    <div className="absolute bottom-4 right-4 opacity-[0.03] sm:opacity-[0.02] pointer-events-none select-none group-hover:scale-110 group-hover:opacity-[0.05] transition-all duration-700">
+                      <svg className="w-32 h-32 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                       </svg>
                     </div>
 
@@ -1604,14 +1577,14 @@ export default function Dashboard({
                         ) : (
                           <div className="flex flex-col items-center space-y-2">
                             <div className="flex -space-x-3">
-                              <div className="w-12 h-12 rounded-full bg-orange-600/30 border border-orange-500/50 flex items-center justify-center text-[11px] font-extrabold text-orange-400">
+                              <div className="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-extrabold text-indigo-400">
                                 {appLanguage === 'hi' ? 'आलोक' : 'ALOK'}
                               </div>
-                              <div className="w-12 h-12 rounded-full bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-[11px] font-extrabold text-emerald-400 z-10">
+                              <div className="w-12 h-12 rounded-full bg-teal-600/20 border border-teal-500/30 flex items-center justify-center text-[11px] font-extrabold text-teal-400 z-10">
                                 {appLanguage === 'hi' ? 'रॉय' : 'ROY'}
                               </div>
                             </div>
-                            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600">Bharat AI Batch</span>
+                            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600">Premium Study Batch</span>
                           </div>
                         )}
 
@@ -1640,15 +1613,15 @@ export default function Dashboard({
                       {/* Batch Details */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[9px] border px-2 py-0.5 rounded font-bold font-mono ${isDarkMode ? 'bg-zinc-900 border-zinc-850 text-zinc-400' : 'bg-orange-50 border-orange-100/50 text-orange-700'}`}>
+                          <span className={`text-[9px] border px-2 py-0.5 rounded font-bold font-mono ${isDarkMode ? 'bg-zinc-900 border-zinc-850 text-zinc-400' : 'bg-indigo-50 border-indigo-100/50 text-indigo-700'}`}>
                             {course.subject === 'Physics' && appLanguage === 'hi' ? 'भौतिकी' : course.subject === 'Chemistry' && appLanguage === 'hi' ? 'रसायन विज्ञान' : course.subject === 'Biology' && appLanguage === 'hi' ? 'जीव विज्ञान' : course.subject}
                           </span>
-                          <span className={`text-[9px] border px-2 py-0.5 rounded font-bold font-mono ${isDarkMode ? 'bg-zinc-900 border-zinc-850 text-zinc-400' : 'bg-orange-50 border-orange-100/50 text-orange-700'}`}>
+                          <span className={`text-[9px] border px-2 py-0.5 rounded font-bold font-mono ${isDarkMode ? 'bg-zinc-900 border-zinc-850 text-zinc-400' : 'bg-indigo-50 border-indigo-100/50 text-indigo-700'}`}>
                             {classLevelStr}
                           </span>
                           {course.specialAIFeature && (
-                            <span className="text-[9px] bg-amber-500/10 border border-amber-500/25 px-2.5 py-0.5 rounded-lg text-amber-500 font-extrabold font-mono tracking-wider flex items-center gap-1 animate-pulse">
-                              <Sparkles className="w-2.5 h-2.5" /> AI CHAKRA BATCH
+                            <span className="text-[9px] bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-0.5 rounded-lg text-indigo-400 font-extrabold font-mono tracking-wider flex items-center gap-1 animate-pulse">
+                              <Sparkles className="w-2.5 h-2.5" /> PREMIUM AI BATCH
                             </span>
                           )}
                         </div>
@@ -1976,12 +1949,8 @@ export default function Dashboard({
               exit={{ scale: 0.96, opacity: 0 }}
               className="bg-zinc-950 border border-zinc-800/80 rounded-[32px] overflow-hidden max-w-4xl w-full relative text-zinc-300 shadow-2xl flex flex-col md:flex-row"
             >
-              {/* Subtle Tricolor Top accent bar */}
-              <div className="absolute top-0 left-0 right-0 h-1 flex z-30">
-                <div className="h-full w-1/3 bg-[#FF9933]"></div>
-                <div className="h-full w-1/3 bg-white"></div>
-                <div className="h-full w-1/3 bg-[#138808]"></div>
-              </div>
+              {/* Subtle Premium Top accent bar */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400 z-30"></div>
 
               <button
                 onClick={() => setCheckoutCourse(null)}
@@ -1992,25 +1961,10 @@ export default function Dashboard({
 
               {/* LEFT COLUMN: Billing Details & UPI Scannable QR Code */}
               <div className="md:w-1/2 p-6 sm:p-8 bg-zinc-900/30 border-r border-zinc-900 flex flex-col justify-between space-y-6 relative">
-                {/* Background watermarked Ashok Chakra */}
-                <div className="absolute bottom-4 right-4 opacity-[0.04] pointer-events-none select-none">
-                  <svg className="w-48 h-48 text-[#000080]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="4" />
-                    <circle cx="50" cy="50" r="8" fill="currentColor" />
-                    {Array.from({ length: 24 }).map((_, i) => {
-                      const angle = (i * 360) / 24;
-                      return (
-                        <line
-                          key={i}
-                          x1="50"
-                          y1="50"
-                          x2={(50 + 37 * Math.cos((angle * Math.PI) / 180)).toFixed(2)}
-                          y2={(50 + 37 * Math.sin((angle * Math.PI) / 180)).toFixed(2)}
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        />
-                      );
-                    })}
+                {/* Background watermarked security shield */}
+                <div className="absolute bottom-4 right-4 opacity-[0.03] pointer-events-none select-none">
+                  <svg className="w-48 h-48 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                   </svg>
                 </div>
 

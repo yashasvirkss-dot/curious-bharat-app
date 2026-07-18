@@ -242,20 +242,16 @@ export default function BatchesTab({
         </div>
       )}
 
-      {/* Tricolor Storage Download Permission Modal */}
+      {/* Premium Storage Download Permission Modal */}
       {showStorageModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-zinc-950 border border-zinc-900 rounded-3xl w-full max-w-md overflow-hidden relative shadow-2xl animate-scaleUp">
-            {/* Top Tricolor Decorative Stripe */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 flex">
-              <div className="w-1/3 bg-[#FF9933]"></div>
-              <div className="w-1/3 bg-white"></div>
-              <div className="w-1/3 bg-[#138808]"></div>
-            </div>
+            {/* Top Premium Decorative Stripe */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
             <div className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-orange-500 text-2xl shadow-lg">
-                🇮🇳
+              <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-indigo-500 text-2xl shadow-lg">
+                💾
               </div>
               <h3 className="text-lg font-black text-white">
                 {appLanguage === 'hi' ? 'भंडारण अनुमति आवश्यक है' : 'Storage Permission Required'}
@@ -765,12 +761,8 @@ export default function BatchesTab({
             {/* LEFT COLUMN: YouTube Playlist Glass Metadata Card */}
             <div className="lg:col-span-4 lg:sticky lg:top-24">
               <div className="border rounded-3xl p-6 space-y-5 relative overflow-hidden shadow-2xl bg-zinc-950/70 backdrop-blur-md border-zinc-900/80 text-white">
-                {/* TRICOLOR TOP BORDER STRIPE */}
-                <div className="absolute top-0 left-0 right-0 h-1 flex">
-                  <div className="w-1/3 bg-[#FF9933]"></div>
-                  <div className="w-1/3 bg-white"></div>
-                  <div className="w-1/3 bg-[#138808]"></div>
-                </div>
+                {/* PREMIUM TOP BORDER STRIPE */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
                 {/* Large Playlist Thumbnail Image */}
                 <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative shadow-md select-none">
@@ -923,21 +915,17 @@ export default function BatchesTab({
           </div>
         </div>
       ) : (
-        // LEVEL 0: Grid/List View of Batches (Now refactored into a super prominent visual grid with tricolor lines)
+        // LEVEL 0: Grid/List View of Batches (Now refactored into a super prominent visual grid with premium lines)
         <div className="space-y-6">
           
-          {/* Batches Header with Tricolor theme */}
+          {/* Batches Header with Premium theme */}
           <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 sm:p-8 relative overflow-hidden text-center">
-            <div className="absolute top-0 left-0 w-full h-[3px] flex">
-              <div className="flex-1 bg-amber-500"></div>
-              <div className="w-[10%] bg-white"></div>
-              <div className="flex-1 bg-emerald-500"></div>
-            </div>
-            <div className="absolute top-4 right-4 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-4 left-4 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+            <div className="absolute top-4 right-4 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-4 left-4 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
             
             <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full font-mono font-bold tracking-widest uppercase mb-2 inline-block">
-              {appLanguage === 'hi' ? '🇮🇳 भारत गुरुकुल राष्ट्रीय बैच' : '🇮🇳 BHARAT GURUKUL NATIONAL BATCHES'}
+              {appLanguage === 'hi' ? '🎓 शैक्षणिक राष्ट्रीय बैच' : '🎓 CURATED ACADEMIC BATCHES'}
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {appLanguage === 'hi' ? 'चयनित शैक्षणिक पाठ्यक्रम बैच' : 'Curated Academic Syllabi Batches'}
@@ -1078,32 +1066,13 @@ export default function BatchesTab({
                       className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-700/80 hover:shadow-2xl transition relative overflow-hidden group flex flex-col justify-between h-full space-y-5"
                       id={`batch-row-${course.id}`}
                     >
-                      {/* TOP TRICOLOR DECORATIVE ACCENT STRIPE */}
-                      <div className="absolute left-0 right-0 top-0 h-1 flex">
-                        <div className="w-1/3 bg-[#FF9933]"></div>
-                        <div className="w-1/3 bg-slate-300 dark:bg-zinc-700"></div>
-                        <div className="w-1/3 bg-[#138808]"></div>
-                      </div>
+                      {/* TOP PREMIUM DECORATIVE ACCENT STRIPE */}
+                      <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
-                      {/* SUBTLE ASHOK CHAKRA SPINNING HOVER WATERMARK */}
-                      <div className="absolute bottom-4 right-4 opacity-[0.03] sm:opacity-[0.02] pointer-events-none select-none group-hover:rotate-90 group-hover:opacity-[0.06] transition-all duration-1000">
-                        <svg className="w-32 h-32 text-[#000080]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="3" />
-                          <circle cx="50" cy="50" r="8" fill="currentColor" />
-                          {Array.from({ length: 24 }).map((_, i) => {
-                            const angle = (i * 360) / 24;
-                            return (
-                              <line
-                                key={i}
-                                x1="50"
-                                y1="50"
-                                x2={(50 + 38 * Math.cos((angle * Math.PI) / 180)).toFixed(2)}
-                                y2={(50 + 38 * Math.sin((angle * Math.PI) / 180)).toFixed(2)}
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                              />
-                            );
-                          })}
+                      {/* SUBTLE BACKGROUND WATERMARK */}
+                      <div className="absolute bottom-4 right-4 opacity-[0.03] sm:opacity-[0.02] pointer-events-none select-none group-hover:scale-110 group-hover:opacity-[0.05] transition-all duration-700">
+                        <svg className="w-32 h-32 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                         </svg>
                       </div>
 
@@ -1120,14 +1089,14 @@ export default function BatchesTab({
                           ) : (
                             <div className="flex flex-col items-center space-y-2">
                               <div className="flex -space-x-3">
-                                <div className="w-12 h-12 rounded-full bg-orange-600/30 border border-orange-500/50 flex items-center justify-center text-[11px] font-extrabold text-orange-400">
+                                <div className="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-extrabold text-indigo-400">
                                   {appLanguage === 'hi' ? 'आलोक' : 'ALOK'}
                                 </div>
-                                <div className="w-12 h-12 rounded-full bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-[11px] font-extrabold text-emerald-400 z-10">
+                                <div className="w-12 h-12 rounded-full bg-teal-600/20 border border-teal-500/30 flex items-center justify-center text-[11px] font-extrabold text-teal-400 z-10">
                                   {appLanguage === 'hi' ? 'रॉय' : 'ROY'}
                                 </div>
                               </div>
-                              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600">Bharat AI Batch</span>
+                              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600">Premium Study Batch</span>
                             </div>
                           )}
 
@@ -1155,8 +1124,8 @@ export default function BatchesTab({
                               {classLevelStr}
                             </span>
                             {course.specialAIFeature && (
-                              <span className="text-[9px] bg-amber-500/10 border border-amber-500/25 px-2.5 py-0.5 rounded-lg text-amber-500 font-extrabold font-mono tracking-wider flex items-center gap-1 animate-pulse">
-                                <Sparkles className="w-2.5 h-2.5" /> AI CHAKRA BATCH
+                              <span className="text-[9px] bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-0.5 rounded-lg text-indigo-400 font-extrabold font-mono tracking-wider flex items-center gap-1 animate-pulse">
+                                <Sparkles className="w-2.5 h-2.5" /> PREMIUM AI BATCH
                               </span>
                             )}
                           </div>

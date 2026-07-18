@@ -886,16 +886,12 @@ export default function ChapterView({
               exit={{ opacity: 0, scale: 0.98 }}
               className="bg-zinc-950 border border-zinc-850 max-w-md w-full rounded-3xl p-6 space-y-5 relative overflow-hidden text-left"
             >
-              {/* Top Tricolor Accent line */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 flex">
-                <div className="w-1/3 bg-[#FF9933]"></div>
-                <div className="w-1/3 bg-white"></div>
-                <div className="w-1/3 bg-[#138808]"></div>
-              </div>
+              {/* Top Premium Accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
 
               <div className="space-y-2">
-                <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/25 text-amber-500 rounded-2xl flex items-center justify-center">
-                  <Layers className="w-6 h-6 animate-pulse" />
+                <div className="w-12 h-12 bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 rounded-2xl flex items-center justify-center">
+                  <Layers className="w-6 h-6 animate-pulse" id="chapter-view-layers-icon" />
                 </div>
                 <h3 className="text-base font-extrabold text-white">
                   🔒 Storage Permissions Required
