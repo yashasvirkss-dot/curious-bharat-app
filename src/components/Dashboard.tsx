@@ -709,10 +709,10 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl bg-gradient-to-br from-indigo-500/5 via-zinc-950 to-teal-500/5"
+            className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl bg-gradient-to-br from-[#4F9DFF]/5 via-zinc-950 to-[#14b8a6]/5"
           >
             {/* Premium background accents */}
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 to-teal-400 z-20"></div>
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6] z-20"></div>
             <div className="absolute top-4 right-4 w-40 h-40 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-4 left-4 w-40 h-40 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -1341,7 +1341,7 @@ export default function Dashboard({
                           : 'bg-white/90 backdrop-blur-md border-slate-200 text-slate-900'
                       }`}>
                         {/* PREMIUM TOP BORDER STRIPE */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
                         {/* Large Playlist Thumbnail Image */}
                         <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative shadow-md select-none">
@@ -1353,7 +1353,7 @@ export default function Dashboard({
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-tr from-indigo-600/10 via-zinc-900 to-teal-600/10 flex flex-col items-center justify-center p-4">
+                            <div className="w-full h-full bg-gradient-to-tr from-[#4F9DFF]/10 via-zinc-900 to-[#14b8a6]/10 flex flex-col items-center justify-center p-4">
                               <Video className="w-8 h-8 text-zinc-400 animate-pulse" />
                               <span className="text-[9px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-2">BHARAT GURUKUL</span>
                             </div>
@@ -1555,7 +1555,7 @@ export default function Dashboard({
                     }`}
                   >
                     {/* TOP PREMIUM DECORATIVE ACCENT STRIPE */}
-                    <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+                    <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
                     {/* SUBTLE BACKGROUND WATERMARK */}
                     <div className="absolute bottom-4 right-4 opacity-[0.03] sm:opacity-[0.02] pointer-events-none select-none group-hover:scale-110 group-hover:opacity-[0.05] transition-all duration-700">
@@ -1950,7 +1950,14 @@ export default function Dashboard({
               className="bg-zinc-950 border border-zinc-800/80 rounded-[32px] overflow-hidden max-w-4xl w-full relative text-zinc-300 shadow-2xl flex flex-col md:flex-row"
             >
               {/* Subtle Premium Top accent bar */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400 z-30"></div>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6] z-30"></div>
+
+              {/* Premium Big Price Tag Sticker */}
+              <div className="absolute top-4 right-16 bg-gradient-to-br from-yellow-400 via-amber-400 to-yellow-500 text-black font-black py-2.5 px-4 rounded-2xl shadow-2xl border-4 border-double border-yellow-600 z-40 transform rotate-12 select-none hover:scale-105 transition duration-200 flex flex-col items-center justify-center leading-none">
+                <span className="text-[9px] uppercase tracking-widest text-black/75 font-mono font-bold">Special Price</span>
+                <span className="text-xl font-black font-mono tracking-tight my-1 text-slate-950">{checkoutCourse.price}</span>
+                <span className="text-[8px] uppercase tracking-wider text-black/60 font-extrabold">Lifetime Pass</span>
+              </div>
 
               <button
                 onClick={() => setCheckoutCourse(null)}

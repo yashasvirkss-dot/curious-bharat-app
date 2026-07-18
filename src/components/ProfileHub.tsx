@@ -283,7 +283,7 @@ export default function ProfileHub({
   const maxStudyHours = 6.0;
 
   return (
-    <div className="space-y-6 pb-24 max-w-4xl mx-auto text-left">
+    <div id="profile-hub-root" className={`space-y-6 pb-24 max-w-4xl mx-auto text-left ${isDarkMode ? '' : 'p-6 sm:p-8 rounded-[32px] bg-blue-50/30 border border-blue-100/60 shadow-sm'}`}>
       
       {/* =======================================================
           DYNAMIC COVER BANNER

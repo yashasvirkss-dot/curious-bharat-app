@@ -123,11 +123,17 @@ Student Question: ${question}`;
 // AI Test Generator Endpoint
 app.post('/api/generate-test', async (req, res) => {
   try {
-    const { classLevel, subject, chapter, topic, difficulty, questionCount, questionType } = req.body;
+    const { classLevel, subject, chapter, topic, difficulty, questionCount, questionType, customPrompt } = req.body;
     const ai = getGeminiClient();
 
     let extraInstruction = "";
-    if (questionType === 'pyq') {
+    if (customPrompt) {
+      extraInstruction = `
+The student has requested a customized test with the following specific demands:
+"${customPrompt}"
+You MUST strictly tailor the generated questions to fulfill these demands! Integrate any requested topics, question formats, difficulty tweaks, or real-world themes mentioned.
+`;
+    } else if (questionType === 'pyq') {
       extraInstruction = `
 The student has explicitly selected PYQ (Previous Year Questions) mode.
 You MUST:
@@ -142,7 +148,7 @@ Make sure all generated questions align perfectly with the latest official sylla
 `;
     }
 
-    const systemInstruction = `You are "Bharat AI Test Architect". Generate a comprehensive study test based on the student's level.
+    const systemInstruction = `You are "Bharat AI Test Architect". Generate a comprehensive study test based on the student's level and demands.
 Return a valid JSON array of question objects. Each object MUST look like:
 {
   "id": "q1",
@@ -156,7 +162,9 @@ Ensure the questions are highly accurate, relevant to the latest CBSE pattern, a
 ${extraInstruction}
 Under no circumstances should you hallucinate board papers or years. Absolute factual accuracy is required.`;
 
-    const prompt = `Generate exactly ${questionCount || 4} questions of type "${questionType === 'pyq' ? 'descriptive' : questionType || 'mcq'}" with difficulty "${difficulty || 'medium'}" on Chapter/Topic: "${chapter || 'General'} - ${topic || 'All'}".`;
+    const prompt = customPrompt 
+      ? `Generate exactly ${questionCount || 4} questions according to the student's custom request: "${customPrompt}". Ensure the questions match the NCERT syllabus for Class ${classLevel || '10th'} / ${subject || 'Science'}.`
+      : `Generate exactly ${questionCount || 4} questions of type "${questionType === 'pyq' ? 'descriptive' : questionType || 'mcq'}" with difficulty "${difficulty || 'medium'}" on Chapter/Topic: "${chapter || 'General'} - ${topic || 'All'}".`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',

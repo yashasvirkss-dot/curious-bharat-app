@@ -76,8 +76,30 @@ export default function App() {
   const [preloadAIPrompt, setPreloadAIPrompt] = useState<{ mode: string; text: string } | undefined>(undefined);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [appLanguage, setAppLanguage] = useState<'en' | 'hi'>('en');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [showMenuDropdown, setShowMenuDropdown] = useState<boolean>(false);
+  const [menuTimer, setMenuTimer] = useState<number>(20);
+
+  // Auto close quick nav if inactive for 20 seconds
+  useEffect(() => {
+    if (!showMenuDropdown) {
+      setMenuTimer(20);
+      return;
+    }
+
+    setMenuTimer(20);
+    const interval = setInterval(() => {
+      setMenuTimer((prev) => {
+        if (prev <= 1) {
+          setShowMenuDropdown(false);
+          return 20;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showMenuDropdown]);
 
   // Drilldown states lifted from Dashboard for device Back button reverse navigation
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -163,13 +185,15 @@ export default function App() {
 
   // Sync and load theme settings
   useEffect(() => {
-    const savedTheme = localStorage.getItem('pref_theme');
-    if (savedTheme === 'light') {
+    const savedTheme = localStorage.getItem('pref_theme') || 'light';
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.body.classList.add('dark');
+      document.body.classList.remove('light');
+    } else {
       setIsDarkMode(false);
       document.body.classList.add('light');
-    } else {
-      setIsDarkMode(true);
-      document.body.classList.remove('light');
+      document.body.classList.remove('dark');
     }
   }, []);
 
@@ -177,10 +201,12 @@ export default function App() {
     setIsDarkMode(dark);
     if (dark) {
       localStorage.setItem('pref_theme', 'dark');
+      document.body.classList.add('dark');
       document.body.classList.remove('light');
     } else {
       localStorage.setItem('pref_theme', 'light');
       document.body.classList.add('light');
+      document.body.classList.remove('dark');
     }
   };
 
@@ -482,12 +508,12 @@ export default function App() {
     : 'rounded-2xl';
 
   return (
-    <div className={`min-h-screen relative overflow-x-hidden ${isDarkMode ? 'bg-[#05070a] text-slate-100' : 'bg-slate-50 text-slate-900'} flex flex-col selection:bg-zinc-850 selection:text-white ${fontClass}`}>
+    <div className={`min-h-screen relative overflow-x-hidden ${isDarkMode ? 'bg-[#05070a] text-slate-100' : 'bg-[#F9FAFB] text-slate-900'} flex flex-col selection:bg-zinc-850 selection:text-white ${fontClass}`}>
       
       {/* Immersive Atmospheric Background Glows */}
       {isDarkMode && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#6366f115] rounded-full blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#4F9DFF15] rounded-full blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#14b8a610] rounded-full blur-[120px]" />
         </div>
       )}
@@ -495,7 +521,7 @@ export default function App() {
       {/* Header bar styled in crisp premium aesthetic */}
       <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-4">
         {/* Premium accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-indigo-600 via-purple-500 to-teal-400 opacity-90" />
+        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6] opacity-90" />
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Brand logo */}
@@ -567,8 +593,9 @@ export default function App() {
                       transition={{ duration: 0.15 }}
                       className="absolute right-0 mt-2.5 w-48 z-50 rounded-2xl border bg-black/95 backdrop-blur-md border-zinc-900 p-2 shadow-2xl space-y-1 text-xs text-zinc-300 font-sans"
                     >
-                      <div className="px-2.5 py-1.5 text-[10px] font-mono text-zinc-500 uppercase tracking-wider font-extrabold border-b border-zinc-900">
-                        {appLanguage === 'hi' ? 'त्वरित नेविगेशन' : 'QUICK NAVIGATION'}
+                      <div className="px-2.5 py-1.5 text-[10px] font-mono text-zinc-500 uppercase tracking-wider font-extrabold border-b border-zinc-900 flex justify-between items-center">
+                        <span>{appLanguage === 'hi' ? 'त्वरित नेविगेशन' : 'QUICK NAVIGATION'}</span>
+                        <span className="text-blue-400 font-bold font-mono animate-pulse">{menuTimer}s</span>
                       </div>
                       
                       <button

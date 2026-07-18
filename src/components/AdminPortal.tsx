@@ -1748,7 +1748,7 @@ export default function AdminPortal({
               <div className="space-y-6 text-left">
                 <div className="bg-zinc-950 border border-zinc-850 rounded-2xl p-6 relative overflow-hidden">
                   {/* Decorative Premium strip */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
                   
                   <div className="flex flex-col items-center text-center space-y-4 pt-2">
                     <div className="relative group">

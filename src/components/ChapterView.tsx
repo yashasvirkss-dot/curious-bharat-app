@@ -17,7 +17,8 @@ import {
   FileText,
   ExternalLink,
   Lock,
-  Compass
+  Compass,
+  Workflow
 } from 'lucide-react';
 import { Chapter, ChapterSection, UserProgress, Course, OwnerProfile } from '../types';
 import EditableText from './EditableText';
@@ -753,15 +754,15 @@ export default function ChapterView({
               <GraduationCap className="w-4 h-4" /> Practice Tests & DPPs
             </h4>
             <p className="text-xs text-zinc-500 leading-normal">
-              Validate your scientific conceptual strength. Practice customized multi-choice tests or try active recall cards.
+              Validate your scientific conceptual strength. Explore the chapter using interactive mind maps or try MCQs.
             </p>
 
             <div className="grid grid-cols-1 gap-2.5">
               <button
                 onClick={onStartFlashcards}
-                className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
+                className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-805 text-zinc-300 border border-zinc-800 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <Layers className="w-4 h-4" /> Practice {chapter.flashcards.length} Flashcards
+                <Workflow className="w-4 h-4 text-blue-400" /> Explore Interactive Mind Map
               </button>
               <button
                 onClick={onStartQuiz}
@@ -887,10 +888,10 @@ export default function ChapterView({
               className="bg-zinc-950 border border-zinc-850 max-w-md w-full rounded-3xl p-6 space-y-5 relative overflow-hidden text-left"
             >
               {/* Top Premium Accent line */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
               <div className="space-y-2">
-                <div className="w-12 h-12 bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/25 text-blue-400 rounded-2xl flex items-center justify-center">
                   <Layers className="w-6 h-6 animate-pulse" id="chapter-view-layers-icon" />
                 </div>
                 <h3 className="text-base font-extrabold text-white">

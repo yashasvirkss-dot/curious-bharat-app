@@ -2,257 +2,567 @@
 
 @layer base {
   body {
-    transition: background-color 0.3s ease, color 0.3s ease;
-    background-color: #05070a;
-    color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }
 
 /* ==========================================================
-   IMMERSIVE DARK THEME OVERRIDES (TRICOLOR GLOWS & GLASSMORPHISM)
+   CURIOSITY SKY PREMIUM LIGHT THEME
    ========================================================== */
-
-body:not(.light) {
-  background-color: #05070a !important;
-  color: #f1f5f9 !important;
+body.light {
+  background-color: #FAFCFF !important;
+  color: #111827 !important;
 }
 
-body:not(.light) .bg-black,
-body:not(.light) .bg-zinc-950,
-body:not(.light) .bg-zinc-900,
-body:not(.light) .bg-zinc-900\/60,
-body:not(.light) .bg-zinc-900\/80,
-body:not(.light) .bg-zinc-900\/85,
-body:not(.light) .bg-zinc-900\/95,
-body:not(.light) .bg-zinc-950\/80,
-body:not(.light) .bg-zinc-950\/50,
-body:not(.light) .bg-zinc-900\/40,
-body:not(.light) .bg-zinc-950\/40 {
-  background-color: rgba(10, 15, 26, 0.45) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+body.light .bg-black,
+body.light .bg-zinc-950,
+body.light .bg-zinc-900,
+body.light .bg-zinc-900\/60,
+body.light .bg-zinc-900\/80,
+body.light .bg-zinc-900\/85,
+body.light .bg-zinc-900\/95,
+body.light .bg-zinc-950\/80,
+body.light .bg-zinc-950\/50,
+body.light .bg-zinc-900\/40,
+body.light .bg-zinc-950\/40,
+body.light header,
+body.light aside,
+body.light .sidebar,
+body.light .drawer,
+body.light .modal-content,
+body.light .perspective-box,
+body.light .stats-card,
+body.light .bg-zinc-900\/90,
+body.light .bg-zinc-950\/70,
+body.light .bg-zinc-900\/30 {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #E5E7EB !important;
+  box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.04), 0 2px 6px -1px rgba(37, 99, 235, 0.02) !important;
 }
 
-body:not(.light) .border-zinc-900,
-body:not(.light) .border-zinc-850,
-body:not(.light) .border-zinc-800,
-body:not(.light) .border-zinc-800\/80,
-body:not(.light) .border-zinc-900\/60,
-body:not(.light) .border-zinc-900\/80,
-body:not(.light) .border-zinc-900\/85 {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-body:not(.light) input,
-body:not(.light) select,
-body:not(.light) textarea {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-}
-
-body:not(.light) button.bg-white,
-body:not(.light) .bg-amber-400,
-body:not(.light) .bg-yellow-400 {
-  background-color: #6366f1 !important;
-  color: #ffffff !important;
-}
-
-body:not(.light) button.bg-white:hover {
-  background-color: #4f46e5 !important;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.45) !important;
-}
-
-body:not(.light) .text-amber-400,
-body:not(.light) .text-yellow-400 {
-  color: #818cf8 !important;
-}
-
-body:not(.light) .text-emerald-400 {
-  color: #10b981 !important;
-}
-
-body:not(.light) .hover\:bg-zinc-900:hover,
-body:not(.light) .hover\:bg-zinc-800:hover,
-body:not(.light) .hover\:bg-zinc-850:hover {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+/* Subtle surfaces - premium clean sky-tinted white */
+body.light .bg-zinc-50,
+body.light .bg-slate-50,
+body.light .bg-slate-100,
+body.light .bg-zinc-800,
+body.light .bg-zinc-850,
+body.light .bg-zinc-900/10 {
+  background-color: #F4F8FD !important;
+  color: #111827 !important;
 }
 
 /* ==========================================================
-   CLASSIC HIGH-CONTRAST LIGHT GURUKUL THEME OVERRIDES
+   SPECIAL PROFILE HUB LIGHT BLUE OVERRIDES IN LIGHT MODE
+   ========================================================== */
+body.light #profile-hub-root {
+  background-color: #EBF4FF !important; /* Elegant premium soft light-blue surface */
+  border-color: #BFDBFE !important;
+}
+
+body.light #profile-hub-root .bg-zinc-950,
+body.light #profile-hub-root .bg-zinc-900,
+body.light #profile-hub-root .bg-zinc-900\/30,
+body.light #profile-hub-root .bg-zinc-900\/60 {
+  background-color: #DBEAFE !important; /* Beautiful soft sky blue inner card surfaces */
+  border-color: #BFDBFE !important;
+  color: #1E3A8A !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.03) !important;
+}
+
+body.light #profile-hub-root .text-white,
+body.light #profile-hub-root .text-zinc-100,
+body.light #profile-hub-root .text-zinc-200,
+body.light #profile-hub-root .text-zinc-300,
+body.light #profile-hub-root .text-zinc-400 {
+  color: #1E3A8A !important; /* Perfect high-contrast deep royal blue text */
+}
+
+body.light #profile-hub-root .text-zinc-500,
+body.light #profile-hub-root .text-slate-400,
+body.light #profile-hub-root .text-slate-500 {
+  color: #2563EB !important; /* Luminous blue subtexts */
+}
+
+body.light #profile-hub-root button.bg-white {
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border-color: #2563EB !important;
+}
+
+body.light #profile-hub-root button.bg-white:hover {
+  background-color: #1D4ED8 !important;
+}
+
+body.light #profile-hub-root input,
+body.light #profile-hub-root select {
+  background-color: #FFFFFF !important;
+  border-color: #BFDBFE !important;
+  color: #1E3A8A !important;
+}
+
+/* Subtle borders for pristine card separation */
+body.light .border-zinc-900,
+body.light .border-zinc-850,
+body.light .border-zinc-800,
+body.light .border-zinc-800\/80,
+body.light .border-zinc-900\/60,
+body.light .border-zinc-900\/80,
+body.light .border-zinc-900\/85,
+body.light .border-zinc-700,
+body.light .border-zinc-850\/80,
+body.light .border-white\/10,
+body.light .border-zinc-900\/80 {
+  border-color: #E5E7EB !important;
+}
+
+/* Divider colors */
+body.light hr,
+body.light .divide-y > *,
+body.light .border-t,
+body.light .border-b {
+  border-color: #D1D5DB !important;
+}
+
+/* High Legibility text overrides */
+body.light .text-white,
+body.light .text-zinc-100,
+body.light .text-zinc-200,
+body.light .text-zinc-300,
+body.light .text-slate-900,
+body.light .text-slate-800,
+body.light .text-slate-700,
+body.light .text-slate-600,
+body.light .text-slate-100 {
+  color: #111827 !important;
+}
+
+/* Secondary & Subtitle Text */
+body.light .text-zinc-400,
+body.light .text-zinc-500,
+body.light .text-slate-400,
+body.light .text-slate-500 {
+  color: #4B5563 !important;
+}
+
+/* Disabled Text */
+body.light .text-zinc-600,
+body.light .text-slate-300,
+body.light .text-zinc-500\/40 {
+  color: #9CA3AF !important;
+}
+
+/* Hover States for list items and grids */
+body.light .hover\:bg-zinc-900:hover,
+body.light .hover\:bg-zinc-800:hover,
+body.light .hover\:bg-zinc-850:hover,
+body.light .hover\:bg-slate-50:hover {
+  background-color: #F3F4F6 !important;
+  color: #111827 !important;
+}
+
+/* Input Fields and Select Dropdowns */
+body.light input,
+body.light select,
+body.light textarea {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #E5E7EB !important;
+}
+
+body.light input::placeholder,
+body.light select::placeholder,
+body.light textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* Primary Buttons (Royal Blue #2563EB) */
+body.light button.bg-white,
+body.light .bg-amber-400,
+body.light .bg-yellow-400,
+body.light .bg-indigo-600,
+body.light .bg-blue-600,
+body.light .bg-orange-600 {
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border-color: #2563EB !important;
+}
+
+body.light button.bg-white:hover,
+body.light .bg-amber-400:hover,
+body.light .bg-yellow-400:hover,
+body.light .bg-indigo-600:hover,
+body.light .bg-blue-600:hover,
+body.light .bg-orange-600:hover {
+  background-color: #1D4ED8 !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+}
+
+body.light button.bg-white .text-black,
+body.light button.bg-white .text-slate-900 {
+  color: #FFFFFF !important;
+}
+
+/* Secondary Buttons (White backgrounds, blue borders #2563EB, and blue text #2563EB) */
+body.light button.bg-zinc-900,
+body.light button.bg-zinc-950,
+body.light button.bg-slate-100,
+body.light .bg-zinc-800,
+body.light .bg-slate-100\/90 {
+  background-color: #FFFFFF !important;
+  color: #2563EB !important;
+  border: 1px solid #2563EB !important;
+}
+
+body.light button.bg-zinc-900:hover,
+body.light button.bg-zinc-950:hover,
+body.light button.bg-slate-100:hover,
+body.light .bg-zinc-800:hover {
+  background-color: #F3F4F6 !important;
+  color: #1D4ED8 !important;
+}
+
+/* Icons, Sparkles and Highlights (Royal Blue #2563EB, Teal #14B8A6 for active/highlights) */
+body.light .text-blue-500,
+body.light .text-indigo-500,
+body.light .text-amber-500,
+body.light .text-teal-500,
+body.light .text-indigo-400,
+body.light .text-orange-450,
+body.light .text-yellow-400,
+body.light .text-orange-400 {
+  color: #2563EB !important;
+}
+
+/* Active Highlight / Accent States (Modern Teal #14B8A6) */
+body.light .active-highlight,
+body.light .text-teal-400,
+body.light .text-emerald-400 {
+  color: #14B8A6 !important;
+}
+
+/* Golden Orange Accent #F59E0B Warnings */
+body.light .text-amber-500,
+body.light .text-yellow-500,
+body.light .text-orange-500 {
+  color: #F59E0B !important;
+}
+
+body.light .bg-yellow-500\/10,
+body.light .bg-amber-500\/10,
+body.light .bg-orange-500\/10,
+body.light .bg-yellow-400\/10 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #F59E0B !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Success Elements (Green #22C55E) */
+body.light .text-green-500,
+body.light .text-emerald-500,
+body.light .text-emerald-400 {
+  color: #22C55E !important;
+}
+
+body.light .bg-emerald-500\/10,
+body.light .bg-green-500\/10,
+body.light .bg-emerald-600\/20,
+body.light .bg-emerald-500\/20 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  color: #22C55E !important;
+  border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+/* Error Elements (Red #EF4444) */
+body.light .text-red-400,
+body.light .text-red-500 {
+  color: #EF4444 !important;
+}
+
+body.light .bg-red-500\/10,
+body.light .bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #EF4444 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+
+/* ==========================================================
+   PREMIUM DARK THEME (DEEP SPACE NAVY)
+   ========================================================== */
+body.dark {
+  background-color: #0B1020 !important;
+  color: #F8FAFC !important;
+}
+
+body.dark .bg-black,
+body.dark .bg-zinc-950,
+body.dark .bg-zinc-900,
+body.dark .bg-zinc-900\/60,
+body.dark .bg-zinc-900\/80,
+body.dark .bg-zinc-900\/85,
+body.dark .bg-zinc-900\/95,
+body.dark .bg-zinc-950\/80,
+body.dark .bg-zinc-950\/50,
+body.dark .bg-zinc-900\/40,
+body.dark .bg-zinc-950\/40,
+body.dark header,
+body.dark aside,
+body.dark .sidebar,
+body.dark .drawer,
+body.dark .modal-content,
+body.dark .perspective-box,
+body.dark .stats-card,
+body.dark .bg-zinc-900\/90,
+body.dark .bg-zinc-950\/70,
+body.dark .bg-zinc-900\/30 {
+  background-color: #161B2F !important;
+  color: #F8FAFC !important;
+  border-color: #2A3354 !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 20px -2px rgba(56, 189, 248, 0.05) !important;
+}
+
+/* Secondary Surface #202743 */
+body.dark .bg-zinc-50,
+body.dark .bg-slate-50,
+body.dark .bg-slate-100,
+body.dark .bg-zinc-800,
+body.dark .bg-zinc-850,
+body.dark .bg-zinc-900/10 {
+  background-color: #202743 !important;
+  color: #F8FAFC !important;
+}
+
+/* Subtle borders for pristine card separation */
+body.dark .border-zinc-900,
+body.dark .border-zinc-850,
+body.dark .border-zinc-800,
+body.dark .border-zinc-800\/80,
+body.dark .border-zinc-900\/60,
+body.dark .border-zinc-900\/80,
+body.dark .border-zinc-900\/85,
+body.dark .border-zinc-700,
+body.dark .border-zinc-850\/80,
+body.dark .border-white\/10,
+body.dark .border-zinc-900\/80 {
+  border-color: #2A3354 !important;
+}
+
+/* Divider colors #334155 */
+body.dark hr,
+body.dark .divide-y > *,
+body.dark .border-t,
+body.dark .border-b {
+  border-color: #334155 !important;
+}
+
+/* High Legibility text overrides */
+body.dark .text-white,
+body.dark .text-zinc-100,
+body.dark .text-zinc-200,
+body.dark .text-zinc-300,
+body.dark .text-slate-900,
+body.dark .text-slate-800,
+body.dark .text-slate-700,
+body.dark .text-slate-600,
+body.dark .text-slate-100 {
+  color: #F8FAFC !important;
+}
+
+/* Secondary & Subtitle Text */
+body.dark .text-zinc-400,
+body.dark .text-zinc-500,
+body.dark .text-slate-400,
+body.dark .text-slate-500 {
+  color: #CBD5E1 !important;
+}
+
+/* Disabled Text */
+body.dark .text-zinc-600,
+body.dark .text-slate-300,
+body.dark .text-zinc-500\/40 {
+  color: #64748B !important;
+}
+
+/* Hover States for list items and grids */
+body.dark .hover\:bg-zinc-900:hover,
+body.dark .hover\:bg-zinc-800:hover,
+body.dark .hover\:bg-zinc-850:hover,
+body.dark .hover\:bg-slate-50:hover {
+  background-color: #202743 !important;
+  color: #F8FAFC !important;
+}
+
+/* Input Fields and Select Dropdowns */
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background-color: #161B2F !important;
+  color: #F8FAFC !important;
+  border-color: #2A3354 !important;
+}
+
+body.dark input::placeholder,
+body.dark select::placeholder,
+body.dark textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* Primary Buttons (Electric Cyan #38BDF8 with dark text #0B1020) */
+body.dark button.bg-white,
+body.dark .bg-amber-400,
+body.dark .bg-yellow-400,
+body.dark .bg-indigo-600,
+body.dark .bg-blue-600,
+body.dark .bg-orange-600 {
+  background-color: #38BDF8 !important;
+  color: #0B1020 !important;
+  border-color: #38BDF8 !important;
+}
+
+body.dark button.bg-white:hover,
+body.dark .bg-amber-400:hover,
+body.dark .bg-yellow-400:hover,
+body.dark .bg-indigo-600:hover,
+body.dark .bg-blue-600:hover,
+body.dark .bg-orange-600:hover {
+  background-color: #0ea5e9 !important;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3) !important;
+}
+
+body.dark button.bg-white .text-black,
+body.dark button.bg-white .text-slate-900 {
+  color: #0B1020 !important;
+}
+
+/* Secondary Buttons (Dark background #161B2F with Cyan outline #38BDF8) */
+body.dark button.bg-zinc-900,
+body.dark button.bg-zinc-950,
+body.dark button.bg-slate-100,
+body.dark .bg-zinc-800,
+body.dark .bg-slate-100\/90 {
+  background-color: #161B2F !important;
+  color: #38BDF8 !important;
+  border: 1px solid #38BDF8 !important;
+}
+
+body.dark button.bg-zinc-900:hover,
+body.dark button.bg-zinc-950:hover,
+body.dark button.bg-slate-100:hover,
+body.dark .bg-zinc-800:hover {
+  background-color: #202743 !important;
+  color: #0ea5e9 !important;
+}
+
+/* Icons, Sparkles and Highlights (Electric Cyan #38BDF8) */
+body.dark .text-blue-500,
+body.dark .text-indigo-500,
+body.dark .text-amber-500,
+body.dark .text-teal-500,
+body.dark .text-indigo-400,
+body.dark .text-orange-450,
+body.dark .text-yellow-400,
+body.dark .text-orange-400 {
+  color: #38BDF8 !important;
+}
+
+/* Active Highlight / Soft Violet #8B5CF6 reserved for interactive elements */
+body.dark .active-highlight,
+body.dark .text-teal-400,
+body.dark .text-emerald-400 {
+  color: #8B5CF6 !important;
+}
+
+/* Golden Amber Accent #FBBF24 Warnings */
+body.dark .text-amber-500,
+body.dark .text-yellow-500,
+body.dark .text-orange-500 {
+  color: #FBBF24 !important;
+}
+
+body.dark .bg-yellow-500\/10,
+body.dark .bg-amber-500\/10,
+body.dark .bg-orange-500\/10,
+body.dark .bg-yellow-400\/10 {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+  color: #FBBF24 !important;
+  border-color: rgba(251, 191, 36, 0.2) !important;
+}
+
+/* Success Elements (Green #22C55E) */
+body.dark .text-green-500,
+body.dark .text-emerald-500,
+body.dark .text-emerald-400 {
+  color: #22C55E !important;
+}
+
+body.dark .bg-emerald-500\/10,
+body.dark .bg-green-500\/10,
+body.dark .bg-emerald-600\/20,
+body.dark .bg-emerald-500\/20 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  color: #22C55E !important;
+  border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+/* Error Elements (Red #EF4444) */
+body.dark .text-red-400,
+body.dark .text-red-500 {
+  color: #EF4444 !important;
+}
+
+body.dark .bg-red-500\/10,
+body.dark .bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #EF4444 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+
+/* ==========================================================
+   COMMON COMPONENTS & OVERLAYS
    ========================================================== */
 
-.light {
-  background-color: #f8fafc !important; /* slate-50 */
-  color: #0f172a !important; /* slate-900 */
-}
-
-/* Page Headers & Base Containers */
-.light header,
-.light .bg-black,
-.light .bg-zinc-950,
-.light .bg-zinc-900,
-.light .bg-zinc-900\/60,
-.light .bg-zinc-900\/80,
-.light .bg-zinc-900\/85,
-.light .bg-zinc-900\/95 {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-}
-
-/* Subtle border transitions for light mode */
-.light .border-zinc-900,
-.light .border-zinc-850,
-.light .border-zinc-800,
-.light .border-zinc-800\/80,
-.light .border-zinc-900\/60,
-.light .border-zinc-900\/80,
-.light .border-zinc-900\/85 {
-  border-color: #cbd5e1 !important; /* slate-300 */
-}
-
-/* Text Overrides for High Legibility */
-.light .text-white {
-  color: #0f172a !important; /* slate-900 */
-}
-
-.light .text-zinc-100,
-.light .text-zinc-200,
-.light .text-zinc-300 {
-  color: #1e293b !important; /* slate-800 */
-}
-
-.light .text-zinc-400,
-.light .text-zinc-500 {
-  color: #475569 !important; /* slate-600 */
-}
-
-/* Utility Background Overrides */
-.light .bg-zinc-900,
-.light .bg-zinc-850,
-.light .bg-zinc-800 {
-  background-color: #f1f5f9 !important; /* slate-100 */
-  color: #0f172a !important;
-}
-
-.light .bg-zinc-900\/40 {
-  background-color: #f8fafc !important;
-}
-
-.light .bg-black\/20 {
-  background-color: rgba(241, 245, 249, 0.5) !important;
-}
-
-/* Hover States */
-.light .hover\:bg-zinc-900:hover,
-.light .hover\:bg-zinc-800:hover,
-.light .hover\:bg-zinc-850:hover {
-  background-color: #e2e8f0 !important; /* slate-200 */
-  color: #0f172a !important;
-}
-
-/* Sidebar Rails & Panels */
-.light aside,
-.light .sidebar,
-.light .drawer {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* Interactive Input Elements */
-.light input,
-.light select,
-.light textarea {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-
-.light input::placeholder {
-  color: #94a3b8 !important; /* slate-400 */
-}
-
-/* Custom Buttons Styling */
-.light button.bg-white {
-  background-color: #0f172a !important; /* Dark button in light theme */
-  color: #ffffff !important;
-}
-
-.light button.bg-white:hover {
-  background-color: #1e293b !important;
-}
-
-.light button.bg-white .text-black {
-  color: #ffffff !important;
-}
-
-.light button.bg-zinc-900,
-.light button.bg-zinc-950 {
-  background-color: #e2e8f0 !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-/* Practice & Quiz Overrides */
-.light .bg-zinc-950.border-zinc-900 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-}
-
-.light .bg-emerald-500\/10 {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-  color: #047857 !important;
-}
-
-.light .bg-red-500\/10 {
-  background-color: rgba(239, 68, 68, 0.1) !important;
-  color: #b91c1c !important;
-}
-
-.light .text-emerald-400 {
-  color: #059669 !important;
-}
-
-.light .text-red-400 {
-  color: #dc2626 !important;
-}
-
 /* Study Material / Markdown / Explanations Panel */
-.light .markdown-body,
-.light .prose {
-  color: #1e293b !important;
+body.light .markdown-body,
+body.light .prose {
+  color: #111827 !important;
 }
 
-.light .markdown-body strong {
-  color: #0f172a !important;
+body.dark .markdown-body,
+body.dark .prose {
+  color: #CBD5E1 !important;
 }
 
-.light .markdown-body p,
-.light .markdown-body li {
-  color: #334155 !important;
+body.light .markdown-body strong {
+  color: #111827 !important;
+  font-weight: 700;
 }
 
-/* Diagnostic & Assessment Stats Card */
-.light .stats-card {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+body.dark .markdown-body strong {
+  color: #F8FAFC !important;
+  font-weight: 700;
 }
 
-/* Active Dialog Modals */
-.light .modal-overlay {
-  background-color: rgba(15, 23, 42, 0.7) !important;
+body.light .markdown-body p,
+body.light .markdown-body li {
+  color: #4B5563 !important;
 }
 
-.light .modal-content {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
+body.dark .markdown-body p,
+body.dark .markdown-body li {
+  color: #CBD5E1 !important;
 }
 
-/* Scroll-triggered perspective & animations */
-.light .perspective-box {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+/* Modal Overlay & Backdrop */
+body.light .modal-overlay {
+  background-color: rgba(17, 24, 39, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+body.dark .modal-overlay {
+  background-color: rgba(11, 16, 32, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
 }

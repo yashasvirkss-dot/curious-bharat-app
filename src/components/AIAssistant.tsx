@@ -458,9 +458,9 @@ export default function AIAssistant({
   const TricolorAshokChakra = ({ className = "w-10 h-10" }: { className?: string }) => (
     <div className="relative flex items-center justify-center select-none scale-105 my-3">
       {/* Premium Glow Ring */}
-      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-teal-400 opacity-75 blur-[3px] animate-[spin_8s_linear_infinite]"></div>
+      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#4F9DFF] via-blue-400 to-[#14b8a6] opacity-75 blur-[3px] animate-[spin_8s_linear_infinite]"></div>
       <div className="relative bg-zinc-950 p-2 rounded-full border border-white/10 shadow-xl flex items-center justify-center">
-        <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" id="ai-glowing-logo-icon" />
+        <Sparkles className="w-5 h-5 text-blue-400 animate-pulse" id="ai-glowing-logo-icon" />
       </div>
     </div>
   );
@@ -619,25 +619,19 @@ export default function AIAssistant({
 
     // Standard dialougue feed when there are messages
     return (
-      <div className={`flex-1 w-full h-full flex flex-col justify-between ${isDarkMode ? 'bg-zinc-950 text-zinc-300' : 'bg-gradient-to-r from-orange-50/50 via-white/90 to-emerald-50/50 text-slate-800'} ${inline ? 'border border-zinc-900 rounded-3xl overflow-hidden' : 'border-x border-zinc-900/80 max-w-4xl mx-auto'}`}>
-        {/* Header */}
-        <div className={`p-4 ${isDarkMode ? 'bg-zinc-900 border-b border-zinc-850' : 'bg-white border-b border-orange-100/60 shadow-sm'} flex items-center justify-between shrink-0`}>
-          <div className="flex items-center gap-2.5">
-            <TricolorAshokChakra className="w-7 h-7" />
-            <div>
-              <h3 className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center gap-1`}>
-                {appLanguage === 'hi' ? 'भारत AI अध्ययन गुरु' : 'Bharat AI Study Mentor'} <Sparkles className="w-3.5 h-3.5 text-yellow-500 animate-pulse" />
-              </h3>
-              {currentChapterTitle ? (
-                <span className={`text-[10px] ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'} flex items-center gap-1 font-medium max-w-[300px] sm:max-w-[400px] truncate`}>
-                  <BookOpen className="w-3 h-3 shrink-0" /> {appLanguage === 'hi' ? 'विषय' : 'Subject'}: {currentChapterTitle}
-                </span>
-              ) : (
-                <span className={`text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-slate-500'}`}>
-                  {appLanguage === 'hi' ? 'कक्षा 9-12 विज्ञान अध्ययन गुरु' : 'Your Class 9 & 10 Science Study Guru'}
-                </span>
-              )}
-            </div>
+      <div className={`flex-1 w-full h-full flex flex-col justify-between ${isDarkMode ? 'bg-zinc-950/95 backdrop-blur-md text-zinc-300' : 'bg-slate-50/95 backdrop-blur-md text-slate-800'} ${inline ? 'border border-zinc-900 rounded-3xl overflow-hidden' : 'border-x border-zinc-900/80 max-w-4xl mx-auto'} relative`}>
+        {/* Header - exactly identical format as first look */}
+        <div className="p-4 flex items-center justify-between shrink-0 border-b border-white/5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono tracking-wider uppercase font-bold text-zinc-500 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              {appLanguage === 'hi' ? 'भारत एआई अध्ययन' : 'BHARAT AI • ONLINE'}
+            </span>
+            {currentChapterTitle && (
+              <span className={`text-[10px] ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'} font-medium truncate max-w-[150px] sm:max-w-[250px]`}>
+                • {currentChapterTitle}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -682,7 +676,7 @@ export default function AIAssistant({
         </div>
 
         {/* Messages Feed */}
-        <div className={`flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar ${isDarkMode ? 'bg-black/45' : 'bg-orange-50/10'} min-h-[300px]`}>
+        <div className={`flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar ${isDarkMode ? 'bg-black/45' : 'bg-transparent'} min-h-[300px]`}>
           {messages.map((msg) => {
             const isUser = msg.sender === 'user';
             return (
@@ -821,9 +815,9 @@ export default function AIAssistant({
                 className="max-w-md w-full bg-zinc-950 border border-zinc-900 rounded-3xl p-6 text-center relative overflow-hidden shadow-2xl"
               >
                 {/* PREMIUM HEADER STRIPE */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4 text-indigo-400">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto mb-4 text-blue-400">
                   <Download className="w-7 h-7" />
                 </div>
 

@@ -47,7 +47,12 @@ interface EvaluationResult {
 
 export default function PracticeTab({ progress, onUpdateProgress, studentName, appLanguage = 'en' }: PracticeTabProps) {
   const [activePracticeMode, setActivePracticeMode] = useState<'menu' | 'generator' | 'active-test' | 'evaluation'>('menu');
+  const [practiceSubTab, setPracticeSubTab] = useState<'prompt' | 'parameter'>('prompt');
   
+  // Custom prompt voice / text demands
+  const [customPrompt, setCustomPrompt] = useState<string>('');
+  const [isPromptListening, setIsPromptListening] = useState<boolean>(false);
+
   // Test Config State - completely typeable
   const [classLevel, setClassLevel] = useState<string>('Class 10th');
   const [subject, setSubject] = useState<string>('Physics');
@@ -79,10 +84,11 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
     'Biology': ['Molecular Basis of Inheritance', 'Life Processes', 'Control & Coordination', 'Cell Structure']
   };
 
-  const startTestGeneration = async () => {
+  const startTestGeneration = async (promptOverride?: string) => {
     setIsGenerating(true);
     setActivePracticeMode('active-test');
     try {
+      const activePrompt = promptOverride || customPrompt;
       const response = await fetch('/api/generate-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,7 +98,8 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
           chapter,
           difficulty,
           questionCount,
-          questionType
+          questionType,
+          customPrompt: activePrompt || undefined
         })
       });
       
@@ -232,6 +239,50 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
     }
   };
 
+  const startVoiceTypingForPrompt = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setIsPromptListening(true);
+      setSpeechError(null);
+      setTimeout(() => {
+        const textSample = "Generate 4 tricky descriptive questions on Electricity and resistance for Class 10th Science.";
+        setCustomPrompt(prev => (prev ? prev + " " + textSample : textSample));
+        setIsPromptListening(false);
+      }, 2500);
+      return;
+    }
+
+    try {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = 'en-IN';
+
+      rec.onstart = () => {
+        setIsPromptListening(true);
+        setSpeechError(null);
+      };
+
+      rec.onresult = (e: any) => {
+        const resultText = e.results[0][0].transcript;
+        setCustomPrompt(prev => (prev ? prev + " " + resultText : resultText));
+      };
+
+      rec.onerror = () => {
+        setSpeechError("Voice not captured. Please type your requirements.");
+        setIsPromptListening(false);
+      };
+
+      rec.onend = () => {
+        setIsPromptListening(false);
+      };
+
+      rec.start();
+    } catch (err) {
+      setIsPromptListening(false);
+    }
+  };
+
   const handleNextQuestion = () => {
     setShowDuoHint(false);
     if (currentQuestionIdx < questions.length - 1) {
@@ -338,186 +389,382 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
       {activePracticeMode === 'menu' && (
         <div className="space-y-6">
           
-          {/* Practice Hero */}
-          <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-6 relative overflow-hidden text-center">
-            <div className="absolute top-0 right-0 w-44 h-44 bg-yellow-500/5 rounded-full blur-3xl" />
-            <div className="w-12 h-12 bg-white/5 border border-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-6 h-6 text-yellow-400 fill-yellow-400/10" />
-            </div>
-            <h2 className="text-xl font-extrabold text-white">
-              {appLanguage === 'hi' ? 'एआई नैदानिक मूल्यांकन प्रयोगशाला' : 'AI Diagnostic Assessment Lab'}
-            </h2>
-            <p className="text-xs text-zinc-400 max-w-md mx-auto mt-1 leading-relaxed">
-              {appLanguage === 'hi' 
-                ? 'कक्षा 9-12 NCERT पाठ्यक्रम के अनुकूल कस्टम परीक्षा प्रश्नपत्र तैयार करें। वर्णनात्मक, संख्यात्मक, या एमसीक्यू हल करें और त्वरित एआई रिपोर्ट कार्ड प्राप्त करें!'
-                : 'Generate custom exam papers tailored to Class 9-12 NCERT curriculum. Attempt descriptive, numeric, or mcq sets, and receive instant AI report cards!'}
-            </p>
-          </div>
-
-          {/* Cards Options */}
-          <div className="max-w-md mx-auto">
+          {/* Practice Hero - STUNNING RECONSTRUCTED LOOK */}
+          <div className="bg-gradient-to-br from-indigo-950 via-zinc-950 to-blue-950 border border-zinc-900/80 rounded-3xl p-6.5 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-indigo-500/5 rounded-full blur-2xl" />
             
-            {/* AI Custom Test Card */}
-            <div 
-              onClick={() => setActivePracticeMode('generator')}
-              className="p-5 bg-zinc-950 hover:bg-zinc-900/60 border border-zinc-900 rounded-2xl cursor-pointer group transition flex items-start gap-4 text-left"
-            >
-              <div className="p-3 bg-white/5 rounded-xl text-white group-hover:scale-110 transition">
-                <Brain className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                  {appLanguage === 'hi' ? 'एआई टेस्ट जनरेटर' : 'AI Test Generator'}
-                  <span className="text-[8px] uppercase tracking-wider bg-yellow-400 text-black px-1.5 py-0.5 rounded-full font-bold">
-                    {appLanguage === 'hi' ? 'नया' : 'New'}
-                  </span>
-                </h3>
-                <p className="text-[11px] text-zinc-500 leading-normal">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+              <div className="space-y-1.5 text-left">
+                <span className="text-[10px] font-mono tracking-widest uppercase font-black text-blue-400 bg-blue-950/65 border border-blue-900/50 px-2.5 py-1 rounded-full">
+                  {appLanguage === 'hi' ? 'परम मूल्यांकन प्रयोगशाला' : 'ULTIMATE ASSESSMENT LAB'}
+                </span>
+                <h2 className="text-2xl font-black text-white tracking-tight">
+                  {appLanguage === 'hi' ? 'एआई कस्टमाइज्ड परीक्षा हब' : 'AI Custom Exam Hub'}
+                </h2>
+                <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
                   {appLanguage === 'hi' 
-                    ? 'कुल प्रश्नों, कठिनाई स्तरों और विषय-विशिष्ट प्रश्नों को अनुकूलित करें।'
-                    : 'Customize total questions, difficulty levels, and subject-specific pyqs.'}
+                    ? 'अपनी इच्छानुसार बोलकर या टाइप करके अपना स्वयं का पेपर डिज़ाइन करें, या सीबीएसई ब्लू प्रिंट के अनुसार मानक मापदंडों का चयन करें।'
+                    : 'Design your own practice sets simply by speaking or typing your demands, or select standard CBSE blueprint parameters.'}
                 </p>
-                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-bold font-mono pt-1.5">
-                  <span>{appLanguage === 'hi' ? 'प्रयोगशाला में प्रवेश करें' : 'Enter lab'}</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </div>
+              </div>
+
+              {/* Status Pill */}
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-900 px-4 py-3 rounded-2xl flex flex-col justify-center items-center shrink-0 min-w-[120px] shadow-lg">
+                <Flame className="w-5 h-5 text-orange-500 animate-bounce mb-1" />
+                <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Rank Coins</span>
+                <span className="text-base font-black font-mono text-yellow-400">{progress.totalXP || 0} XP</span>
               </div>
             </div>
-
           </div>
 
-          {/* Daily Quick Stats Preview inside Practice */}
-          <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 flex justify-between items-center text-xs text-left">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-yellow-500 animate-pulse" />
-              <span className="text-zinc-400">
-                {appLanguage === 'hi' ? 'मूल्यांकन स्थिति:' : 'Assessment Status:'}{' '}
-                <strong className="text-white">
-                  {appLanguage === 'hi' ? 'सीबीएसई पाठ्यक्रम तैयार' : 'CBSE Syllabus Ready'}
-                </strong>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-zinc-400">
-                {appLanguage === 'hi' ? 'रैंक सिक्के:' : 'Rank Coins:'}{' '}
-                <strong className="text-white">{progress.totalXP}</strong>
-              </span>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* Test Generator Form Mode */}
-      {activePracticeMode === 'generator' && (
-        <div className="space-y-5 bg-zinc-950 border border-zinc-900 rounded-2xl p-6">
-          <div className="border-b border-zinc-900 pb-3 flex justify-between items-center">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Setup AI Test parameters</h3>
-            <button 
-              onClick={() => setActivePracticeMode('menu')}
-              className="text-xs text-zinc-500 hover:text-white"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            
-            {/* Class Selection */}
-            <div className="space-y-1.5">
-              <label className="text-zinc-500 block uppercase font-mono text-[9px]">Class / Grade (Typeable)</label>
-              <input 
-                type="text"
-                value={classLevel}
-                onChange={(e) => setClassLevel(e.target.value)}
-                placeholder="e.g. Class 10th"
-                className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
-              />
-            </div>
-
-            {/* Subject */}
-            <div className="space-y-1.5">
-              <label className="text-zinc-500 block uppercase font-mono text-[9px]">Subject Stream (Typeable)</label>
-              <input 
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. Physics"
-                className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
-              />
-            </div>
-
-            {/* Chapter Option */}
-            <div className="space-y-1.5">
-              <label className="text-zinc-500 block uppercase font-mono text-[9px]">Topic / Chapter Focus (Typeable)</label>
-              <input 
-                type="text"
-                value={chapter}
-                onChange={(e) => setChapter(e.target.value)}
-                placeholder="e.g. Light & Refraction"
-                className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
-              />
-            </div>
-
-            {/* Difficulty */}
-            <div className="space-y-1.5">
-              <label className="text-zinc-500 block uppercase font-mono text-[9px]">Challenge Metric</label>
-              <div className="flex gap-2">
-                {['easy', 'medium', 'hard'].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDifficulty(d as any)}
-                    className={`flex-1 py-2 border rounded-xl font-bold font-mono uppercase text-[10px] transition cursor-pointer ${
-                      difficulty === d 
-                        ? 'bg-white text-black border-white'
-                        : 'bg-black text-zinc-500 border-zinc-900 hover:border-zinc-800'
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Question count */}
-            <div className="space-y-1.5">
-              <label className="text-zinc-500 block uppercase font-mono text-[9px]">Number of Questions (Enter Any Count)</label>
-              <input 
-                type="number"
-                min={1}
-                value={questionCount}
-                onChange={(e) => setQuestionCount(Math.max(1, Number(e.target.value)))}
-                placeholder="e.g. 5"
-                className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
-              />
-            </div>
-
-            {/* Question Type */}
-            <div className="space-y-1.5">
-              <label className="text-zinc-500 block uppercase font-mono text-[9px]">Question Class</label>
-              <select 
-                value={questionType}
-                onChange={(e) => setQuestionType(e.target.value as any)}
-                className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+          {/* TAB CONTROLS - HIGHLY STYLISH PILL SWITCHER */}
+          <div className="flex justify-center">
+            <div className="bg-zinc-950 border border-zinc-900/90 p-1.5 rounded-2xl flex gap-1.5 shadow-md">
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setPracticeSubTab('prompt');
+                }}
+                className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                  practiceSubTab === 'prompt'
+                    ? 'bg-white text-black shadow-lg font-black'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+                }`}
               >
-                <option value="mcq">MCQs & Assertion-Reason Only</option>
-                <option value="descriptive">Descriptive Short/Long Answers</option>
-                <option value="numerical">Numerical Calculations</option>
-                <option value="all">Mixed Curriculum Papers</option>
-                <option value="pyq">Official CBSE Board PYQs (Previous Year Questions)</option>
-              </select>
+                <Mic className="w-3.5 h-3.5" />
+                <span>{appLanguage === 'hi' ? 'वाणी/प्रॉम्प्ट द्वारा परीक्षा' : 'Voice/Text Prompt Exam'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setPracticeSubTab('parameter');
+                }}
+                className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                  practiceSubTab === 'parameter'
+                    ? 'bg-white text-black shadow-lg font-black'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{appLanguage === 'hi' ? 'पाठ्यक्रम मापदंड परीक्षा' : 'NCERT Parameter Exam'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* DYNAMIC SUBTAB DISPLAY */}
+          <AnimatePresence mode="wait">
+            {practiceSubTab === 'prompt' ? (
+              <motion.div
+                key="prompt-tab"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="bg-zinc-950 border border-zinc-900/90 p-6 rounded-3xl space-y-5 text-left shadow-2xl relative"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl" />
+                
+                <div className="space-y-1.5 border-b border-zinc-900 pb-3">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-blue-400 fill-blue-400/15" />
+                    {appLanguage === 'hi' ? 'अपनी भाषा में परीक्षा की मांग करें' : 'Describe Your Dream Test'}
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 leading-normal">
+                    {appLanguage === 'hi'
+                      ? 'अपनी आवाज या कीबोर्ड से अपनी आवश्यकताएं बताएं। उदाहरण के लिए: "मुझे इलेक्ट्रिसिटी चैप्टर के 5 कठिन न्यूमेरिकल सवाल दो"।'
+                      : 'Dictate or type your requirements. Tell Bharat AI the chapter, quantity, question formatting, or difficulty directly.'}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="relative">
+                    <textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      placeholder={
+                        appLanguage === 'hi'
+                          ? "यहाँ लिखें या वॉइस टाइपिंग का उपयोग करें... जैसे: 'प्रकाश परावर्तन पर ३ कठिन दीर्घ उत्तरीय प्रश्न पत्र बनाएं'"
+                          : "Type your requirements here or click the Mic button to talk... e.g. 'Draft a 3-question tough assessment on Cells focusing heavily on organelles and their diagrams.'"
+                      }
+                      rows={4}
+                      className="w-full bg-black border border-zinc-900 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-800/80 transition font-sans leading-relaxed placeholder-zinc-600 resize-none pr-12"
+                    />
+
+                    {/* Microphone Activation HUD Overlay */}
+                    {isPromptListening && (
+                      <div className="absolute inset-0 bg-black/85 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 animate-pulse z-20">
+                        <div className="flex gap-1.5 items-end h-8">
+                          <span className="w-1.5 h-4 bg-blue-500 rounded-full animate-pulse delay-75" />
+                          <span className="w-1.5 h-8 bg-indigo-400 rounded-full animate-pulse delay-150" />
+                          <span className="w-1.5 h-5 bg-blue-400 rounded-full animate-pulse delay-200" />
+                          <span className="w-1.5 h-7 bg-blue-500 rounded-full animate-pulse delay-300" />
+                          <span className="w-1.5 h-3 bg-indigo-500 rounded-full animate-pulse delay-500" />
+                        </div>
+                        <p className="text-[11px] font-mono text-zinc-300 font-bold">Bharat AI is catching your speech...</p>
+                      </div>
+                    )}
+
+                    {/* Quick Mic Floating Trigger on Textbox */}
+                    <button
+                      onClick={startVoiceTypingForPrompt}
+                      className={`absolute right-3.5 bottom-3.5 p-3 rounded-full border transition cursor-pointer ${
+                        isPromptListening
+                          ? 'bg-red-950 border-red-900 text-red-400 animate-pulse'
+                          : 'bg-zinc-900 hover:bg-zinc-850 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                      title="Speak your custom test requirements"
+                    >
+                      <Mic className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Sample suggestions pills */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] text-zinc-500 uppercase font-mono font-bold tracking-wider">Or Select Quick Suggestions:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        appLanguage === 'hi' 
+                          ? 'इलेक्ट्रिसिटी पर ४ कठिन न्यूमेरिकल' 
+                          : '4 tough numericals on Electricity',
+                        appLanguage === 'hi'
+                          ? 'सेल ओर्गेनेल्स पर सीबीएसई बोर्ड पेपर २०१९'
+                          : 'CBSE 2019 Board Cell Organelles',
+                        appLanguage === 'hi'
+                          ? 'लाइट रिफ्लेक्शन पर ५ ट्रिकी एमसीक्यू'
+                          : '5 tricky MCQs on Light reflection',
+                        appLanguage === 'hi'
+                          ? 'केमिकल बांड्स पर लघु उत्तरीय प्रश्न'
+                          : 'Short-answers on Chemical bonds'
+                      ].map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            playSound('click');
+                            setCustomPrompt(item);
+                          }}
+                          className="px-3 py-1.5 bg-zinc-900/80 hover:bg-zinc-900 hover:text-white border border-zinc-850 hover:border-zinc-750 text-zinc-400 text-[11px] rounded-xl cursor-pointer transition text-left"
+                        >
+                          ✨ {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-3 border-t border-zinc-900/60">
+                  <button
+                    onClick={() => setCustomPrompt('')}
+                    className="px-4 py-3 bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-850 rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    Reset Text
+                  </button>
+                  <button
+                    onClick={() => startTestGeneration()}
+                    className="flex-1 py-3 bg-white text-black font-extrabold text-xs rounded-xl cursor-pointer hover:bg-zinc-200 transition shadow-xl flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 fill-black" />
+                    {appLanguage === 'hi' ? 'कस्टम परीक्षा उत्पन्न करें' : 'Generate Prompted Test'}
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="parameter-tab"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="space-y-5 bg-zinc-950 border border-zinc-900/90 rounded-3xl p-6 text-left shadow-2xl"
+              >
+                <div className="border-b border-zinc-900/60 pb-3">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Setup NCERT Test parameters</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  
+                  {/* Class Selection */}
+                  <div className="space-y-1.5">
+                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Class / Grade (Typeable)</label>
+                    <input 
+                      type="text"
+                      value={classLevel}
+                      onChange={(e) => setClassLevel(e.target.value)}
+                      placeholder="e.g. Class 10th"
+                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                    />
+                  </div>
+
+                  {/* Subject */}
+                  <div className="space-y-1.5">
+                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Subject Stream (Typeable)</label>
+                    <input 
+                      type="text"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="e.g. Physics"
+                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                    />
+                  </div>
+
+                  {/* Chapter Option */}
+                  <div className="space-y-1.5">
+                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Topic / Chapter Focus (Typeable)</label>
+                    <input 
+                      type="text"
+                      value={chapter}
+                      onChange={(e) => setChapter(e.target.value)}
+                      placeholder="e.g. Light & Refraction"
+                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                    />
+                  </div>
+
+                  {/* Difficulty */}
+                  <div className="space-y-1.5">
+                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Challenge Metric</label>
+                    <div className="flex gap-2">
+                      {['easy', 'medium', 'hard'].map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setDifficulty(d as any)}
+                          className={`flex-1 py-2 border rounded-xl font-bold font-mono uppercase text-[10px] transition cursor-pointer ${
+                            difficulty === d 
+                              ? 'bg-white text-black border-white'
+                              : 'bg-black text-zinc-500 border-zinc-900 hover:border-zinc-800'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question count */}
+                  <div className="space-y-1.5">
+                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Number of Questions (Enter Any Count)</label>
+                    <input 
+                      type="number"
+                      min={1}
+                      value={questionCount}
+                      onChange={(e) => setQuestionCount(Math.max(1, Number(e.target.value)))}
+                      placeholder="e.g. 5"
+                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                    />
+                  </div>
+
+                  {/* Question Type */}
+                  <div className="space-y-1.5">
+                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Question Class</label>
+                    <select 
+                      value={questionType}
+                      onChange={(e) => setQuestionType(e.target.value as any)}
+                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                    >
+                      <option value="mcq">MCQs & Assertion-Reason Only</option>
+                      <option value="descriptive">Descriptive Short/Long Answers</option>
+                      <option value="numerical">Numerical Calculations</option>
+                      <option value="all">Mixed Curriculum Papers</option>
+                      <option value="pyq">Official CBSE Board PYQs (Previous Year Questions)</option>
+                    </select>
+                  </div>
+
+                </div>
+
+                <button
+                  onClick={() => startTestGeneration()}
+                  className="w-full py-3 bg-white text-black font-extrabold text-xs rounded-xl cursor-pointer hover:bg-zinc-200 transition mt-4 shadow-xl shadow-white/5 flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 fill-black" />
+                  Generate Custom Test Paper
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* BENTO GRID OF MINI-CHALLENGES (COMPLETELY NEW INTERACTIVE LOOK!) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            {/* Quick MCQ challenge card */}
+            <div 
+              onClick={() => {
+                playSound('click');
+                setClassLevel('Class 10th');
+                setSubject('Physics');
+                setChapter('Light & Reflection');
+                setDifficulty('easy');
+                setQuestionCount(3);
+                setQuestionType('mcq');
+                startTestGeneration("Give me 3 light reflection easy conceptual mcqs");
+              }}
+              className="p-4 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-2xl text-left space-y-2 cursor-pointer transition group"
+            >
+              <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-900/50 rounded-lg flex items-center justify-center text-emerald-400 group-hover:scale-105 transition">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">MCQ Speedrun</h4>
+                <p className="text-[10px] text-zinc-500 leading-normal mt-0.5">Quick 3-question MCQ diagnostic on light mirrors.</p>
+              </div>
+            </div>
+
+            {/* Tricky numerical drill card */}
+            <div 
+              onClick={() => {
+                playSound('click');
+                setClassLevel('Class 10th');
+                setSubject('Physics');
+                setChapter('Electricity & Resistivity');
+                setDifficulty('hard');
+                setQuestionCount(3);
+                setQuestionType('numerical');
+                startTestGeneration("Give me 3 hard numericals on Ohm's Law and resistors");
+              }}
+              className="p-4 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-2xl text-left space-y-2 cursor-pointer transition group"
+            >
+              <div className="w-8 h-8 bg-amber-500/10 border border-amber-900/50 rounded-lg flex items-center justify-center text-amber-400 group-hover:scale-105 transition">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Numerical Drill</h4>
+                <p className="text-[10px] text-zinc-500 leading-normal mt-0.5">Challenging math & physics formulas calculation sets.</p>
+              </div>
+            </div>
+
+            {/* CBSE PYQ Board Board Paper */}
+            <div 
+              onClick={() => {
+                playSound('click');
+                setClassLevel('Class 10th');
+                setSubject('Chemistry');
+                setChapter('Acids & Bases');
+                setDifficulty('medium');
+                setQuestionCount(3);
+                setQuestionType('pyq');
+                startTestGeneration("Give me 3 official CBSE PYQs on Acids Bases and Salts");
+              }}
+              className="p-4 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-2xl text-left space-y-2 cursor-pointer transition group"
+            >
+              <div className="w-8 h-8 bg-indigo-500/10 border border-indigo-900/50 rounded-lg flex items-center justify-center text-indigo-400 group-hover:scale-105 transition">
+                <Award className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">CBSE Board PYQs</h4>
+                <p className="text-[10px] text-zinc-500 leading-normal mt-0.5">Official board examination questions with real markings.</p>
+              </div>
             </div>
 
           </div>
 
-          <button
-            onClick={startTestGeneration}
-            className="w-full py-3 bg-white text-black font-extrabold text-sm rounded-xl cursor-pointer hover:bg-zinc-200 transition mt-4 shadow-xl shadow-white/5 flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-4 h-4 fill-black" />
-            Generate Custom Test Paper
-          </button>
+          {/* Core NCERT Readiness Badge Info */}
+          <div className="bg-zinc-950/40 border border-zinc-900 rounded-2xl p-4 flex justify-between items-center text-xs text-left">
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-zinc-400 font-mono text-[10px]">
+                {appLanguage === 'hi' ? 'सीबीएसई २०२६ पाठ्यक्रम एकीकृत' : 'CBSE 2026 PATTERN INTEGRATED'}
+              </span>
+            </div>
+            <span className="text-zinc-500 text-[10px] font-mono">STUDENT: {studentName}</span>
+          </div>
+
         </div>
       )}
 

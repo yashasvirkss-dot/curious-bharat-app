@@ -247,7 +247,7 @@ export default function BatchesTab({
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-zinc-950 border border-zinc-900 rounded-3xl w-full max-w-md overflow-hidden relative shadow-2xl animate-scaleUp">
             {/* Top Premium Decorative Stripe */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
             <div className="p-6 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-indigo-500 text-2xl shadow-lg">
@@ -315,7 +315,7 @@ export default function BatchesTab({
                 { id: 'lecture', label: appLanguage === 'hi' ? 'व्याख्यान' : 'Lecture Video' },
                 { id: 'notes', label: appLanguage === 'hi' ? 'अध्ययन नोट्स' : 'Revision Notes' },
                 { id: 'quiz', label: appLanguage === 'hi' ? 'अभ्यास प्रश्नोत्तरी' : 'MCQ Quiz' },
-                { id: 'flashcards', label: appLanguage === 'hi' ? 'रटें (कार्ड्स)' : 'Flashcards' },
+                { id: 'flashcards', label: appLanguage === 'hi' ? 'माइंड मैप' : 'Mind Map' },
                 { id: 'dpp', label: appLanguage === 'hi' ? 'अभ्यास पत्रक (DPP)' : 'DPP Sheets' }
               ].map(tab => (
                 <button
@@ -548,71 +548,127 @@ export default function BatchesTab({
                 </div>
               )}
 
-              {/* 4. FLASHCARDS */}
+              {/* 4. MIND MAP */}
               {activeTopicTab === 'flashcards' && (
-                <div className="space-y-4 max-w-sm mx-auto bg-zinc-900/20 border border-zinc-900 p-6 rounded-2xl text-center">
+                <div className="space-y-4 max-w-2xl mx-auto bg-zinc-900/20 border border-zinc-900 p-6 rounded-3xl text-center">
+                  <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
+                    <span className="uppercase">Interactive Mind Map Concepts</span>
+                    <span>+5 XP / Explored</span>
+                  </div>
+
                   {selectedTopic.flashcards && selectedTopic.flashcards.length > 0 ? (
                     (() => {
                       const fcList = selectedTopic.flashcards;
                       const activeFc = fcList[topicFcIndex];
-
-                      const handleRate = (right: boolean) => {
-                        playSound(right ? 'correct' : 'wrong');
-                        if (right) {
-                          onUpdateProgress({
-                            ...progress,
-                            totalXP: (progress.totalXP || 0) + 5
-                          });
-                        }
-                        setTopicFcFlipped(false);
-                        setTimeout(() => {
-                          setTopicFcIndex(prev => (prev + 1) % fcList.length);
-                        }, 200);
-                      };
-
                       return (
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
-                            <span>CARD {topicFcIndex + 1} OF {fcList.length}</span>
-                            <span>+5 XP / Got it right</span>
+                        <div className="space-y-5 text-left">
+                          {/* Radial Node SVG connections */}
+                          <div className="bg-black/40 border border-zinc-900 p-3 rounded-2xl h-48 relative overflow-hidden flex items-center justify-center">
+                            <div className="absolute inset-0 bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] bg-[size:16px_16px] opacity-40" />
+                            
+                            {/* Connect Center with active node */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                              <line x1="50%" y1="50%" x2="50%" y2="25%" className="stroke-zinc-800 stroke-2" />
+                              {fcList.map((_, i) => {
+                                const angle = (i / fcList.length) * 2 * Math.PI - Math.PI / 2;
+                                const distance = 70;
+                                const isCurrent = i === topicFcIndex;
+                                return (
+                                  <line
+                                    key={i}
+                                    x1="50%"
+                                    y1="50%"
+                                    x2={`calc(50% + ${distance * Math.cos(angle)}px)`}
+                                    y2={`calc(50% + ${distance * Math.sin(angle)}px)`}
+                                    className={`stroke-2 transition-all ${isCurrent ? 'stroke-blue-500' : 'stroke-zinc-900'}`}
+                                  />
+                                );
+                              })}
+                            </svg>
+
+                            {/* Core Node */}
+                            <div className="absolute w-24 h-12 bg-blue-950 border border-blue-900 rounded-xl flex items-center justify-center p-2 text-center shadow-lg z-10">
+                              <span className="text-[9px] font-black text-white truncate">{selectedTopic.title}</span>
+                            </div>
+
+                            {/* Node markers */}
+                            {fcList.map((fc, i) => {
+                              const angle = (i / fcList.length) * 2 * Math.PI - Math.PI / 2;
+                              const distance = 70;
+                              const isCurrent = i === topicFcIndex;
+                              return (
+                                <button
+                                  key={fc.id}
+                                  onClick={() => { playSound('click'); setTopicFcIndex(i); setTopicFcFlipped(false); }}
+                                  className={`absolute w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-black transition z-10 cursor-pointer ${
+                                    isCurrent 
+                                      ? 'bg-blue-600 border-white text-white scale-110 animate-pulse' 
+                                      : 'bg-zinc-900 border-zinc-850 text-zinc-500 hover:text-white'
+                                  }`}
+                                  style={{
+                                    transform: `translate(${distance * Math.cos(angle)}px, ${distance * Math.sin(angle)}px)`
+                                  }}
+                                >
+                                  {i + 1}
+                                </button>
+                              );
+                            })}
                           </div>
 
-                          <div 
-                            onClick={() => { playSound('click'); setTopicFcFlipped(!topicFcFlipped); }}
-                            className="h-44 bg-zinc-900 border border-zinc-800 hover:border-zinc-650 rounded-2xl p-6 flex flex-col justify-between items-center justify-center cursor-pointer transition select-none relative"
-                          >
-                            <div className="flex-1 flex items-center justify-center">
-                              <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">
-                                {topicFcFlipped ? activeFc.back : activeFc.front}
-                              </p>
+                          {/* Selected Concept Card */}
+                          <div className="bg-zinc-950 border border-zinc-900 p-5 rounded-2xl space-y-3.5 relative">
+                            <span className="text-[8px] font-mono uppercase bg-zinc-900 px-2 py-0.5 rounded text-zinc-500">Selected Concept Branch</span>
+                            <h4 className="text-xs sm:text-sm font-extrabold text-white">{activeFc.front}</h4>
+                            
+                            <div className="bg-black/35 p-3.5 rounded-xl border border-zinc-900/50">
+                              <span className="text-[8px] uppercase tracking-wider font-mono text-zinc-600 block mb-1">Scientific Explanation</span>
+                              <p className="text-xs text-zinc-300 leading-relaxed font-sans">{activeFc.back}</p>
                             </div>
-                            <span className="text-[9px] uppercase font-mono text-zinc-500 font-bold">
-                              {topicFcFlipped ? '✓ Answer' : '⚡ Click to Flip'}
-                            </span>
-                          </div>
 
-                          {topicFcFlipped && (
-                            <div className="grid grid-cols-2 gap-2 pt-2 animate-pulse">
+                            <div className="flex justify-between items-center pt-2">
+                              <div className="flex gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    playSound('click');
+                                    setTopicFcIndex(prev => (prev - 1 + fcList.length) % fcList.length);
+                                    setTopicFcFlipped(false);
+                                  }}
+                                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-850 text-zinc-400 hover:text-white rounded-lg text-[11px] cursor-pointer"
+                                >
+                                  ← Prev Node
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    playSound('click');
+                                    setTopicFcIndex(prev => (prev + 1) % fcList.length);
+                                    setTopicFcFlipped(false);
+                                  }}
+                                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-850 text-zinc-400 hover:text-white rounded-lg text-[11px] cursor-pointer"
+                                >
+                                  Next Node →
+                                </button>
+                              </div>
+
                               <button
-                                onClick={() => handleRate(false)}
-                                className="py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition"
+                                onClick={() => {
+                                  playSound('success');
+                                  onUpdateProgress({
+                                    ...progress,
+                                    totalXP: (progress.totalXP || 0) + 5
+                                  });
+                                }}
+                                className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black font-extrabold text-[11px] rounded-lg cursor-pointer"
                               >
-                                Needs Review
-                              </button>
-                              <button
-                                onClick={() => handleRate(true)}
-                                className="py-2 bg-white text-black font-bold text-xs rounded-xl hover:bg-zinc-200 transition"
-                              >
-                                Got it right! (+5)
+                                Mark Concept Explored (+5)
                               </button>
                             </div>
-                          )}
+                          </div>
                         </div>
                       );
                     })()
                   ) : (
                     <div className="text-center py-8 text-zinc-500 text-xs">
-                      Active recall flashcards are being formulated for this syllabus track.
+                      Active recall concepts are being formulated for this syllabus track.
                     </div>
                   )}
                 </div>
@@ -762,7 +818,7 @@ export default function BatchesTab({
             <div className="lg:col-span-4 lg:sticky lg:top-24">
               <div className="border rounded-3xl p-6 space-y-5 relative overflow-hidden shadow-2xl bg-zinc-950/70 backdrop-blur-md border-zinc-900/80 text-white">
                 {/* PREMIUM TOP BORDER STRIPE */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
                 {/* Large Playlist Thumbnail Image */}
                 <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative shadow-md select-none">
@@ -920,7 +976,7 @@ export default function BatchesTab({
           
           {/* Batches Header with Premium theme */}
           <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 sm:p-8 relative overflow-hidden text-center">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
             <div className="absolute top-4 right-4 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-4 left-4 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
             
@@ -1067,7 +1123,7 @@ export default function BatchesTab({
                       id={`batch-row-${course.id}`}
                     >
                       {/* TOP PREMIUM DECORATIVE ACCENT STRIPE */}
-                      <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-indigo-600 to-teal-400"></div>
+                      <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
 
                       {/* SUBTLE BACKGROUND WATERMARK */}
                       <div className="absolute bottom-4 right-4 opacity-[0.03] sm:opacity-[0.02] pointer-events-none select-none group-hover:scale-110 group-hover:opacity-[0.05] transition-all duration-700">
