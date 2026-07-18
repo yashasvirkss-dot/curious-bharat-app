@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: #05070a;
+    color: #f1f5f9;
+  }
+}
+
+/* ==========================================================
+   IMMERSIVE DARK THEME OVERRIDES (TRICOLOR GLOWS & GLASSMORPHISM)
+   ========================================================== */
+
+body:not(.light) {
+  background-color: #05070a !important;
+  color: #f1f5f9 !important;
+}
+
+body:not(.light) .bg-black,
+body:not(.light) .bg-zinc-950,
+body:not(.light) .bg-zinc-900,
+body:not(.light) .bg-zinc-900\/60,
+body:not(.light) .bg-zinc-900\/80,
+body:not(.light) .bg-zinc-900\/85,
+body:not(.light) .bg-zinc-900\/95,
+body:not(.light) .bg-zinc-950\/80,
+body:not(.light) .bg-zinc-950\/50,
+body:not(.light) .bg-zinc-900\/40,
+body:not(.light) .bg-zinc-950\/40 {
+  background-color: rgba(10, 15, 26, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body:not(.light) .border-zinc-900,
+body:not(.light) .border-zinc-850,
+body:not(.light) .border-zinc-800,
+body:not(.light) .border-zinc-800\/80,
+body:not(.light) .border-zinc-900\/60,
+body:not(.light) .border-zinc-900\/80,
+body:not(.light) .border-zinc-900\/85 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body:not(.light) input,
+body:not(.light) select,
+body:not(.light) textarea {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+body:not(.light) button.bg-white,
+body:not(.light) .bg-amber-400,
+body:not(.light) .bg-yellow-400 {
+  background-color: #FF9933 !important;
+  color: #000000 !important;
+}
+
+body:not(.light) button.bg-white:hover {
+  background-color: #ffaa44 !important;
+  box-shadow: 0 0 15px rgba(255, 153, 51, 0.45) !important;
+}
+
+body:not(.light) .text-amber-400,
+body:not(.light) .text-yellow-400 {
+  color: #FF9933 !important;
+}
+
+body:not(.light) .text-emerald-400 {
+  color: #138808 !important;
+}
+
+body:not(.light) .hover\:bg-zinc-900:hover,
+body:not(.light) .hover\:bg-zinc-800:hover,
+body:not(.light) .hover\:bg-zinc-850:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ==========================================================
+   CLASSIC HIGH-CONTRAST LIGHT GURUKUL THEME OVERRIDES
+   ========================================================== */
+
+.light {
+  background-color: #f8fafc !important; /* slate-50 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+/* Page Headers & Base Containers */
+.light header,
+.light .bg-black,
+.light .bg-zinc-950,
+.light .bg-zinc-900,
+.light .bg-zinc-900\/60,
+.light .bg-zinc-900\/80,
+.light .bg-zinc-900\/85,
+.light .bg-zinc-900\/95 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Subtle border transitions for light mode */
+.light .border-zinc-900,
+.light .border-zinc-850,
+.light .border-zinc-800,
+.light .border-zinc-800\/80,
+.light .border-zinc-900\/60,
+.light .border-zinc-900\/80,
+.light .border-zinc-900\/85 {
+  border-color: #cbd5e1 !important; /* slate-300 */
+}
+
+/* Text Overrides for High Legibility */
+.light .text-white {
+  color: #0f172a !important; /* slate-900 */
+}
+
+.light .text-zinc-100,
+.light .text-zinc-200,
+.light .text-zinc-300 {
+  color: #1e293b !important; /* slate-800 */
+}
+
+.light .text-zinc-400,
+.light .text-zinc-500 {
+  color: #475569 !important; /* slate-600 */
+}
+
+/* Utility Background Overrides */
+.light .bg-zinc-900,
+.light .bg-zinc-850,
+.light .bg-zinc-800 {
+  background-color: #f1f5f9 !important; /* slate-100 */
+  color: #0f172a !important;
+}
+
+.light .bg-zinc-900\/40 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-black\/20 {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+
+/* Hover States */
+.light .hover\:bg-zinc-900:hover,
+.light .hover\:bg-zinc-800:hover,
+.light .hover\:bg-zinc-850:hover {
+  background-color: #e2e8f0 !important; /* slate-200 */
+  color: #0f172a !important;
+}
+
+/* Sidebar Rails & Panels */
+.light aside,
+.light .sidebar,
+.light .drawer {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Interactive Input Elements */
+.light input,
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light input::placeholder {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Custom Buttons Styling */
+.light button.bg-white {
+  background-color: #0f172a !important; /* Dark button in light theme */
+  color: #ffffff !important;
+}
+
+.light button.bg-white:hover {
+  background-color: #1e293b !important;
+}
+
+.light button.bg-white .text-black {
+  color: #ffffff !important;
+}
+
+.light button.bg-zinc-900,
+.light button.bg-zinc-950 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Practice & Quiz Overrides */
+.light .bg-zinc-950.border-zinc-900 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #047857 !important;
+}
+
+.light .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #b91c1c !important;
+}
+
+.light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+.light .text-red-400 {
+  color: #dc2626 !important;
+}
+
+/* Study Material / Markdown / Explanations Panel */
+.light .markdown-body,
+.light .prose {
+  color: #1e293b !important;
+}
+
+.light .markdown-body strong {
+  color: #0f172a !important;
+}
+
+.light .markdown-body p,
+.light .markdown-body li {
+  color: #334155 !important;
+}
+
+/* Diagnostic & Assessment Stats Card */
+.light .stats-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Active Dialog Modals */
+.light .modal-overlay {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+}
+
+.light .modal-content {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Scroll-triggered perspective & animations */
+.light .perspective-box {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}

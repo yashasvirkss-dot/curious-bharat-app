@@ -1,0 +1,6 @@
+{
+  "name": "Curious Bharat",
+  "description": "Premium Dark EdTech platform for Class 9 & Class 10 Science with study materials, practice tests, interactive flashcards, progress tracking, and a server-side Gemini AI Study Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
