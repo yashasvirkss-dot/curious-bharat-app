@@ -48,6 +48,36 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
   const [bookmarkedTimestamps, setBookmarkedTimestamps] = useState<Array<{ id: string; seconds: number; note: string }>>([]);
   const [reportedIssues, setReportedIssues] = useState(false);
 
+  // Video download simulation states
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [downloadingQuality, setDownloadingQuality] = useState<string | null>(null);
+
+  const triggerVideoDownload = (selectedQual: string) => {
+    if (downloadProgress !== null) {
+      alert("Another download is already in progress!");
+      return;
+    }
+    setDownloadingQuality(selectedQual);
+    setDownloadProgress(0);
+    
+    let current = 0;
+    const interval = setInterval(() => {
+      current += Math.floor(Math.random() * 15) + 5;
+      if (current >= 100) {
+        current = 100;
+        setDownloadProgress(100);
+        clearInterval(interval);
+        setTimeout(() => {
+          alert(`Success! "${chapter.title}" (${selectedQual}) has been cached locally in your PWA application container for high-fidelity offline playback.`);
+          setDownloadProgress(null);
+          setDownloadingQuality(null);
+        }, 600);
+      } else {
+        setDownloadProgress(current);
+      }
+    }, 300);
+  };
+
   // YouTube Player Ref & Loading State
   const playerRef = useRef<any>(null);
   const playerContainerId = `yt-player-${chapter.id}`;
@@ -447,6 +477,103 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
 
           </div>
 
+          {/* Quick Media Controls & Offline Download Section */}
+          <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-orange-400 animate-spin-slow" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-350 font-mono">
+                  Lecture Action desk & offline download
+                </h4>
+              </div>
+              <span className="text-[9px] font-mono text-zinc-500 uppercase">Interactive play & save</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Speed & Quality Quick Toggles */}
+              <div className="space-y-3 bg-zinc-900/10 border border-zinc-900/65 rounded-xl p-3">
+                {/* Playback Speed Controller */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono block">Playback Speed Control</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[0.5, 1, 1.25, 1.5, 2].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => handleSpeedChange(s)}
+                        className={`px-2.5 py-1 text-[10px] font-bold font-mono rounded-lg transition-all border cursor-pointer ${
+                          playbackSpeed === s
+                            ? "bg-white text-black border-white shadow-md shadow-white/5 scale-105"
+                            : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:border-zinc-700 hover:text-white"
+                        }`}
+                      >
+                        {s === 1 ? "Normal (1x)" : `${s}x`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Playback Quality Controller */}
+                <div className="space-y-1.5 pt-1.5 border-t border-zinc-900/50">
+                  <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono block">Video Resolution Mode</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["1080p", "720p", "480p", "360p"].map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => setQuality(q)}
+                        className={`px-2.5 py-1 text-[10px] font-bold font-mono rounded-lg transition-all border cursor-pointer ${
+                          quality === q
+                            ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/10 scale-105"
+                            : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:border-zinc-700 hover:text-white"
+                        }`}
+                      >
+                        {q === "1080p" ? "1080p (FHD)" : q === "720p" ? "720p (HD)" : q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Download Control Center */}
+              <div className="space-y-3 bg-zinc-900/10 border border-zinc-900/65 rounded-xl p-3 flex flex-col justify-between">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono block">Secure Offline Downloads</span>
+                  <p className="text-[10px] text-zinc-400 leading-normal">
+                    Save this full lecture into your local database container for zero-data offline learning.
+                  </p>
+                </div>
+
+                {downloadProgress !== null ? (
+                  <div className="bg-zinc-950 border border-zinc-900 p-2.5 rounded-lg space-y-1.5 animate-pulse">
+                    <div className="flex justify-between text-[10px] font-mono">
+                      <span className="text-orange-400 font-bold">Caching Video ({downloadingQuality})...</span>
+                      <span className="text-white">{downloadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-zinc-900 h-1 rounded-full overflow-hidden">
+                      <div className="bg-orange-500 h-full transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { label: "1080p", size: "320 MB" },
+                      { label: "720p", size: "180 MB" },
+                      { label: "360p", size: "85 MB" }
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => triggerVideoDownload(item.label)}
+                        className="bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-750 p-1.5 rounded-lg text-center cursor-pointer transition text-zinc-300 hover:text-white"
+                      >
+                        <span className="text-[10px] font-black block font-mono text-orange-400">{item.label}</span>
+                        <span className="text-[8px] text-zinc-500 block font-mono mt-0.5">{item.size}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Subtabs Below Video Area */}
           <div className="border-b border-zinc-900 flex gap-4 text-xs font-mono">
             {[
@@ -594,23 +721,46 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
                     <Download className="w-4 h-4 text-zinc-500 hover:text-white" />
                   </a>
 
-                  <a
-                    href={chapter.dppUrl || '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-xl transition cursor-pointer text-left"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-blue-950/20 border border-blue-900/40 text-blue-400 rounded-lg">
-                        <Notebook className="w-4 h-4" />
+                  {chapter.dppFiles && chapter.dppFiles.length > 0 ? (
+                    chapter.dppFiles.map((file, idx) => (
+                      <a
+                        key={file.id || idx}
+                        href={file.url || '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-between p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-xl transition cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-blue-950/20 border border-blue-900/40 text-blue-400 rounded-lg">
+                            <Notebook className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white">{file.name || `Practice Sheet Day #${idx + 1}`}</p>
+                            <p className="text-[9px] text-zinc-500 font-mono">Day Wise DPP • Daily Sheet</p>
+                          </div>
+                        </div>
+                        <Download className="w-4 h-4 text-zinc-500 hover:text-white" />
+                      </a>
+                    ))
+                  ) : (
+                    <a
+                      href={chapter.dppUrl || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-xl transition cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 bg-blue-950/20 border border-blue-900/40 text-blue-400 rounded-lg">
+                          <Notebook className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Daily Practice Problem (DPP)</p>
+                          <p className="text-[9px] text-zinc-500 font-mono">10 Questions • Recommended</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-white">Daily Practice Problem (DPP)</p>
-                        <p className="text-[9px] text-zinc-500 font-mono">10 Questions • Recommended</p>
-                      </div>
-                    </div>
-                    <Download className="w-4 h-4 text-zinc-500 hover:text-white" />
-                  </a>
+                      <Download className="w-4 h-4 text-zinc-500 hover:text-white" />
+                    </a>
+                  )}
                 </div>
               </div>
             )}

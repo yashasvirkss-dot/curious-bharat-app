@@ -605,5 +605,84 @@ export const chaptersData: Chapter[] = [
         explanation: 'mRNA is synthesized complementary to the template DNA in the 5\' to 3\' direction. A pairs with U, T with A, C with G, and G with C. Thus, 3\'-ATCGTA-5\' transcribes to 5\'-UAGCAU-3\'.'
       }
     ]
+  },
+  // ==================== CLASS 10 OPTICS CHAPTER ====================
+  {
+    id: 'c10-optics',
+    title: 'Light: Reflection, Refraction & Optical Phenomena',
+    description: 'Master the principles of Ray Optics. Understand mirror and lens formulas, Snell\'s law, refraction through prisms, defects of vision, and natural scattering phenomena.',
+    classLevel: 10,
+    subject: 'Physics',
+    readingTime: '20 mins',
+    keyConcepts: ['Reflection & Mirrors', 'Refraction & Lenses', 'Human Eye Defects', 'Scattering & Dispersion'],
+    sections: [
+      {
+        id: 'c10-optics-s1',
+        title: '1. Reflection of Light & Mirror Formula',
+        body: 'Reflection is the bouncing back of light into the same medium when it falls on a polished surface. Laws of reflection apply to all types of reflecting surfaces, including spherical mirrors:\n\n• The angle of incidence (i) equals the angle of reflection (r).\n• The incident ray, the normal, and the reflected ray all lie in the same plane.\n\nFor spherical mirrors, we use the Mirror Formula to calculate object distance (u), image distance (v), and focal length (f):\n\n1/f = 1/v + 1/u\n\nLinear Magnification (m) is given by:\nm = h\'/h = -v/u\nWhere h\' is image height and h is object height. Saffron/Sanskritized sign conventions state that distances in the direction of incident light are positive.',
+        keyPoints: [
+          'Concave mirrors can produce real, inverted images as well as virtual, erect images depending on object position.',
+          'Convex mirrors always produce virtual, erect, and diminished images regardless of object position.',
+          'Focus (f) is half of the Radius of Curvature (R): f = R/2.'
+        ],
+        diagramType: 'atom'
+      },
+      {
+        id: 'c10-optics-s2',
+        title: '2. Refraction of Light & Snell\'s Law',
+        body: 'Refraction is the bending of light when it passes obliquely from one transparent medium to another. It occurs due to the change in the speed of light.\n\n• Snell\'s Law of Refraction: The ratio of sine of angle of incidence to the sine of angle of refraction is constant for a given pair of media:\nsin(i) / sin(r) = constant = n₂₁ (refractive index of medium 2 with respect to medium 1).\n\nFor spherical lenses, the Lens Formula is:\n1/f = 1/v - 1/u\n\nAnd Lens Magnification (m) is:\nm = h\'/h = v/u\n\nPower of a Lens (P) is the reciprocal of its focal length in meters (P = 1/f), measured in Dioptres (D).',
+        keyPoints: [
+          'When light goes from a rarer to a denser medium, it bends towards the normal.',
+          'When light goes from a denser to a rarer medium, it bends away from the normal.',
+          'Convex lenses are converging lenses, whereas concave lenses are diverging lenses.'
+        ]
+      },
+      {
+        id: 'c10-optics-s3',
+        title: '3. Human Eye & Atmospheric Scattering',
+        body: 'The human eye is a natural optical instrument. The ciliary muscles adjust the curvature of the eye lens to focus nearby or distant objects onto the retina (Power of Accommodation).\n\nCommon defects of vision include:\n• Myopia (Near-sightedness): Distant objects cannot be seen clearly. Corrected using a concave lens.\n• Hypermetropia (Far-sightedness): Nearby objects cannot be seen clearly. Corrected using a convex lens.\n• Presbyopia: Aging causes weakening of ciliary muscles. Corrected using bifocal lenses.\n\nAtmospheric scattering explains beautiful natural phenomena. Blue sky occurs because tiny air molecules scatter shorter wavelengths of blue light more than red light (Rayleigh scattering). At sunset/sunrise, light travels longer distances through the atmosphere, scattering away most blue light, leaving red/orange wavelengths to reach our eyes.',
+        keyPoints: [
+          'The least distance of distinct vision for a normal young eye is 25 cm.',
+          'Dispersion: The splitting of white light into its seven component colors (VIBGYOR) when passing through a prism.',
+          'Tyndall Effect: Scattering of light by colloidal particles in a suspension.'
+        ]
+      }
+    ],
+    flashcards: [
+      {
+        id: 'f-optics-1',
+        front: 'What is the sign of focal length for Concave and Convex mirrors?',
+        back: 'Focal length of a Concave mirror is always Negative (-f). Focal length of a Convex mirror is always Positive (+f) under Cartesian sign conventions.',
+        category: 'Physics'
+      },
+      {
+        id: 'f-optics-2',
+        front: 'State Snell\'s Law of Refraction.',
+        back: 'The ratio of the sine of the angle of incidence (i) to the sine of the angle of refraction (r) is constant for a given color of light and pair of media: sin(i)/sin(r) = n₂/n₁.',
+        category: 'Physics'
+      },
+      {
+        id: 'f-optics-3',
+        front: 'How is Myopia corrected and what lens is used?',
+        back: 'Myopia (near-sightedness) is corrected using a Concave (diverging) lens of suitable power, which focuses the parallel rays from distant objects back onto the retina.',
+        category: 'Physics'
+      }
+    ],
+    quiz: [
+      {
+        id: 'q-optics-1',
+        question: 'An object is placed 20 cm in front of a concave mirror of focal length 10 cm. Where will the image be formed?',
+        options: ['10 cm in front of the mirror', '20 cm in front of the mirror', '20 cm behind the mirror', 'At infinity'],
+        correctAnswerIndex: 1,
+        explanation: 'Since the focal length f = -10 cm and u = -20 cm, the object is placed at the Center of Curvature (R = 2f = 20 cm). Concave mirrors form an image at the center of curvature itself when the object is placed there. v = -20 cm.'
+      },
+      {
+        id: 'q-optics-2',
+        question: 'Why does the clear sky appear blue during a bright sunny day?',
+        options: ['Due to refraction through the atmosphere', 'Due to scattering of blue light by air molecules', 'Due to reflection of oceans', 'Due to absorption of red light by the clouds'],
+        correctAnswerIndex: 1,
+        explanation: 'Air molecules (N₂ and O₂) are smaller than the wavelength of visible light. They scatter shorter wavelengths (blue/violet) much more strongly than longer wavelengths (red), making the sky appear blue.'
+      }
+    ]
   }
 ];

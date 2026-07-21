@@ -19,6 +19,8 @@ import {
 import { ChatMessage, UserProgress } from '../types';
 import { translations } from '../lib/translations';
 import { playSound } from '../utils/audio';
+import ThreeDElement from './ThreeDElement';
+import HorizontalScrollContainer from './HorizontalScrollContainer';
 
 interface AIAssistantProps {
   currentChapterTitle?: string;
@@ -455,13 +457,11 @@ export default function AIAssistant({
     });
   };
 
-  const TricolorAshokChakra = ({ className = "w-10 h-10" }: { className?: string }) => (
-    <div className="relative flex items-center justify-center select-none scale-105 my-3">
-      {/* Premium Glow Ring */}
-      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#4F9DFF] via-blue-400 to-[#14b8a6] opacity-75 blur-[3px] animate-[spin_8s_linear_infinite]"></div>
-      <div className="relative bg-zinc-950 p-2 rounded-full border border-white/10 shadow-xl flex items-center justify-center">
-        <Sparkles className="w-5 h-5 text-blue-400 animate-pulse" id="ai-glowing-logo-icon" />
-      </div>
+  const BharatRobotAvatar = ({ className = "w-16 h-16" }: { className?: string }) => (
+    <div className={`relative flex items-center justify-center select-none ${className}`}>
+      {/* Premium Glow Aura */}
+      <div className="absolute -inset-3 rounded-full bg-[#14b8a6]/15 opacity-60 blur-[8px] animate-pulse"></div>
+      <ThreeDElement type="robot_3d_assistant" className="w-full h-full relative z-10" />
     </div>
   );
 
@@ -493,14 +493,14 @@ export default function AIAssistant({
           {/* Centered Main Minimalist Section (Image 1 reference) */}
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-8 max-w-xl mx-auto w-full">
             <div className="flex flex-col items-center space-y-4">
-              <TricolorAshokChakra className="w-12 h-12" />
+              <BharatRobotAvatar className="w-24 h-24 sm:w-28 sm:h-28" />
               <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight font-sans ${isDarkMode ? 'text-white' : 'text-slate-900'} leading-snug`}>
-                {appLanguage === 'hi' ? 'हम कहाँ से शुरुआत करें?' : 'Where should we begin?'}
+                {appLanguage === 'hi' ? 'भारत AI से कुछ भी पूछें' : 'Ask Anything to Bharat AI'}
               </h2>
               <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'} font-medium max-w-sm leading-relaxed`}>
                 {appLanguage === 'hi' 
                   ? 'भौतिकी, रसायन विज्ञान या जीव विज्ञान का कोई भी प्रश्न पूछें और तत्काल समाधान प्राप्त करें।' 
-                  : 'Ask any question from Physics, Chemistry or Biology for instant dual-lingual guidance.'}
+                  : 'Get instant, high-quality answers and verified concepts for your CBSE syllabus.'}
               </p>
             </div>
 
@@ -516,7 +516,7 @@ export default function AIAssistant({
                   type="button"
                   onClick={() => {
                     playSound('click');
-                    setInputText(appLanguage === 'hi' ? "मुझे कोशिका का एक सरल सादृश्य समझाइये।" : "Give me a simple analogy for a cell.");
+                    setInputText(appLanguage === 'hi' ? "कोशिका और परमाणु में क्या अंतर है?" : "What is the difference between a cell and an atom?");
                   }}
                   className={`p-3.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
                     isDarkMode ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-orange-50 text-orange-600'
@@ -533,7 +533,7 @@ export default function AIAssistant({
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder={
                     isListening ? (appLanguage === 'hi' ? 'सुन रहा हूँ... बोलिए' : 'Listening... Speak now') :
-                    (appLanguage === 'hi' ? 'कुछ भी पूछें...' : 'Ask anything...')
+                    (appLanguage === 'hi' ? 'भारत AI से कुछ भी पूछें...' : 'Ask Anything to Bharat AI...')
                   }
                   className={`flex-1 bg-transparent py-3.5 px-2 text-xs outline-none ${
                     isDarkMode ? 'text-white placeholder-zinc-500' : 'text-slate-900 placeholder-slate-400'
@@ -580,33 +580,6 @@ export default function AIAssistant({
                 </div>
               </div>
             </form>
-
-            {/* Quick recommendation options in minimalist pills */}
-            <div className="space-y-2 w-full pt-2">
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
-                {appLanguage === 'hi' ? 'त्वरित विषय चयन' : 'Quick Study Tracks'}
-              </span>
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {presetDoubts.map((item, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      playSound('click');
-                      setStudyMode(item.mode as any);
-                      setInputText(item.prompt);
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
-                      isDarkMode 
-                        ? 'bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/60 text-zinc-400 hover:text-white' 
-                        : 'bg-white hover:bg-orange-50 border border-orange-100 text-slate-700'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Footer branding */}
@@ -658,20 +631,22 @@ export default function AIAssistant({
           <span className={`${isDarkMode ? 'text-zinc-500' : 'text-slate-500'} flex items-center gap-1 font-mono text-[10px] font-bold`}>
             <Sliders className="w-3.5 h-3.5" /> {t.ai_track}
           </span>
-          <div className="flex gap-1.5 overflow-x-auto max-w-[285px] sm:max-w-lg no-scrollbar">
-            {(['doubt', 'numerical', 'analogy', 'quiz'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setStudyMode(mode)}
-                className={`px-3 py-1 rounded text-[10px] font-bold capitalize transition cursor-pointer shrink-0 ${
-                  studyMode === mode
-                    ? (isDarkMode ? 'bg-white text-black font-extrabold' : 'bg-orange-600 text-white font-extrabold shadow-sm')
-                    : (isDarkMode ? 'bg-zinc-950 text-zinc-400 border border-zinc-850 hover:bg-zinc-900' : 'bg-white text-slate-600 border border-orange-100/80 hover:bg-orange-50/40')
-                }`}
-              >
-                {mode === 'doubt' ? t.ai_track_concept : mode === 'numerical' ? t.ai_track_numerical : mode === 'analogy' ? t.ai_track_analogy : t.ai_track_quiz}
-              </button>
-            ))}
+          <div className="max-w-[285px] sm:max-w-lg">
+            <HorizontalScrollContainer>
+              {(['doubt', 'numerical', 'analogy', 'quiz'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => { playSound('click'); setStudyMode(mode); }}
+                  className={`px-3 py-1 rounded text-[10px] font-bold capitalize transition cursor-pointer shrink-0 ${
+                    studyMode === mode
+                      ? (isDarkMode ? 'bg-white text-black font-extrabold' : 'bg-orange-600 text-white font-extrabold shadow-sm')
+                      : (isDarkMode ? 'bg-zinc-950 text-zinc-400 border border-zinc-850 hover:bg-zinc-900' : 'bg-white text-slate-600 border border-orange-100/80 hover:bg-orange-50/40')
+                  }`}
+                >
+                  {mode === 'doubt' ? t.ai_track_concept : mode === 'numerical' ? t.ai_track_numerical : mode === 'analogy' ? t.ai_track_analogy : t.ai_track_quiz}
+                </button>
+              ))}
+            </HorizontalScrollContainer>
           </div>
         </div>
 
@@ -685,8 +660,8 @@ export default function AIAssistant({
                 className={`flex items-start gap-3.5 ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 {!isUser && (
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1 ${isDarkMode ? 'bg-zinc-900 border border-zinc-800 text-white' : 'bg-orange-50 border border-orange-100 text-orange-600'}`}>
-                    <Brain className="w-4 h-4" />
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1 p-0.5 ${isDarkMode ? 'bg-zinc-900 border border-zinc-800' : 'bg-teal-50 border border-teal-150 text-teal-600'}`}>
+                    <ThreeDElement type="robot_3d_assistant" className="w-full h-full" />
                   </div>
                 )}
 
@@ -706,8 +681,8 @@ export default function AIAssistant({
 
           {isTyping && (
             <div className="flex items-start gap-3.5">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1 animate-spin ${isDarkMode ? 'bg-zinc-900 border border-zinc-800 text-white' : 'bg-orange-50 border border-orange-100 text-orange-600'}`}>
-                <Brain className="w-4 h-4" />
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1 p-0.5 animate-pulse ${isDarkMode ? 'bg-zinc-900 border border-zinc-800' : 'bg-teal-50 border border-teal-150 text-teal-600'}`}>
+                <ThreeDElement type="robot_3d_assistant" className="w-full h-full" />
               </div>
               <div className={`rounded-2xl rounded-tl-none px-5 py-3.5 flex items-center gap-1 shadow-md ${isDarkMode ? 'bg-zinc-900 border border-zinc-850' : 'bg-white border border-orange-100'}`}>
                 <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.2s] ${isDarkMode ? 'bg-white' : 'bg-orange-600'}`}></div>

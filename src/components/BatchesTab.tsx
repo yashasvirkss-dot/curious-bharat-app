@@ -24,6 +24,9 @@ import { Course, StudentAnalysisRecord, OwnerProfile, Chapter, Topic } from '../
 import { dbService } from '../lib/firebase';
 import { translations } from '../lib/translations';
 import { playSound } from '../utils/audio';
+import { getTenQuestions } from '../utils/quizGenerator';
+import FlashcardsView from './FlashcardsView';
+import ThreeDElement from './ThreeDElement';
 
 interface BatchesTabProps {
   courses: Course[];
@@ -34,6 +37,7 @@ interface BatchesTabProps {
   onAddStudentAnalysisRecord?: (record: StudentAnalysisRecord) => void;
   appLanguage?: 'en' | 'hi';
   ownerProfile?: OwnerProfile;
+  onOpenCheckout?: (course: Course) => void;
 }
 
 export default function BatchesTab({ 
@@ -44,7 +48,8 @@ export default function BatchesTab({
   studentAnalysisRecords,
   onAddStudentAnalysisRecord,
   appLanguage = 'en',
-  ownerProfile
+  ownerProfile,
+  onOpenCheckout
 }: BatchesTabProps) {
   const t = translations[appLanguage];
   const [purchasedIds, setPurchasedIds] = useState<string[]>(progress.purchasedCourses || []);
@@ -121,6 +126,11 @@ export default function BatchesTab({
   }, [progress.studentName]);
 
   const handlePurchase = async (course: Course) => {
+    if (onOpenCheckout) {
+      onOpenCheckout(course);
+      return;
+    }
+
     const coursePriceNum = parseInt(course.price.replace(/[^0-9]/g, '')) || 0;
     
     let priceToPay = coursePriceNum;
@@ -165,6 +175,9 @@ export default function BatchesTab({
 
   // Filter & Search computation
   const filteredCourses = courses.filter(course => {
+    // If course/batch is marked hidden by the educator, hide it from students
+    if (course.hidden) return false;
+
     // Search match
     const titleMatch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
     const descMatch = course.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -189,22 +202,26 @@ export default function BatchesTab({
   });
 
   const getChapterTopics = (chapter: Chapter): Topic[] => {
+    let topicsList: Topic[] = [];
     if (chapter.topics && chapter.topics.length > 0) {
-      return chapter.topics;
+      topicsList = chapter.topics;
+    } else {
+      topicsList = [
+        {
+          id: `${chapter.id}-main-topic`,
+          title: `${chapter.title} Core Masterclass`,
+          description: `Full curriculum reading, conceptual video lecture, spaced repetition flashcards, and MCQ self-assessments.`,
+          sections: chapter.sections || [],
+          flashcards: chapter.flashcards || [],
+          quiz: chapter.quiz || [],
+          lectureUrl: chapter.lectureUrl,
+          pdfUrl: chapter.pdfUrl,
+          dppUrl: chapter.dppUrl
+        }
+      ];
     }
-    return [
-      {
-        id: `${chapter.id}-main-topic`,
-        title: `${chapter.title} Core Masterclass`,
-        description: `Full curriculum reading, conceptual video lecture, spaced repetition flashcards, and MCQ self-assessments.`,
-        sections: chapter.sections || [],
-        flashcards: chapter.flashcards || [],
-        quiz: chapter.quiz || [],
-        lectureUrl: chapter.lectureUrl,
-        pdfUrl: chapter.pdfUrl,
-        dppUrl: chapter.dppUrl
-      }
-    ];
+    // Filter out hidden topics for students
+    return topicsList.filter(t => !t.hidden);
   };
 
   const getYouTubeEmbedUrl = (url: string) => {
@@ -412,7 +429,7 @@ export default function BatchesTab({
                 <div className="space-y-4 max-w-xl mx-auto bg-zinc-900/20 border border-zinc-900 p-6 rounded-2xl">
                   {selectedTopic.quiz && selectedTopic.quiz.length > 0 ? (
                     (() => {
-                      const qList = selectedTopic.quiz;
+                      const qList = getTenQuestions(selectedTopic.quiz, selectedTopic.id, selectedTopic.title, selectedTopic.subject || '');
                       const isFinished = topicQuizIndex >= qList.length;
 
                       if (isFinished) {
@@ -477,6 +494,18 @@ export default function BatchesTab({
                             <span>+15 XP Reward / Answer</span>
                           </div>
 
+                          <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                            {activeQ.examReference && (
+                              <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-lg">
+                                🏆 {activeQ.examReference}
+                              </span>
+                            )}
+                            {activeQ.weightage && (
+                              <span className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-lg">
+                                {activeQ.weightage}
+                              </span>
+                            )}
+                          </div>
                           <h4 className="text-xs sm:text-sm font-bold text-white leading-relaxed">
                             {activeQ.question}
                           </h4>
@@ -547,130 +576,37 @@ export default function BatchesTab({
                   )}
                 </div>
               )}
-
-              {/* 4. MIND MAP */}
               {activeTopicTab === 'flashcards' && (
-                <div className="space-y-4 max-w-2xl mx-auto bg-zinc-900/20 border border-zinc-900 p-6 rounded-3xl text-center">
-                  <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
-                    <span className="uppercase">Interactive Mind Map Concepts</span>
-                    <span>+5 XP / Explored</span>
-                  </div>
-
-                  {selectedTopic.flashcards && selectedTopic.flashcards.length > 0 ? (
-                    (() => {
-                      const fcList = selectedTopic.flashcards;
-                      const activeFc = fcList[topicFcIndex];
-                      return (
-                        <div className="space-y-5 text-left">
-                          {/* Radial Node SVG connections */}
-                          <div className="bg-black/40 border border-zinc-900 p-3 rounded-2xl h-48 relative overflow-hidden flex items-center justify-center">
-                            <div className="absolute inset-0 bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] bg-[size:16px_16px] opacity-40" />
-                            
-                            {/* Connect Center with active node */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                              <line x1="50%" y1="50%" x2="50%" y2="25%" className="stroke-zinc-800 stroke-2" />
-                              {fcList.map((_, i) => {
-                                const angle = (i / fcList.length) * 2 * Math.PI - Math.PI / 2;
-                                const distance = 70;
-                                const isCurrent = i === topicFcIndex;
-                                return (
-                                  <line
-                                    key={i}
-                                    x1="50%"
-                                    y1="50%"
-                                    x2={`calc(50% + ${distance * Math.cos(angle)}px)`}
-                                    y2={`calc(50% + ${distance * Math.sin(angle)}px)`}
-                                    className={`stroke-2 transition-all ${isCurrent ? 'stroke-blue-500' : 'stroke-zinc-900'}`}
-                                  />
-                                );
-                              })}
-                            </svg>
-
-                            {/* Core Node */}
-                            <div className="absolute w-24 h-12 bg-blue-950 border border-blue-900 rounded-xl flex items-center justify-center p-2 text-center shadow-lg z-10">
-                              <span className="text-[9px] font-black text-white truncate">{selectedTopic.title}</span>
-                            </div>
-
-                            {/* Node markers */}
-                            {fcList.map((fc, i) => {
-                              const angle = (i / fcList.length) * 2 * Math.PI - Math.PI / 2;
-                              const distance = 70;
-                              const isCurrent = i === topicFcIndex;
-                              return (
-                                <button
-                                  key={fc.id}
-                                  onClick={() => { playSound('click'); setTopicFcIndex(i); setTopicFcFlipped(false); }}
-                                  className={`absolute w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-black transition z-10 cursor-pointer ${
-                                    isCurrent 
-                                      ? 'bg-blue-600 border-white text-white scale-110 animate-pulse' 
-                                      : 'bg-zinc-900 border-zinc-850 text-zinc-500 hover:text-white'
-                                  }`}
-                                  style={{
-                                    transform: `translate(${distance * Math.cos(angle)}px, ${distance * Math.sin(angle)}px)`
-                                  }}
-                                >
-                                  {i + 1}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Selected Concept Card */}
-                          <div className="bg-zinc-950 border border-zinc-900 p-5 rounded-2xl space-y-3.5 relative">
-                            <span className="text-[8px] font-mono uppercase bg-zinc-900 px-2 py-0.5 rounded text-zinc-500">Selected Concept Branch</span>
-                            <h4 className="text-xs sm:text-sm font-extrabold text-white">{activeFc.front}</h4>
-                            
-                            <div className="bg-black/35 p-3.5 rounded-xl border border-zinc-900/50">
-                              <span className="text-[8px] uppercase tracking-wider font-mono text-zinc-600 block mb-1">Scientific Explanation</span>
-                              <p className="text-xs text-zinc-300 leading-relaxed font-sans">{activeFc.back}</p>
-                            </div>
-
-                            <div className="flex justify-between items-center pt-2">
-                              <div className="flex gap-1.5">
-                                <button
-                                  onClick={() => {
-                                    playSound('click');
-                                    setTopicFcIndex(prev => (prev - 1 + fcList.length) % fcList.length);
-                                    setTopicFcFlipped(false);
-                                  }}
-                                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-850 text-zinc-400 hover:text-white rounded-lg text-[11px] cursor-pointer"
-                                >
-                                  ← Prev Node
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    playSound('click');
-                                    setTopicFcIndex(prev => (prev + 1) % fcList.length);
-                                    setTopicFcFlipped(false);
-                                  }}
-                                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-850 text-zinc-400 hover:text-white rounded-lg text-[11px] cursor-pointer"
-                                >
-                                  Next Node →
-                                </button>
-                              </div>
-
-                              <button
-                                onClick={() => {
-                                  playSound('success');
-                                  onUpdateProgress({
-                                    ...progress,
-                                    totalXP: (progress.totalXP || 0) + 5
-                                  });
-                                }}
-                                className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black font-extrabold text-[11px] rounded-lg cursor-pointer"
-                              >
-                                Mark Concept Explored (+5)
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="text-center py-8 text-zinc-500 text-xs">
-                      Active recall concepts are being formulated for this syllabus track.
-                    </div>
-                  )}
+                <div className="w-full">
+                  <FlashcardsView
+                    embedded={true}
+                    chapter={{
+                      id: selectedTopic.id,
+                      title: selectedTopic.title,
+                      description: selectedTopic.description,
+                      classLevel: 9,
+                      subject: selectedTopic.subject || 'Syllabus Focus',
+                      readingTime: '10 mins',
+                      keyConcepts: [],
+                      sections: [],
+                      flashcards: selectedTopic.flashcards || []
+                    }}
+                    progress={progress}
+                    onRateCard={(cardId, rating) => {
+                      const existingStatus = progress.flashcardStatus && progress.flashcardStatus[cardId];
+                      onUpdateProgress({
+                        ...progress,
+                        totalXP: (progress.totalXP || 0) + (existingStatus ? 0 : 5),
+                        flashcardStatus: {
+                          ...(progress.flashcardStatus || {}),
+                          [cardId]: rating
+                        }
+                      });
+                    }}
+                    onOpenAI={(mode, context, customPrompt) => {
+                      alert(`Bharat AI: Analyzing concept context in detail... \n\nFocus Area: ${context}\n\nPrompt: ${customPrompt || 'Please explain.'}`);
+                    }}
+                  />
                 </div>
               )}
 
@@ -702,23 +638,41 @@ export default function BatchesTab({
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-white block">Daily Practice Problems (DPP)</span>
-                        <span className="text-[10px] text-zinc-500 block">Homework Worksheet Challenge</span>
+                    {selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0 ? (
+                      selectedTopic.dppFiles.map((file, idx) => (
+                        <div key={file.id || idx} className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
+                          <div className="space-y-0.5 text-left">
+                            <span className="text-xs font-bold text-white block">{file.name || `Practice Sheet Day #${idx + 1}`}</span>
+                            <span className="text-[10px] text-zinc-500 block">Homework Sheet • Day Wise</span>
+                          </div>
+                          <button
+                            onClick={() => handleDownloadClick(file.url || '', file.name || `Daily Practice DPP Sheet Day #${idx + 1}`)}
+                            className="px-3 py-1.5 bg-cyan-950/40 border border-cyan-800/40 hover:bg-cyan-900/50 text-cyan-400 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 shrink-0"
+                          >
+                            <Download className="w-3 h-3 text-cyan-400" />
+                            <span>Download</span>
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
+                        <div className="space-y-0.5 text-left">
+                          <span className="text-xs font-bold text-white block">Daily Practice Problems (DPP)</span>
+                          <span className="text-[10px] text-zinc-500 block">Homework Worksheet Challenge</span>
+                        </div>
+                        {selectedTopic.dppUrl ? (
+                          <button
+                            onClick={() => handleDownloadClick(selectedTopic.dppUrl || '', `${selectedTopic.title} DPP Sheet`)}
+                            className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 shrink-0"
+                          >
+                            <Download className="w-3 h-3 text-sky-400" />
+                            <span>Download</span>
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-zinc-600 font-mono">🔒 Unlinked</span>
+                        )}
                       </div>
-                      {selectedTopic.dppUrl ? (
-                        <button
-                          onClick={() => handleDownloadClick(selectedTopic.dppUrl || '', `${selectedTopic.title} DPP Sheet`)}
-                          className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1"
-                        >
-                          <Download className="w-3 h-3 text-sky-400" />
-                          <span>Download</span>
-                        </button>
-                      ) : (
-                        <span className="text-[10px] text-zinc-600 font-mono">🔒 Unlinked</span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -891,12 +845,12 @@ export default function BatchesTab({
 
             {/* RIGHT COLUMN: Sequential Tracks Layout */}
             <div className="lg:col-span-8 space-y-3">
-              {selectedCourse.chapters.length === 0 ? (
+              {selectedCourse.chapters.filter(ch => !ch.hidden).length === 0 ? (
                 <div className="text-center py-16 border rounded-3xl text-xs bg-zinc-950 border-zinc-900 text-zinc-500">
                   {appLanguage === 'hi' ? 'इस बैच के तहत अभी कोई अध्याय नामांकित नहीं है।' : 'No chapters enrolled under this batch track yet. Admins can sync modules.'}
                 </div>
               ) : (
-                selectedCourse.chapters.map((chapter, index) => (
+                selectedCourse.chapters.filter(ch => !ch.hidden).map((chapter, index) => (
                   <div
                     key={chapter.id}
                     className="rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all border group relative hover:-translate-y-0.5 duration-200 cursor-pointer bg-zinc-950 hover:bg-zinc-900/60 border-zinc-900 hover:border-zinc-700"
@@ -975,22 +929,28 @@ export default function BatchesTab({
         <div className="space-y-6">
           
           {/* Batches Header with Premium theme */}
-          <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 sm:p-8 relative overflow-hidden text-center">
+          <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 sm:p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
             <div className="absolute top-4 right-4 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-4 left-4 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
             
-            <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full font-mono font-bold tracking-widest uppercase mb-2 inline-block">
-              {appLanguage === 'hi' ? '🎓 शैक्षणिक राष्ट्रीय बैच' : '🎓 CURATED ACADEMIC BATCHES'}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              {appLanguage === 'hi' ? 'चयनित शैक्षणिक पाठ्यक्रम बैच' : 'Curated Academic Syllabi Batches'}
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-2 max-w-lg mx-auto leading-relaxed">
-              {appLanguage === 'hi' 
-                ? 'भारत के शीर्ष व्यवस्थित बैचों में दाखिला लें। पूर्ण सीबीएसई/एनसीईआरटी अध्याय, टेस्ट तैयारी, और आधिकारिक बोर्ड प्रश्न हल करें।'
-                : "Enroll in India's top structured, high-tier classes. Complete CBSE/NCERT chapters, test prep, DPPs, and official CBSE board PYQs."}
-            </p>
+            <div className="flex-1 text-center md:text-left">
+              <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full font-mono font-bold tracking-widest uppercase mb-2 inline-block">
+                {appLanguage === 'hi' ? '🎓 शैक्षणिक राष्ट्रीय बैच' : '🎓 CURATED ACADEMIC BATCHES'}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                {appLanguage === 'hi' ? 'चयनित शैक्षणिक पाठ्यक्रम बैच' : 'Curated Academic Syllabi Batches'}
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-2 max-w-lg leading-relaxed">
+                {appLanguage === 'hi' 
+                  ? 'भारत के शीर्ष व्यवस्थित बैचों में दाखिला लें। पूर्ण सीबीएसई/एनसीईआरटी अध्याय, टेस्ट तैयारी, और आधिकारिक बोर्ड प्रश्न हल करें।'
+                  : "Enroll in India's top structured, high-tier classes. Complete CBSE/NCERT chapters, test prep, DPPs, and official CBSE board PYQs."}
+              </p>
+            </div>
+
+            <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center bg-zinc-900/40 rounded-full border border-zinc-850 p-2">
+              <ThreeDElement type="books_bundle_3d" className="w-full h-full" />
+            </div>
           </div>
 
           {/* Embedded Search and Toggleable Filter Bar */}
@@ -1111,7 +1071,8 @@ export default function BatchesTab({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {filteredCourses.map((course) => {
                   const isCourseApproved = studentAnalysisRecords && studentAnalysisRecords.some(r => r.courseId === course.id && r.studentName === progress.studentName && r.status === 'approved');
-                  const isPurchased = !course.isPaid || isCourseApproved || purchasedIds.includes(course.id);
+                  const isCoursePending = studentAnalysisRecords && studentAnalysisRecords.some(r => r.courseId === course.id && r.studentName === progress.studentName && r.status === 'pending');
+                  const isPurchased = !course.isPaid || isCourseApproved || (progress.purchasedCourses || []).includes(course.id);
                   const rawPrice = parseInt(course.price.replace(/[^0-9]/g, '')) || 0;
                   const hasChapters = course.chapters && course.chapters.length > 0;
                   const classLevelStr = hasChapters ? `Class ${course.chapters[0].classLevel}th` : 'All Class';
@@ -1143,24 +1104,27 @@ export default function BatchesTab({
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <div className="flex flex-col items-center space-y-2">
-                              <div className="flex -space-x-3">
-                                <div className="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-extrabold text-indigo-400">
-                                  {appLanguage === 'hi' ? 'आलोक' : 'ALOK'}
-                                </div>
-                                <div className="w-12 h-12 rounded-full bg-teal-600/20 border border-teal-500/30 flex items-center justify-center text-[11px] font-extrabold text-teal-400 z-10">
-                                  {appLanguage === 'hi' ? 'रॉय' : 'ROY'}
-                                </div>
+                            <div className="flex flex-col items-center justify-center p-4 text-center">
+                              <div className="w-20 h-20 relative mb-1 flex items-center justify-center">
+                                <ThreeDElement 
+                                  type={course.id.includes('biology') ? 'walkingGirl' : (course.id.includes('chemistry') ? 'shortsBoy' : 'backpackBoy')} 
+                                  className="w-full h-full" 
+                                />
                               </div>
-                              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600">Premium Study Batch</span>
+                              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500">Premium Study Batch</span>
                             </div>
                           )}
 
                           {/* Status overlay */}
                           <div className="absolute top-3 right-3 flex gap-1.5 z-10">
                             {isPurchased ? (
-                              <span className="text-[9px] bg-emerald-500 text-black px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md">
+                              <span className="text-[9px] bg-emerald-500 text-black px-2.5 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md">
                                 <Check className="w-3 h-3" /> Unlocked
+                              </span>
+                            ) : isCoursePending ? (
+                              <span className="text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/40 px-2.5 py-0.5 rounded-lg font-extrabold flex items-center gap-1.5 shadow-md animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                                Under Verification
                               </span>
                             ) : (
                               <span className="text-[9px] bg-zinc-900/90 text-amber-500 border border-zinc-800 px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md">
@@ -1254,13 +1218,21 @@ export default function BatchesTab({
                               <span>{appLanguage === 'hi' ? 'बैच खोलें' : 'Open Batch'}</span>
                               <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
                             </button>
+                          ) : isCoursePending ? (
+                            <button
+                              disabled={true}
+                              className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-not-allowed opacity-85"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                              <span>{appLanguage === 'hi' ? 'सत्यापन जारी है' : 'Under Process of Verification'}</span>
+                            </button>
                           ) : (
                             <button
                               onClick={() => handlePurchase(course)}
                               className="px-4 py-2 bg-white text-black hover:bg-zinc-200 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                               <Lock className="w-3.5 h-3.5 text-black" />
-                              <span>{appLanguage === 'hi' ? 'अनलॉक' : 'Unlock'}</span>
+                              <span>{appLanguage === 'hi' ? 'बैच खरीदें' : 'Buy the Batch'}</span>
                             </button>
                           )}
                         </div>

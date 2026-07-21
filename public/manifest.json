@@ -1,0 +1,18 @@
+{
+  "short_name": "BharatSci",
+  "name": "Bharat AI Science Academy",
+  "description": "Interactive AI-powered CBSE Science Hub with mind maps, quizzes, and simulation models.",
+  "icons": [
+    {
+      "src": "/src/assets/images/kalu_and_buddhu_1784268211413.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090b",
+  "theme_color": "#09090b"
+}

@@ -12,6 +12,7 @@ import {
   Sparkles 
 } from 'lucide-react';
 import { Chapter, QuizQuestion } from '../types';
+import ThreeDElement from './ThreeDElement';
 
 interface QuizViewProps {
   chapter: Chapter;
@@ -105,13 +106,41 @@ export default function QuizView({ chapter, onBack, onCompleteQuiz, onOpenAI }: 
             </div>
 
             {/* Question */}
-            <div className="space-y-3">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-white bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
-                <HelpCircle className="w-3.5 h-3.5" /> Core Assessment Query
-              </span>
-              <h2 className="text-base sm:text-lg font-bold text-white leading-relaxed">
-                {currentQuestion.question}
-              </h2>
+            <div className="flex flex-col md:flex-row gap-5 items-start justify-between">
+              <div className="space-y-3 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-white bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
+                    <HelpCircle className="w-3.5 h-3.5" /> Core Assessment Query
+                  </span>
+                  {currentQuestion.examReference && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-lg">
+                      🏆 {currentQuestion.examReference}
+                    </span>
+                  )}
+                  {currentQuestion.weightage && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-lg">
+                      {currentQuestion.weightage}
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                  {currentQuestion.question}
+                </h2>
+              </div>
+
+              {/* Dynamic educational cutout image block */}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 hidden sm:flex items-center justify-center bg-zinc-900/30 rounded-2xl border border-zinc-900 p-1 self-center">
+                <ThreeDElement 
+                  type={
+                    chapter.title.toLowerCase().includes('physics') || currentQuestion.question.toLowerCase().includes('physics') || currentQuestion.question.toLowerCase().includes('velocity') || currentQuestion.question.toLowerCase().includes('speed') || currentQuestion.question.toLowerCase().includes('car') || currentQuestion.question.toLowerCase().includes('motion') || currentQuestion.question.toLowerCase().includes('motorcycle')
+                      ? (currentQuestion.question.toLowerCase().includes('motorcycle') || currentQuestion.question.toLowerCase().includes('bike') ? 'motorcycle' : 'car')
+                      : (chapter.title.toLowerCase().includes('biology') || chapter.title.toLowerCase().includes('botany') || chapter.title.toLowerCase().includes('tree') || currentQuestion.question.toLowerCase().includes('cell') || currentQuestion.question.toLowerCase().includes('plant') || currentQuestion.question.toLowerCase().includes('leaf')
+                          ? 'tree' 
+                          : 'questionMark')
+                  }
+                  className="w-full h-full"
+                />
+              </div>
             </div>
 
             {/* Answer Options */}

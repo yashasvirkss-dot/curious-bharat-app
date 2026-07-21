@@ -1,5 +1,6 @@
-import React from 'react';
-import { Home, Bookmark, BookOpen, Brain, User, ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Home, Bookmark, BookOpen, Brain, User, ShieldAlert, ChevronUp } from 'lucide-react';
+import { playSound } from '../utils/audio';
 
 interface BottomNavigationProps {
   activeTab: 'home' | 'batches' | 'practice' | 'ai' | 'profile';
@@ -14,12 +15,16 @@ export default function BottomNavigation({
   isOnline,
   appLanguage = 'en'
 }: BottomNavigationProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   interface TabItem {
     id: 'home' | 'batches' | 'practice' | 'ai' | 'profile';
     label: string;
     icon: React.ComponentType<any>;
     isAccent?: boolean;
   }
+
   const tabs: TabItem[] = [
     { id: 'home', label: appLanguage === 'hi' ? 'होम' : 'Home', icon: Home },
     { id: 'batches', label: appLanguage === 'hi' ? 'बैच' : 'Batches', icon: BookOpen },
@@ -28,8 +33,68 @@ export default function BottomNavigation({
     { id: 'profile', label: appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile', icon: User }
   ];
 
+  // Disappearing/Consolidating timer: 20 seconds of user idleness
+  const resetTimer = () => {
+    setIsCollapsed(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      setIsCollapsed(true);
+    }, 20000); // 20 seconds
+  };
+
+  useEffect(() => {
+    // Listen to user interactions anywhere on the window
+    const events = ['mousemove', 'click', 'keydown', 'touchstart', 'scroll'];
+    
+    // Start initial timer
+    resetTimer();
+
+    const handleActivity = () => {
+      resetTimer();
+    };
+
+    events.forEach(event => {
+      window.addEventListener(event, handleActivity);
+    });
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      events.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+    };
+  }, []);
+
+  const handleTabClick = (tabId: 'home' | 'batches' | 'practice' | 'ai' | 'profile') => {
+    playSound('Toggle Tick');
+    onChangeTab(tabId);
+    resetTimer();
+  };
+
+  if (isCollapsed) {
+    return (
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+        <button
+          onClick={() => {
+            playSound('UI Pop');
+            setIsCollapsed(false);
+            resetTimer();
+          }}
+          className="px-5 py-2.5 bg-zinc-950/95 backdrop-blur-md border border-zinc-800 text-yellow-400 hover:text-white rounded-full flex items-center gap-2 shadow-2xl text-xs font-bold transition cursor-pointer"
+        >
+          <ChevronUp className="w-4 h-4 animate-pulse" />
+          <span>{appLanguage === 'hi' ? 'नेविगेशन दिखाएं' : 'Show Navigation'}</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md border-t border-zinc-900 z-40 pb-safe shadow-2xl">
+    <nav className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-zinc-900 z-40 pb-safe shadow-2xl transition-all duration-300">
       {/* Offline Alert Strip */}
       {!isOnline && (
         <div className="bg-red-950/40 border-b border-red-900/60 text-red-400 py-1 text-[10px] font-mono font-semibold tracking-wider flex items-center justify-center gap-1">
@@ -46,7 +111,7 @@ export default function BottomNavigation({
           return (
             <button
               key={tab.id}
-              onClick={() => onChangeTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className="flex flex-col items-center justify-center flex-1 h-full py-2 select-none transition-all cursor-pointer relative group"
             >
               <div

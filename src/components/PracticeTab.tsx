@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { playSound } from '../utils/audio';
+import HorizontalScrollContainer from './HorizontalScrollContainer';
+import ThreeDElement from './ThreeDElement';
 
 interface PracticeTabProps {
   progress: any;
@@ -389,67 +391,89 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
       {activePracticeMode === 'menu' && (
         <div className="space-y-6">
           
-          {/* Practice Hero - STUNNING RECONSTRUCTED LOOK */}
-          <div className="bg-gradient-to-br from-indigo-950 via-zinc-950 to-blue-950 border border-zinc-900/80 rounded-3xl p-6.5 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-indigo-500/5 rounded-full blur-2xl" />
+          {/* Practice Hero - STUNNING RECONSTRUCTED LOOK with Tricolor Flag Gradient & Ashok Chakra Glow */}
+          <div className="bg-gradient-to-br from-amber-600/15 via-zinc-950 to-emerald-600/15 border-y border-zinc-800/85 rounded-3xl p-6.5 relative overflow-hidden shadow-2xl">
+            <div className="absolute -top-12 -left-12 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" />
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-              <div className="space-y-1.5 text-left">
-                <span className="text-[10px] font-mono tracking-widest uppercase font-black text-blue-400 bg-blue-950/65 border border-blue-900/50 px-2.5 py-1 rounded-full">
+            {/* Ashok Chakra watermark in background */}
+            <div className="absolute right-6 sm:right-20 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+              <svg className="w-24 h-24 sm:w-28 sm:h-28 text-blue-500/80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100" fill="none" stroke="currentColor">
+                <circle cx="50" cy="50" r="45" strokeWidth="2" />
+                <circle cx="50" cy="50" r="8" strokeWidth="1.5" />
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const angle = (i * 360) / 24;
+                  return (
+                    <line
+                      key={i}
+                      x1="50"
+                      y1="50"
+                      x2={50 + 45 * Math.cos((angle * Math.PI) / 180)}
+                      y2={50 + 45 * Math.sin((angle * Math.PI) / 180)}
+                      strokeWidth="1"
+                    />
+                  );
+                })}
+              </svg>
+            </div>
+            
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-1.5 text-left flex-1">
+                <span className="text-[10px] font-mono tracking-widest uppercase font-black text-amber-500 bg-amber-950/40 border border-amber-800/30 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   {appLanguage === 'hi' ? 'परम मूल्यांकन प्रयोगशाला' : 'ULTIMATE ASSESSMENT LAB'}
                 </span>
-                <h2 className="text-2xl font-black text-white tracking-tight">
+                <h2 className="text-2xl font-black text-white tracking-tight text-white-force">
                   {appLanguage === 'hi' ? 'एआई कस्टमाइज्ड परीक्षा हब' : 'AI Custom Exam Hub'}
                 </h2>
-                <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+                <p className="text-xs text-zinc-300 max-w-xl leading-relaxed text-white-force">
                   {appLanguage === 'hi' 
                     ? 'अपनी इच्छानुसार बोलकर या टाइप करके अपना स्वयं का पेपर डिज़ाइन करें, या सीबीएसई ब्लू प्रिंट के अनुसार मानक मापदंडों का चयन करें।'
                     : 'Design your own practice sets simply by speaking or typing your demands, or select standard CBSE blueprint parameters.'}
                 </p>
               </div>
 
-              {/* Status Pill */}
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-900 px-4 py-3 rounded-2xl flex flex-col justify-center items-center shrink-0 min-w-[120px] shadow-lg">
-                <Flame className="w-5 h-5 text-orange-500 animate-bounce mb-1" />
-                <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Rank Coins</span>
-                <span className="text-base font-black font-mono text-yellow-400">{progress.totalXP || 0} XP</span>
+              {/* Responsive 3D Student Solving Paper Mascot */}
+              <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-zinc-900/50 border border-zinc-800/80 rounded-3xl p-1.5 flex items-center justify-center relative shadow-lg">
+                <ThreeDElement type="student_solving_3d" className="w-full h-full" autoRotate={true} interactive={true} />
               </div>
             </div>
           </div>
 
           {/* TAB CONTROLS - HIGHLY STYLISH PILL SWITCHER */}
-          <div className="flex justify-center">
-            <div className="bg-zinc-950 border border-zinc-900/90 p-1.5 rounded-2xl flex gap-1.5 shadow-md">
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setPracticeSubTab('prompt');
-                }}
-                className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                  practiceSubTab === 'prompt'
-                    ? 'bg-white text-black shadow-lg font-black'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
-                }`}
-              >
-                <Mic className="w-3.5 h-3.5" />
-                <span>{appLanguage === 'hi' ? 'वाणी/प्रॉम्प्ट द्वारा परीक्षा' : 'Voice/Text Prompt Exam'}</span>
-              </button>
+          <div className="flex justify-center w-full max-w-md mx-auto">
+            <div className="bg-zinc-950 border border-zinc-900/90 p-1.5 rounded-2xl w-full shadow-md">
+              <HorizontalScrollContainer innerClassName="justify-center">
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setPracticeSubTab('prompt');
+                  }}
+                  className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 ${
+                    practiceSubTab === 'prompt'
+                      ? 'bg-white text-black shadow-lg font-black'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+                  }`}
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  <span>{appLanguage === 'hi' ? 'वाणी/प्रॉम्प्ट द्वारा परीक्षा' : 'Voice/Text Prompt Exam'}</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setPracticeSubTab('parameter');
-                }}
-                className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                  practiceSubTab === 'parameter'
-                    ? 'bg-white text-black shadow-lg font-black'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>{appLanguage === 'hi' ? 'पाठ्यक्रम मापदंड परीक्षा' : 'NCERT Parameter Exam'}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setPracticeSubTab('parameter');
+                  }}
+                  className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 ${
+                    practiceSubTab === 'parameter'
+                      ? 'bg-white text-black shadow-lg font-black'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{appLanguage === 'hi' ? 'पाठ्यक्रम मापदंड परीक्षा' : 'NCERT Parameter Exam'}</span>
+                </button>
+              </HorizontalScrollContainer>
             </div>
           </div>
 
@@ -517,38 +541,6 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                     >
                       <Mic className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Sample suggestions pills */}
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] text-zinc-500 uppercase font-mono font-bold tracking-wider">Or Select Quick Suggestions:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        appLanguage === 'hi' 
-                          ? 'इलेक्ट्रिसिटी पर ४ कठिन न्यूमेरिकल' 
-                          : '4 tough numericals on Electricity',
-                        appLanguage === 'hi'
-                          ? 'सेल ओर्गेनेल्स पर सीबीएसई बोर्ड पेपर २०१९'
-                          : 'CBSE 2019 Board Cell Organelles',
-                        appLanguage === 'hi'
-                          ? 'लाइट रिफ्लेक्शन पर ५ ट्रिकी एमसीक्यू'
-                          : '5 tricky MCQs on Light reflection',
-                        appLanguage === 'hi'
-                          ? 'केमिकल बांड्स पर लघु उत्तरीय प्रश्न'
-                          : 'Short-answers on Chemical bonds'
-                      ].map((item, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            playSound('click');
-                            setCustomPrompt(item);
-                          }}
-                          className="px-3 py-1.5 bg-zinc-900/80 hover:bg-zinc-900 hover:text-white border border-zinc-850 hover:border-zinc-750 text-zinc-400 text-[11px] rounded-xl cursor-pointer transition text-left"
-                        >
-                          ✨ {item}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
@@ -871,7 +863,7 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                 </div>
               )}
 
-              {/* Kalu & Buddhu real-time hint widget */}
+              {/* AI Real-Time Hint Widget */}
               <div className="pt-2">
                 <button
                   type="button"
@@ -885,7 +877,7 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                   <span>
                     {showDuoHint 
                       ? (appLanguage === 'hi' ? 'संकेत छिपाएं' : 'Hide Mentor Advice') 
-                      : (appLanguage === 'hi' ? '💡 कालू और बुद्धू से संकेत मांगें!' : '💡 Ask Kalu & Buddhu for Hints!')}
+                      : (appLanguage === 'hi' ? '💡 एआई गुरु से संकेत मांगें!' : '💡 Ask AI Mentor for Hints!')}
                   </span>
                 </button>
 
@@ -899,11 +891,11 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 bg-zinc-900/60 border border-zinc-900 rounded-2xl">
                         
-                        {/* Kalu's Advice */}
+                        {/* Speed Hack */}
                         <div className="space-y-2 border-b sm:border-b-0 sm:border-r border-zinc-900 pb-3 sm:pb-0 sm:pr-4">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-black text-white flex items-center gap-1">
-                              😈 {appLanguage === 'hi' ? 'कालू की चालाकी' : "Kalu Sir's Clever Hack"} ⚡
+                              ⚡ {appLanguage === 'hi' ? 'स्मार्ट स्पीड हैक' : "Exam Speed-Hack"} ⚡
                             </span>
                           </div>
                           <p className="text-[11px] leading-relaxed text-zinc-400">
@@ -913,11 +905,11 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                           </p>
                         </div>
 
-                        {/* Buddhu's Advice */}
+                        {/* Conceptual Analogy */}
                         <div className="space-y-2 sm:pl-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-black text-white flex items-center gap-1">
-                              😇 {appLanguage === 'hi' ? 'बुद्धू की सादृश्यता' : "Buddhu Sir's Analogy"} 🎈
+                              🎈 {appLanguage === 'hi' ? 'अवधारणा सादृश्य' : "Conceptual Analogy"} 🎈
                             </span>
                           </div>
                           <p className="text-[11px] leading-relaxed text-zinc-400">

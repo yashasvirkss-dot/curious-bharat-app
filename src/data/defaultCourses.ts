@@ -101,6 +101,23 @@ export const defaultCourses: Course[] = [
         dppUrl: 'https://drive.google.com/file/d/1SAMPLE_MOL_DPP/view'
       }
     ]
+  },
+  {
+    id: 'course-optics-master',
+    title: 'Class 10 Optics & Vision Masterclass',
+    description: 'Master the comprehensive syllabus of Ray Optics, Reflection, Refraction, and Human Eye defects with our specialized video playlist, comprehensive notes, and structured problem sets.',
+    isPaid: false,
+    price: '0',
+    subject: 'Physics',
+    thumbnailUrl: 'https://img.youtube.com/vi/URUJD5NEXC8/maxresdefault.jpg',
+    chapters: [
+      {
+        ...chaptersData[8], // Light: Reflection, Refraction & Optical Phenomena
+        lectureUrl: 'https://www.youtube.com/embed/videoseries?list=PLDvpX1-ojGyI',
+        pdfUrl: 'https://drive.google.com/file/d/1Optics_Master_Notes_PDF/view',
+        dppUrl: 'https://drive.google.com/file/d/1Optics_Master_DPP_Problems/view'
+      }
+    ]
   }
 ];
 

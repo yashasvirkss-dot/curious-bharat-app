@@ -22,9 +22,10 @@ import { playSound } from '../utils/audio';
 interface FlashcardsViewProps {
   chapter: Chapter;
   progress: UserProgress;
-  onBack: () => void;
+  onBack?: () => void;
   onRateCard: (cardId: string, rating: 'easy' | 'medium' | 'hard') => void;
   onOpenAI: (mode: string, context: string, customPrompt?: string) => void;
+  embedded?: boolean;
 }
 
 export default function FlashcardsView({ 
@@ -32,7 +33,8 @@ export default function FlashcardsView({
   progress, 
   onBack, 
   onRateCard, 
-  onOpenAI 
+  onOpenAI,
+  embedded = false
 }: FlashcardsViewProps) {
   // We'll treat our dynamic list of points as editable nodes of the mind map!
   const [nodes, setNodes] = useState<Flashcard[]>([]);
@@ -181,15 +183,17 @@ export default function FlashcardsView({
       {/* Mind Map Header */}
       <div className="flex items-center justify-between bg-zinc-950 p-4.5 rounded-2xl border border-zinc-900 shadow-xl">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              playSound('click');
-              onBack();
-            }}
-            className="p-2.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl cursor-pointer transition"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          {!embedded && onBack && (
+            <button
+              onClick={() => {
+                playSound('click');
+                onBack();
+              }}
+              className="p-2.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl cursor-pointer transition"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
           <div className="text-left">
             <span className="text-[10px] uppercase tracking-widest font-black text-blue-400 flex items-center gap-1">
               <Workflow className="w-3 h-3 text-blue-400 animate-pulse" />
@@ -359,11 +363,11 @@ export default function FlashcardsView({
               <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">{selectedNode.back}</p>
             </div>
 
-            {/* Kalu & Buddhu Memory Advice specifically on this mind map node */}
+            {/* AI Memory Advice specifically on this mind map node */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1.5">
               <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-4 space-y-1">
                 <div className="flex items-center gap-1 text-xs font-bold text-white">
-                  <span>😈 Kalu Sir's Cheat-Code</span>
+                  <span>⚡ Exam Speed-Hack</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-relaxed">
                   "Underline keywords here like '{selectedNode.front.toLowerCase().includes('lysosome') ? 'suicide enzymes' : 'ATP generation'}'. Don't write bulky textbooks, just list bullet equations!"
@@ -372,7 +376,7 @@ export default function FlashcardsView({
 
               <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-4 space-y-1">
                 <div className="flex items-center gap-1 text-xs font-bold text-white">
-                  <span>😇 Buddhu Sir's Analogy</span>
+                  <span>🎈 Conceptual Analogy</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-relaxed">
                   "Think of this concept like a standard household battery storing chemical charge, or a vacuum cleaner cleaning up debris inside a bedroom! Super easy! 😇"

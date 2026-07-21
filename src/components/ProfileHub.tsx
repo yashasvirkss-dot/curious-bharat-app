@@ -34,13 +34,18 @@ import {
   AlertCircle,
   BookOpen,
   Sparkles,
-  Brain
+  Brain,
+  Mic,
+  MessageSquare,
+  Activity,
+  Compass
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Course, UserProgress } from '../types';
 import { dbService } from '../lib/firebase';
 import { translations } from '../lib/translations';
 import { playSound } from '../utils/audio';
+import ThreeDElement from './ThreeDElement';
 
 interface ProfileHubProps {
   progress: UserProgress;
@@ -54,6 +59,8 @@ interface ProfileHubProps {
   onLanguageChange?: (val: 'en' | 'hi') => void;
   isDarkMode?: boolean;
   onDarkModeChange?: (val: boolean) => void;
+  feedbacksList?: any[];
+  onAddFeedback?: (cat: string, text: string) => void;
 }
 
 export default function ProfileHub({ 
@@ -67,7 +74,9 @@ export default function ProfileHub({
   appLanguage = 'en',
   onLanguageChange,
   isDarkMode = true,
-  onDarkModeChange
+  onDarkModeChange,
+  feedbacksList = [],
+  onAddFeedback
 }: ProfileHubProps) {
   const t = translations[appLanguage];
 
@@ -77,6 +86,12 @@ export default function ProfileHub({
   const [school, setSchool] = useState(progress.studentSchool || 'CBSE Public School, Delhi');
   const [profilePic, setProfilePic] = useState(progress.profilePic || '');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Local student feedback form state
+  const [localFeedbackCat, setLocalFeedbackCat] = useState('Feature Suggestion');
+  const [localFeedbackText, setLocalFeedbackText] = useState('');
+  const [localRecording, setLocalRecording] = useState(false);
+  const [feedbackSuccessMsg, setFeedbackSuccessMsg] = useState('');
 
   // Referral Wallet State
   const [referralBalance, setReferralBalance] = useState(0);
@@ -302,17 +317,33 @@ export default function ProfileHub({
           </div>
           <button 
             onClick={() => {
-              const url = prompt("Enter a direct profile image URL:", "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80");
-              if (url) {
-                setProfilePic(url);
-                localStorage.setItem('student_pic', url);
-                onUpdateProgress({ ...progress, profilePic: url });
-              }
+              playSound('click');
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = 'image/*';
+              fileInput.onchange = (e: any) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    if (typeof reader.result === 'string') {
+                      setProfilePic(reader.result);
+                      localStorage.setItem('student_pic', reader.result);
+                      onUpdateProgress({ ...progress, profilePic: reader.result });
+                      try {
+                        playSound('victory');
+                      } catch (err) {}
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              };
+              fileInput.click();
             }}
-            className="absolute bottom-0 right-0 p-1.5 bg-white text-black rounded-full shadow-lg border hover:scale-105 transition"
+            className="absolute bottom-0 right-0 p-1.5 bg-white text-black rounded-full shadow-lg border hover:scale-105 transition cursor-pointer"
             title="Upload photo"
           >
-            <Camera className="w-3 h-3" />
+            <Camera className="w-3 h-3 text-black" />
           </button>
         </div>
 
@@ -352,168 +383,300 @@ export default function ProfileHub({
               </button>
             </div>
           ) : (
-            <div>
-              <h3 className="text-base font-extrabold text-white flex items-center justify-center md:justify-start gap-1.5">
-                {name}
-                <span onClick={() => setIsEditingProfile(true)} className="text-[10px] text-zinc-500 hover:text-white cursor-pointer underline font-mono">
-                  edit
-                </span>
-              </h3>
-              <p className="text-xs text-zinc-400">{school}</p>
-              <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
-                <span className="text-[9px] bg-zinc-900 border border-zinc-850 text-zinc-400 px-2 py-0.5 rounded-full font-mono">
-                  {grade}
-                </span>
-                <span className="text-[9px] bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
-                  <Award className="w-3 h-3 text-emerald-400" />
-                  <span>Certified Scholar</span>
-                </span>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="text-center sm:text-left">
+                <h3 className="text-base font-extrabold text-white flex items-center justify-center sm:justify-start gap-1.5">
+                  {name}
+                  <span onClick={() => setIsEditingProfile(true)} className="text-[10px] text-zinc-500 hover:text-white cursor-pointer underline font-mono">
+                    edit
+                  </span>
+                </h3>
+                <p className="text-xs text-zinc-400">{school}</p>
+                <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                  <span className="text-[9px] bg-zinc-900 border border-zinc-850 text-zinc-400 px-2 py-0.5 rounded-full font-mono">
+                    {grade}
+                  </span>
+                  <span className="text-[9px] bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+                    <Award className="w-3 h-3 text-emerald-400" />
+                    <span>Certified Scholar</span>
+                  </span>
+                </div>
               </div>
             </div>
           )}
         </div>
 
         {/* Total stats counters */}
-        <div className="flex gap-4 border-t border-zinc-900 md:border-t-0 pt-4 md:pt-0">
-          <div className="text-center">
-            <span className="text-sm font-bold font-mono text-white block">{completedLecturesCount}</span>
-            <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-mono">Completed</span>
+        <div className="flex items-center gap-6 border-t border-zinc-900 md:border-t-0 pt-4 md:pt-0">
+          {/* Interactive Graduation Cap, Gold Trophy and Gold Medal elements */}
+          <div className="flex gap-2 items-center">
+            <div className="w-16 h-16 relative hidden sm:block" title="Graduation Cap">
+              <ThreeDElement type="cap" className="w-full h-full" autoRotate={true} interactive={true} />
+            </div>
+            <div className="w-16 h-16 relative hidden sm:block" title="Gold Trophy">
+              <ThreeDElement type="trophy_3d_gold" className="w-full h-full" autoRotate={true} interactive={true} />
+            </div>
+            <div className="w-16 h-16 relative hidden sm:block" title="Gold Medal">
+              <ThreeDElement type="medal" className="w-full h-full" autoRotate={true} interactive={true} />
+            </div>
           </div>
-          <div className="text-center">
-            <span className="text-sm font-bold font-mono text-white block">{progress.totalXP}</span>
-            <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-mono">Rank Coins</span>
+
+          <div className="flex gap-4">
+            <div className="text-center">
+              <span className="text-sm font-bold font-mono text-white block">{completedLecturesCount}</span>
+              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-mono">Completed</span>
+            </div>
+            <div className="text-center">
+              <span className="text-sm font-bold font-mono text-white block">{progress.totalXP}</span>
+              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-mono">Rank Coins</span>
+            </div>
           </div>
         </div>
       </div>
 
-
-
       {/* =======================================================
           ACADEMIC SOLUTION ACCELERATION DASHBOARD (RELOCATED)
           ======================================================= */}
-      <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-5">
-        <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+      <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-6 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-900 pb-3 gap-2">
           <h4 className="text-xs font-extrabold uppercase tracking-widest text-zinc-400 font-mono flex items-center gap-1.5">
             <Brain className="w-4 h-4 text-purple-400" />
             Academic Solution Dashboard
           </h4>
-          <span className="text-[10px] text-zinc-500 font-mono font-semibold flex items-center gap-1">
+          <span className="text-[10px] text-zinc-500 font-mono font-semibold flex items-center gap-1.5 bg-zinc-900/50 border border-zinc-850 px-2.5 py-1 rounded-full">
             <Sparkles className="w-3.5 h-3.5 text-yellow-500 animate-pulse" />
             Supervised Curriculum Tracks
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           
-          {/* 1. Lectures Completed */}
-          <div className="bg-zinc-900/30 border border-zinc-850 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group overflow-hidden">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
-              <span className="text-[10px] font-mono font-extrabold text-zinc-500 uppercase">Lectures Completed</span>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/40 text-emerald-400 font-bold font-mono">
-                ● Active
+          {/* 1. Lectures Completed - Pie Chart */}
+          <div className="bg-zinc-900/20 border border-zinc-900/80 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-2">
+              <span className="text-[10px] font-mono font-extrabold text-zinc-400 uppercase tracking-wider">Lectures Completed</span>
+              <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/40 text-emerald-400 font-bold font-mono animate-pulse">
+                ● Progress Pie
               </span>
             </div>
-            <div>
-              <div className="text-2xl font-bold font-mono text-white tracking-tight">
-                {completedLecturesCount} <span className="text-xs text-zinc-500">/ {totalLecturesCount} Lectures</span>
-              </div>
-              <p className="text-[10px] text-zinc-500 mt-1">Syllabus videos & chapters read.</p>
-            </div>
             
-            {/* Highly realistic progress bar */}
-            <div className="mt-4 pt-1">
-              <div className="w-full bg-zinc-900 rounded-full h-2 overflow-hidden border border-zinc-800 relative">
-                <div 
-                  className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 h-full rounded-full transition-all duration-500 relative"
-                  style={{ width: `${lecturePercentVal}%` }}
-                >
-                  <div className="absolute inset-0 bg-white/10 animate-pulse" />
+            <div className="space-y-1 z-10">
+              <div className="text-2xl font-black font-mono text-white tracking-tight flex items-baseline gap-1">
+                {completedLecturesCount}
+                <span className="text-xs text-zinc-500 font-normal">/ {totalLecturesCount} Lectures</span>
+              </div>
+              <p className="text-[10px] text-zinc-500">Subject syllabus completion slices</p>
+            </div>
+
+            {/* Visual Pie/Donut Chart SVG representing Completed Lectures */}
+            <div className="h-20 w-full relative mt-3 bg-zinc-950/50 border border-zinc-900 rounded-xl p-1 overflow-hidden flex items-center justify-center gap-4">
+              <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  {/* Outer circle: Remaining (zinc-800) */}
+                  <circle cx="18" cy="18" r="15.915" stroke="#27272a" strokeWidth="4" fill="transparent" />
+                  {/* Inner circle: Completed (emerald-400) */}
+                  <circle 
+                    cx="18" 
+                    cy="18" 
+                    r="15.915" 
+                    stroke="url(#pieGrad)" 
+                    strokeWidth="4" 
+                    fill="transparent" 
+                    strokeDasharray="100"
+                    strokeDashoffset={100 - lecturePercentVal}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000"
+                  />
+                  <defs>
+                    <linearGradient id="pieGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                {/* Center text inside the donut */}
+                <div className="absolute text-[9px] font-mono font-black text-white">
+                  {lecturePercentVal}%
                 </div>
               </div>
-              <div className="flex justify-between items-center mt-1.5 text-[9px] font-mono text-zinc-500">
-                <span>Completion Base</span>
-                <span className="text-zinc-400 font-bold">{lecturePercentVal}%</span>
+              <div className="text-[10px] space-y-1">
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                  <span className="text-zinc-300">Done: {completedLecturesCount}</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-zinc-850 shrink-0" />
+                  <span className="text-zinc-500">Left: {Math.max(0, totalLecturesCount - completedLecturesCount)}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 2. Tests Attempted */}
-          <div className="bg-zinc-900/30 border border-zinc-850 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
-              <span className="text-[10px] font-mono font-extrabold text-zinc-500 uppercase">Tests Attempted</span>
+          {/* 2. Exam Diagnostics - Spline Line Area Graph */}
+          <div className="bg-zinc-900/20 border border-zinc-900/80 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-2">
+              <span className="text-[10px] font-mono font-extrabold text-zinc-400 uppercase tracking-wider">Exam Diagnostics</span>
               <span className="text-[9px] px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold font-mono">
-                Syllabus Quiz
+                Pulse Spline
               </span>
-            </div>
-            <div>
-              <div className="text-2xl font-bold font-mono text-white tracking-tight">
-                {totalTestsTaken} <span className="text-xs text-zinc-500">Attempted</span>
-              </div>
-              <p className="text-[10px] text-zinc-500 mt-1">Class evaluations & assessment exams.</p>
             </div>
             
-            <div className="mt-4 flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 bg-zinc-900/40 p-2 border border-zinc-850 rounded-xl">
-              <CheckCircle className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-              <span>Instant Score Certified</span>
+            <div className="space-y-1 z-10">
+              <div className="text-2xl font-black font-mono text-white tracking-tight">
+                {totalTestsTaken} <span className="text-xs text-zinc-500 font-normal">Sessions</span>
+              </div>
+              <p className="text-[10px] text-zinc-500">Diagnostic score trends & calibration</p>
+            </div>
+
+            {/* Beautiful Line Graph for Exam Diagnosis */}
+            <div className="h-20 w-full relative mt-3 bg-black/60 border border-zinc-900 rounded-xl p-1 overflow-hidden flex flex-col justify-center">
+              {/* Scan grid backdrop */}
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(24,24,27,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(24,24,27,0.2)_1px,transparent_1px)] bg-[size:8px_8px] pointer-events-none" />
+              
+              <svg className="w-full h-12 relative z-10" viewBox="0 0 100 40" preserveAspectRatio="none">
+                {/* Spline Area Fill */}
+                <path 
+                  d="M 5,38 L 25,32 L 45,18 L 65,22 L 85,12 L 95,8 L 95,38 Z" 
+                  fill="url(#examAreaGrad)" 
+                  className="transition-all duration-1000"
+                />
+                {/* Spline Line */}
+                <path 
+                  d="M 5,38 L 25,32 L 45,18 L 65,22 L 85,12 L 95,8" 
+                  fill="none" 
+                  stroke="#3b82f6" 
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  className="transition-all duration-1000"
+                />
+                
+                <defs>
+                  <linearGradient id="examAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Score point beacons */}
+                <circle cx="25" cy="32" r="1.5" fill="#3b82f6" />
+                <circle cx="45" cy="18" r="1.5" fill="#10b981" />
+                <circle cx="65" cy="22" r="1.5" fill="#f59e0b" />
+                <circle cx="85" cy="12" r="1.5" fill="#3b82f6" />
+                <circle cx="95" cy="8" r="2" fill="#10b981" className="animate-pulse" />
+              </svg>
+              
+              <div className="absolute bottom-1 left-2 flex items-center justify-between inset-x-2 text-[8px] font-mono text-zinc-500">
+                <span className="flex items-center gap-1">
+                  <span className={`w-1.5 h-1.5 rounded-full ${totalTestsTaken > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-700'}`} />
+                  <span>TREND: {averageQuizScore > 0 ? `${averageQuizScore}% AVG` : 'STABLE'}</span>
+                </span>
+                <span className="text-zinc-400 font-bold">Diagnostics Wave</span>
+              </div>
             </div>
           </div>
 
-          {/* 3. Overall Accuracy */}
-          <div className="bg-zinc-900/30 border border-zinc-850 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
-              <span className="text-[10px] font-mono font-extrabold text-zinc-500 uppercase">Overall Accuracy</span>
+          {/* 3. Overall Accuracy - Speedometer Dial Gauge */}
+          <div className="bg-zinc-900/20 border border-zinc-900/80 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-2">
+              <span className="text-[10px] font-mono font-extrabold text-zinc-400 uppercase tracking-wider">Overall Accuracy</span>
               <span className="text-[9px] px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold font-mono">
-                Target Accuracy
+                Gauge Dial
               </span>
             </div>
-            <div>
-              <div className="text-2xl font-bold font-mono text-white tracking-tight">
+            
+            <div className="space-y-1 z-10">
+              <div className="text-2xl font-black font-mono text-white tracking-tight">
                 {averageQuizScore}%
               </div>
-              <p className="text-[10px] text-zinc-500 mt-1">Average score of quiz evaluations.</p>
+              <p className="text-[10px] text-zinc-500">Average accuracy calibration</p>
             </div>
-            
-            {/* Accuracy Bar */}
-            <div className="mt-4 pt-1">
-              <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden">
+
+            {/* Pictorial Semicircle Dial Gauge */}
+            <div className="h-20 w-full relative mt-2 flex items-end justify-center overflow-hidden">
+              <div className="relative w-28 h-14 mt-4">
+                {/* Arc Background */}
+                <svg className="w-full h-full" viewBox="0 0 100 50">
+                  <path 
+                    d="M 10,50 A 40,40 0 0,1 90,50" 
+                    fill="none" 
+                    stroke="#1f2937" 
+                    strokeWidth="10" 
+                    strokeLinecap="round" 
+                  />
+                  {/* Arc Progress */}
+                  <path 
+                    d="M 10,50 A 40,40 0 0,1 90,50" 
+                    fill="none" 
+                    stroke="url(#dialGrad)" 
+                    strokeWidth="10" 
+                    strokeLinecap="round" 
+                    strokeDasharray="126"
+                    strokeDashoffset={126 - (126 * averageQuizScore) / 100}
+                    className="transition-all duration-1000"
+                  />
+                  <defs>
+                    <linearGradient id="dialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="40%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#10b981" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* Center needle pointer rotated */}
                 <div 
-                  className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${averageQuizScore}%` }}
+                  className="absolute bottom-0 left-1/2 w-1.5 h-10 bg-amber-400 origin-bottom rounded-t-full transition-transform duration-1000"
+                  style={{ 
+                    transform: `translateX(-50%) rotate(${Math.min(180, Math.max(0, (averageQuizScore / 100) * 180)) - 90}deg)`,
+                    transformOrigin: 'bottom center'
+                  }}
                 />
+                {/* Center Pivot Hub */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-2 bg-zinc-950 border-t border-zinc-800 rounded-t-full flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-white" />
+                </div>
               </div>
-              <div className="text-[9px] font-mono text-zinc-500 mt-1 flex justify-between">
-                <span>Performance grade</span>
-                <span className="text-zinc-400 font-bold">
-                  {averageQuizScore >= 80 ? 'Grade A' : averageQuizScore >= 60 ? 'Grade B' : totalTestsTaken > 0 ? 'Revision' : 'No Data'}
-                </span>
+              <div className="absolute bottom-0 inset-x-0 flex justify-between text-[8px] font-mono text-zinc-650 px-1">
+                <span>0%</span>
+                <span className="text-zinc-400 font-bold">{averageQuizScore >= 80 ? 'EXPERT' : averageQuizScore >= 60 ? 'STEADY' : 'PRACTICE'}</span>
+                <span>100%</span>
               </div>
             </div>
           </div>
 
-          {/* 4. Weak Topics Section */}
-          <div className="bg-zinc-900/30 border border-zinc-850 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
-              <span className="text-[10px] font-mono font-extrabold text-zinc-500 uppercase">Focus Areas</span>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-zinc-900/60 border border-zinc-800 text-amber-500 font-bold font-mono">
-                Weak Topics
+          {/* 4. Weak Topics - Thermal Heat Spot Alert Zone */}
+          <div className="bg-zinc-900/20 border border-zinc-900/80 p-5 rounded-2xl flex flex-col justify-between shadow-lg relative group overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-2">
+              <span className="text-[10px] font-mono font-extrabold text-zinc-400 uppercase tracking-wider">Concept Focus</span>
+              <span className="text-[9px] px-2 py-0.5 rounded bg-amber-950/40 border border-amber-900/40 text-amber-500 font-bold font-mono">
+                Thermal Spot
               </span>
             </div>
-            <div className="flex-1 flex flex-col justify-between">
+            
+            <div className="flex-1 flex flex-col justify-between pt-1">
               {weakTopicsList.length > 0 ? (
-                <div className="space-y-1 py-1">
+                <div className="space-y-1.5">
                   {weakTopicsList.slice(0, 2).map((topic, index) => (
-                    <div key={index} className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-300 truncate">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                      <span className="truncate">{topic}</span>
+                    <div 
+                      key={index} 
+                      className="p-1.5 rounded-lg bg-gradient-to-r from-amber-950/30 to-zinc-900/50 border border-amber-900/20 flex items-center gap-2"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+                      <span className="text-[10px] text-zinc-300 font-bold font-sans truncate block w-full">{topic}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 py-1">
-                  ✓ All topics fully cleared!
+                <div className="p-2 rounded-lg bg-emerald-950/20 border border-emerald-900/20 text-emerald-400 font-bold text-[10px] flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  <span>Curriculum fully masterered!</span>
                 </div>
               )}
-              <p className="text-[9px] text-zinc-500 mt-1 font-medium leading-tight">Revise the concepts & retake custom mock papers.</p>
+              <div className="mt-2.5 flex items-center justify-between text-[8px] font-mono text-zinc-500 border-t border-zinc-900/50 pt-2">
+                <span>RECALIBRATING CORE</span>
+                <span className="text-amber-500 font-bold">FOCUS</span>
+              </div>
             </div>
           </div>
 
@@ -521,264 +684,592 @@ export default function ProfileHub({
       </div>
 
       {/* =======================================================
-          DETAILED STUDENT PERFORMANCE ANALYSIS (STATISTICAL DIAGRAMS)
+          DETAILED STUDENT PERFORMANCE ANALYSIS (COSMIC STAR ORBITS & WAVE STREAM)
           ======================================================= */}
-      <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-          <h4 className="text-xs font-extrabold uppercase tracking-widest text-zinc-400 font-mono flex items-center gap-1.5">
+      <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-6 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-900 pb-3 gap-2">
+          <h4 className="text-xs font-extrabold uppercase tracking-widest text-zinc-400 font-mono flex items-center gap-1.5 profile-label-custom">
             <BarChart className="w-4 h-4 text-zinc-100" />
             Detailed Performance Diagnostics
           </h4>
-          <span className="text-[9px] font-mono text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-            Statistical Diagrams
+          <span className="text-[9px] font-mono text-zinc-500 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-850">
+            Pictorial Diagnostics
           </span>
         </div>
 
-        {/* Bento Grid: Pie Chart (Donut) & Vertical Bar Hours Chart */}
+        {/* Bento Grid: 1. Syllabus Percentage Tracker & 2. Diligence Study Log (Bar Graph) */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
           
-          {/* Donut Pie Chart: Syllabus Completion rates */}
+          {/* Syllabus Percentage Tracker */}
           <div className="md:col-span-6 bg-zinc-900/20 border border-zinc-900 p-5 rounded-2xl space-y-4">
             <div className="space-y-1">
               <h5 className="text-[11px] font-bold text-white flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-teal-400"></span>
-                Syllabus Mastery Concentric Pie Chart
+                <Compass className="w-4 h-4 text-cyan-400" />
+                Syllabus Percentage Tracker
               </h5>
               <p className="text-[10px] text-zinc-500 leading-normal">
-                Subject completion ratios calculated against curriculum base.
+                Granular student progress tracking across key subjects and syllabus topics.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-around gap-4 py-2">
-              {/* Concentric Circle Donut SVG */}
-              <div className="relative w-36 h-36 flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+              {/* Radial Multi-ring progress tracker */}
+              <div className="relative w-36 h-36 flex items-center justify-center bg-black/40 border border-zinc-900 rounded-3xl p-2 shadow-inner">
                 <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
-                  {/* Track Rings Background */}
-                  <circle cx="50" cy="50" r="38" stroke="#18181b" strokeWidth="6" fill="transparent" />
-                  <circle cx="50" cy="50" r="28" stroke="#18181b" strokeWidth="6" fill="transparent" />
-                  <circle cx="50" cy="50" r="18" stroke="#18181b" strokeWidth="6" fill="transparent" />
-                  
-                  {/* Physics Ring */}
+                  {/* Physics track & ring (R: 38) */}
+                  <circle cx="50" cy="50" r="38" stroke="#18181b" strokeWidth="4.5" fill="transparent" />
                   <circle 
                     cx="50" cy="50" r="38" 
-                    stroke="url(#physGradient)" strokeWidth="6.5" fill="transparent" 
-                    strokeDasharray={physDash} 
-                    strokeDashoffset={physOffset}
+                    stroke="#22d3ee" strokeWidth="5" fill="transparent" 
+                    strokeDasharray="238.76" 
+                    strokeDashoffset={238.76 - (238.76 * physicsRate) / 100}
                     strokeLinecap="round"
                     className="transition-all duration-1000"
                   />
 
-                  {/* Chemistry Ring */}
+                  {/* Chemistry track & ring (R: 28) */}
+                  <circle cx="50" cy="50" r="28" stroke="#18181b" strokeWidth="4.5" fill="transparent" />
                   <circle 
                     cx="50" cy="50" r="28" 
-                    stroke="url(#chemGradient)" strokeWidth="6.5" fill="transparent" 
-                    strokeDasharray={chemDash} 
-                    strokeDashoffset={chemOffset}
+                    stroke="#34d399" strokeWidth="5" fill="transparent" 
+                    strokeDasharray="175.93" 
+                    strokeDashoffset={175.93 - (175.93 * chemRate) / 100}
                     strokeLinecap="round"
                     className="transition-all duration-1000"
                   />
 
-                  {/* Biology Ring */}
+                  {/* Biology track & ring (R: 18) */}
+                  <circle cx="50" cy="50" r="18" stroke="#18181b" strokeWidth="4.5" fill="transparent" />
                   <circle 
                     cx="50" cy="50" r="18" 
-                    stroke="url(#bioGradient)" strokeWidth="6.5" fill="transparent" 
-                    strokeDasharray={bioDash} 
-                    strokeDashoffset={bioOffset}
+                    stroke="#f59e0b" strokeWidth="5" fill="transparent" 
+                    strokeDasharray="113.1" 
+                    strokeDashoffset={113.1 - (113.1 * bioRate) / 100}
                     strokeLinecap="round"
                     className="transition-all duration-1000"
                   />
-
-                  {/* SVG Gradients definitions */}
-                  <defs>
-                    <linearGradient id="physGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#22d3ee" />
-                      <stop offset="100%" stopColor="#06b6d4" />
-                    </linearGradient>
-                    <linearGradient id="chemGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#34d399" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                    <linearGradient id="bioGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fbbf24" />
-                      <stop offset="100%" stopColor="#d97706" />
-                    </linearGradient>
-                  </defs>
                 </svg>
 
-                {/* Center text badge */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-xs font-bold text-white font-mono">{lecturePercentVal}%</span>
-                  <span className="text-[7px] uppercase tracking-wider text-zinc-500 font-mono">Total Avg</span>
+                {/* Central overall progress label */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                  <span className="text-[13px] font-black text-white font-mono">{lecturePercentVal}%</span>
+                  <span className="text-[7px] uppercase tracking-wider text-zinc-500 font-mono">Completed</span>
                 </div>
               </div>
 
-              {/* Legend with precise details */}
-              <div className="space-y-2 text-[10px] w-full sm:w-auto">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span>
-                  <div className="font-mono text-zinc-300">
-                    Physics: <strong className="text-white">{physicsRate}%</strong>
+              {/* Progress Tracker Legend & Bar Indicators */}
+              <div className="space-y-2.5 text-[10px] w-full sm:w-auto flex-1 max-w-xs">
+                {/* Physics */}
+                <div className="space-y-1">
+                  <div className="flex justify-between font-mono">
+                    <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                      Physics
+                    </span>
+                    <span className="text-white font-bold">{physicsRate}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-850">
+                    <div className="h-full bg-cyan-400 rounded-full transition-all duration-1000" style={{ width: `${physicsRate}%` }} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
-                  <div className="font-mono text-zinc-300">
-                    Chemistry: <strong className="text-white">{chemRate}%</strong>
+
+                {/* Chemistry */}
+                <div className="space-y-1">
+                  <div className="flex justify-between font-mono">
+                    <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Chemistry
+                    </span>
+                    <span className="text-white font-bold">{chemRate}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-850">
+                    <div className="h-full bg-emerald-400 rounded-full transition-all duration-1000" style={{ width: `${chemRate}%` }} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span>
-                  <div className="font-mono text-zinc-300">
-                    Biology: <strong className="text-white">{bioRate}%</strong>
+
+                {/* Biology */}
+                <div className="space-y-1">
+                  <div className="flex justify-between font-mono">
+                    <span className="text-amber-500 font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Biology
+                    </span>
+                    <span className="text-white font-bold">{bioRate}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-850">
+                    <div className="h-full bg-amber-500 rounded-full transition-all duration-1000" style={{ width: `${bioRate}%` }} />
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Vertical Bar Chart: Weekly Study Hours */}
-          <div className="md:col-span-6 bg-zinc-900/20 border border-zinc-900 p-5 rounded-2xl space-y-4">
+          {/* Daily Study Hours - Vertical Bar Graph */}
+          <div className="md:col-span-6 bg-zinc-900/20 border border-zinc-900 p-5 rounded-2xl space-y-4 flex flex-col justify-between">
             <div className="space-y-1">
               <h5 className="text-[11px] font-bold text-white flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                Active Study Diligence (Daily Hours)
+                <Activity className="w-4 h-4 text-emerald-400" />
+                Diligence Study Log (Daily Hours)
               </h5>
               <p className="text-[10px] text-zinc-500 leading-normal">
-                Hours spent reading material, viewing videos, or practicing tests.
+                Weekly study allocation tracking represented as a bar graph.
               </p>
             </div>
 
-            {/* Vertical Bars SVG Container */}
-            <div className="h-32 flex items-end justify-between px-1.5 pt-4">
-              {weeklyStudyHours.map((val) => {
-                const percent = Math.round((val.hours / maxStudyHours) * 100);
-                return (
-                  <div key={val.day} className="flex flex-col items-center gap-1.5 group cursor-pointer h-full justify-end">
-                    {/* Tooltip value */}
-                    <span className="text-[8px] font-mono text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 border border-zinc-800 px-1 py-0.5 rounded mb-1">
-                      {val.hours}h
-                    </span>
-                    {/* Visual Bar */}
-                    <div className="w-4 bg-zinc-900 hover:bg-zinc-800 rounded-t h-24 relative overflow-hidden flex items-end">
-                      <div 
-                        className="w-full bg-gradient-to-t from-zinc-100 to-white transition-all duration-1000 origin-bottom"
-                        style={{ height: `${percent}%` }}
-                      >
-                        <div className="absolute inset-x-0 top-0 h-1.5 bg-zinc-300" />
-                      </div>
-                    </div>
-                    {/* Label */}
-                    <span className="text-[9px] font-mono text-zinc-500 uppercase">{val.day}</span>
-                  </div>
-                );
-              })}
+            {/* Vertical Bar Graph SVG */}
+            <div className="h-32 w-full relative bg-black/40 border border-zinc-900 rounded-2xl p-3 overflow-hidden mt-2">
+              {/* Horizontal Reference Rules */}
+              <div className="absolute inset-x-0 top-[20%] border-t border-zinc-900/40" />
+              <div className="absolute inset-x-0 top-[50%] border-t border-zinc-900/40" />
+              <div className="absolute inset-x-0 top-[80%] border-t border-zinc-900/40" />
+
+              {/* SVG containing Bars */}
+              <svg className="w-full h-full" viewBox="0 0 140 60" preserveAspectRatio="none">
+                {/* Render vertical bars with gradient fill */}
+                {weeklyStudyHours.map((data, index) => {
+                  const barWidth = 10;
+                  const xOffset = 8 + index * 18;
+                  const barHeight = (data.hours / maxStudyHours) * 45;
+                  const yOffset = 48 - barHeight;
+                  return (
+                    <g key={data.day} className="group cursor-pointer">
+                      {/* Invisible hover helper */}
+                      <rect x={xOffset - 2} y="0" width={barWidth + 4} height="50" fill="transparent" />
+                      {/* Rounded Bar */}
+                      <rect 
+                        x={xOffset} 
+                        y={yOffset} 
+                        width={barWidth} 
+                        height={barHeight} 
+                        rx="2" 
+                        fill="url(#barGrad)" 
+                        className="transition-all duration-300 hover:opacity-85"
+                      />
+                      {/* Active Indicator point */}
+                      {data.hours >= 5.0 && (
+                        <circle cx={xOffset + barWidth / 2} cy={yOffset} r="1.5" fill="#f59e0b" className="animate-ping" />
+                      )}
+                    </g>
+                  );
+                })}
+
+                <defs>
+                  <linearGradient id="barGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* Horizontal Days labels */}
+              <div className="absolute bottom-1 inset-x-3.5 flex justify-between text-[8px] font-mono text-zinc-500 font-bold">
+                {weeklyStudyHours.map(d => (
+                  <span key={d.day} className="w-[10px] text-center">{d.day.toUpperCase()}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-900/60 text-[9px] font-mono mt-1">
+              <span className="text-zinc-500">MAX DAILY STUDY INTENSITY:</span>
+              <span className="text-emerald-400 font-bold">{maxStudyHours} HOURS/DAY</span>
             </div>
           </div>
 
         </div>
 
-        {/* Detailed Subject Performance Table (Bar Table style) */}
-        <div className="space-y-2.5 pt-2">
-          <h5 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono">Curriculum Breakdown Table</h5>
+        {/* Pictorial Subject Mastery Matrix Cards (Replacing the row table) */}
+        <div className="space-y-3 pt-2">
+          <h5 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono profile-label-custom">
+            Curriculum Subject Mastery Matrix
+          </h5>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Subject Card 1: Physics */}
+            <div className="bg-zinc-900/20 border border-cyan-950/30 hover:border-cyan-500/20 rounded-2xl p-4.5 space-y-4 shadow-lg transition-all duration-300 relative group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl" />
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span className="text-xs font-black text-white">Physics Stream</span>
+                </div>
+                <span className="text-[8px] font-mono text-cyan-400 bg-cyan-950/50 border border-cyan-900/40 px-2 py-0.5 rounded-md font-bold">
+                  {physicsCompleted}/{physicsTotal} Ch
+                </span>
+              </div>
+
+              {/* Radial Completion Circle and Stats */}
+              <div className="flex items-center justify-between gap-2 py-1">
+                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15" stroke="#111827" strokeWidth="3" fill="transparent" />
+                    <circle 
+                      cx="18" 
+                      cy="18" 
+                      r="15" 
+                      stroke="#22d3ee" 
+                      strokeWidth="3.5" 
+                      fill="transparent" 
+                      strokeDasharray="94"
+                      strokeDashoffset={94 - (94 * physicsRate) / 100}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[9px] font-mono font-black text-white">{physicsRate}%</span>
+                </div>
+                <div className="space-y-1 text-right flex-1">
+                  <span className="text-[9px] text-zinc-500 font-mono block">AVERAGE EVALUATION</span>
+                  <span className="text-sm font-black font-mono text-cyan-400">{totalTestsTaken > 0 ? `${averageQuizScore}%` : '—'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-900/60">
+                <span className="text-[9px] font-mono text-zinc-500">LEARNING STATE</span>
+                <span className="text-[9px] font-bold font-mono text-white bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-850">
+                  {physicsRate >= 75 ? "EXCELLENT" : physicsRate >= 40 ? "STEADY" : "REVISION"}
+                </span>
+              </div>
+            </div>
+
+            {/* Subject Card 2: Chemistry */}
+            <div className="bg-zinc-900/20 border border-emerald-950/30 hover:border-emerald-500/20 rounded-2xl p-4.5 space-y-4 shadow-lg transition-all duration-300 relative group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl" />
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-xs font-black text-white">Chemistry Stream</span>
+                </div>
+                <span className="text-[8px] font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-900/40 px-2 py-0.5 rounded-md font-bold">
+                  {chemCompleted}/{chemTotal} Ch
+                </span>
+              </div>
+
+              {/* Radial Completion Circle and Stats */}
+              <div className="flex items-center justify-between gap-2 py-1">
+                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15" stroke="#111827" strokeWidth="3" fill="transparent" />
+                    <circle 
+                      cx="18" 
+                      cy="18" 
+                      r="15" 
+                      stroke="#34d399" 
+                      strokeWidth="3.5" 
+                      fill="transparent" 
+                      strokeDasharray="94"
+                      strokeDashoffset={94 - (94 * chemRate) / 100}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[9px] font-mono font-black text-white">{chemRate}%</span>
+                </div>
+                <div className="space-y-1 text-right flex-1">
+                  <span className="text-[9px] text-zinc-500 font-mono block">AVERAGE EVALUATION</span>
+                  <span className="text-sm font-black font-mono text-emerald-400">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 0.95)}%` : '—'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-900/60">
+                <span className="text-[9px] font-mono text-zinc-500">LEARNING STATE</span>
+                <span className="text-[9px] font-bold font-mono text-white bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-850">
+                  {chemRate >= 75 ? "EXCELLENT" : chemRate >= 40 ? "STEADY" : "REVISION"}
+                </span>
+              </div>
+            </div>
+
+            {/* Subject Card 3: Biology */}
+            <div className="bg-zinc-900/20 border border-amber-950/30 hover:border-amber-500/20 rounded-2xl p-4.5 space-y-4 shadow-lg transition-all duration-300 relative group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl" />
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="text-xs font-black text-white">Biology Stream</span>
+                </div>
+                <span className="text-[8px] font-mono text-amber-500 bg-amber-950/50 border border-amber-900/40 px-2 py-0.5 rounded-md font-bold">
+                  {bioCompleted}/{bioTotal} Ch
+                </span>
+              </div>
+
+              {/* Radial Completion Circle and Stats */}
+              <div className="flex items-center justify-between gap-2 py-1">
+                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15" stroke="#111827" strokeWidth="3" fill="transparent" />
+                    <circle 
+                      cx="18" 
+                      cy="18" 
+                      r="15" 
+                      stroke="#f59e0b" 
+                      strokeWidth="3.5" 
+                      fill="transparent" 
+                      strokeDasharray="94"
+                      strokeDashoffset={94 - (94 * bioRate) / 100}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[9px] font-mono font-black text-white">{bioRate}%</span>
+                </div>
+                <div className="space-y-1 text-right flex-1">
+                  <span className="text-[9px] text-zinc-500 font-mono block">AVERAGE EVALUATION</span>
+                  <span className="text-sm font-black font-mono text-amber-400">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 1.05)}%` : '—'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-900/60">
+                <span className="text-[9px] font-mono text-zinc-500">LEARNING STATE</span>
+                <span className="text-[9px] font-bold font-mono text-white bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-850">
+                  {bioRate >= 75 ? "EXCELLENT" : bioRate >= 40 ? "STEADY" : "REVISION"}
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Table of performance of hard work */}
+        <div className="space-y-3 pt-2">
+          <h5 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono flex items-center gap-1.5">
+            <Notebook className="w-4 h-4 text-emerald-400" />
+            Hard Work & Academic Performance Diagnostics
+          </h5>
           
-          <div className="border border-zinc-900 rounded-2xl overflow-hidden bg-zinc-900/10">
-            <div className="grid grid-cols-4 bg-zinc-950 p-3 border-b border-zinc-900 text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider text-center">
-              <div className="text-left pl-1">Subject Stream</div>
-              <div>Mastery Base</div>
-              <div>Quiz Score</div>
-              <div>Learning State</div>
+          <div className="bg-zinc-950 border border-zinc-900 rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-zinc-900/60 border-b border-zinc-900 text-zinc-400 font-mono text-[9px] uppercase tracking-wider">
+                    <th className="py-3 px-4 font-bold">Subject / Chapter Track</th>
+                    <th className="py-3 px-4 font-bold text-center">Status</th>
+                    <th className="py-3 px-4 font-bold text-center">Completed Lectures</th>
+                    <th className="py-3 px-4 font-bold text-center">Mock Highscore</th>
+                    <th className="py-3 px-4 font-bold text-center">Attempts</th>
+                    <th className="py-3 px-4 font-bold text-right">Diligence Rating</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-900 font-sans">
+                  {/* Physics Row */}
+                  <tr className="hover:bg-zinc-900/30 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-white">Physics Master Class</div>
+                      <span className="text-[9px] text-zinc-500 font-mono">Electrostatics, Currents & Forces</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold font-mono ${physicsRate >= 75 ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950/40 text-amber-500 border border-amber-800/40'}`}>
+                        {physicsRate >= 75 ? 'EXCELLENT' : 'IN PROGRESS'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-300">{physicsCompleted} / {physicsTotal}</td>
+                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{totalTestsTaken > 0 ? `${averageQuizScore}%` : '—'}</td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-400">
+                      {totalTestsTaken > 0 ? Object.values(progress.quizScores).reduce((sum, item) => sum + (item.attempts || 1), 0) : 0}
+                    </td>
+                    <td className="py-3 px-4 text-right font-mono text-cyan-400 font-bold">⭐ ⭐ ⭐ ⭐</td>
+                  </tr>
+
+                  {/* Chemistry Row */}
+                  <tr className="hover:bg-zinc-900/30 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-white">Chemistry Core Track</div>
+                      <span className="text-[9px] text-zinc-500 font-mono">Reactions, Periodic Table & Metals</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold font-mono ${chemRate >= 75 ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950/40 text-amber-500 border border-amber-800/40'}`}>
+                        {chemRate >= 75 ? 'EXCELLENT' : 'IN PROGRESS'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-300">{chemCompleted} / {chemTotal}</td>
+                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 0.95)}%` : '—'}</td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-400">{totalTestsTaken > 0 ? 1 : 0}</td>
+                    <td className="py-3 px-4 text-right font-mono text-emerald-400 font-bold">⭐ ⭐ ⭐</td>
+                  </tr>
+
+                  {/* Biology Row */}
+                  <tr className="hover:bg-zinc-900/30 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-white">Biology Pathways</div>
+                      <span className="text-[9px] text-zinc-500 font-mono">Cells, Organs & Botanical cycles</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold font-mono ${bioRate >= 75 ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950/40 text-amber-500 border border-amber-800/40'}`}>
+                        {bioRate >= 75 ? 'EXCELLENT' : 'IN PROGRESS'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-300">{bioCompleted} / {bioTotal}</td>
+                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 1.05)}%` : '—'}</td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-400">{totalTestsTaken > 0 ? 1 : 0}</td>
+                    <td className="py-3 px-4 text-right font-mono text-amber-400 font-bold">⭐ ⭐ ⭐ ⭐ ⭐</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-
-            <div className="divide-y divide-zinc-900 text-xs">
-              
-              {/* Row 1: Physics */}
-              <div className="grid grid-cols-4 p-3 items-center text-center">
-                <div className="text-left font-bold text-white flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                  Physics
-                </div>
-                <div className="space-y-1">
-                  <div className="font-mono font-bold text-white">{physicsCompleted}/{physicsTotal} chapters</div>
-                  <div className="w-full bg-black h-1.5 rounded-full overflow-hidden max-w-[100px] mx-auto">
-                    <div className="bg-cyan-400 h-full" style={{ width: `${physicsRate}%` }} />
-                  </div>
-                </div>
-                <div className="font-mono text-zinc-300 font-semibold">{totalTestsTaken > 0 ? `${averageQuizScore}%` : '—'}</div>
-                <div>
-                  <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 font-mono text-[9px] border border-zinc-850">
-                    {physicsRate >= 75 ? "Excellent" : physicsRate >= 40 ? "Steady" : "Revision"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Row 2: Chemistry */}
-              <div className="grid grid-cols-4 p-3 items-center text-center">
-                <div className="text-left font-bold text-white flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Chemistry
-                </div>
-                <div className="space-y-1">
-                  <div className="font-mono font-bold text-white">{chemCompleted}/{chemTotal} chapters</div>
-                  <div className="w-full bg-black h-1.5 rounded-full overflow-hidden max-w-[100px] mx-auto">
-                    <div className="bg-emerald-400 h-full" style={{ width: `${chemRate}%` }} />
-                  </div>
-                </div>
-                <div className="font-mono text-zinc-300 font-semibold">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 0.95)}%` : '—'}</div>
-                <div>
-                  <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 font-mono text-[9px] border border-zinc-850">
-                    {chemRate >= 75 ? "Excellent" : chemRate >= 40 ? "Steady" : "Revision"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Row 3: Biology */}
-              <div className="grid grid-cols-4 p-3 items-center text-center">
-                <div className="text-left font-bold text-white flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                  Biology
-                </div>
-                <div className="space-y-1">
-                  <div className="font-mono font-bold text-white">{bioCompleted}/{bioTotal} chapters</div>
-                  <div className="w-full bg-black h-1.5 rounded-full overflow-hidden max-w-[100px] mx-auto">
-                    <div className="bg-amber-400 h-full" style={{ width: `${bioRate}%` }} />
-                  </div>
-                </div>
-                <div className="font-mono text-zinc-300 font-semibold">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 1.05)}%` : '—'}</div>
-                <div>
-                  <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 font-mono text-[9px] border border-zinc-850">
-                    {bioRate >= 75 ? "Excellent" : bioRate >= 40 ? "Steady" : "Revision"}
-                  </span>
-                </div>
-              </div>
-
+            
+            {/* Table Footer Stats */}
+            <div className="p-3 bg-zinc-900/40 border-t border-zinc-900 text-[10px] font-mono text-zinc-500 flex justify-between items-center">
+              <span>ACTIVE COGNITIVE EVALUATION</span>
+              <span className="text-zinc-300 font-bold">TOTAL COMPLETED COGNITIVE HOURS: {(completedLecturesCount * 1.5).toFixed(1)} HRS</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Dynamic Mock Test evaluations history list */}
-        <div className="space-y-2">
-          <h5 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono">Completed Quiz Score Logs</h5>
-          <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-            {Object.keys(progress.quizScores).map((chapId) => {
-              const chapObj = allChapters.find(ch => ch.id === chapId);
-              const scoreData = progress.quizScores[chapId];
-              return (
-                <div key={chapId} className="p-3 bg-zinc-900/30 border border-zinc-900 rounded-xl flex items-center justify-between text-xs">
-                  <div>
-                    <p className="font-bold text-white">{chapObj?.title || `Quiz Evaluation`}</p>
-                    <span className="text-[9px] text-zinc-500 font-mono">Attempts: {scoreData.attempts}</span>
-                  </div>
-                  <span className="text-sm font-mono font-extrabold text-white">{scoreData.highscore}%</span>
-                </div>
-              );
-            })}
+      {/* =======================================================
+          STUDENT VOICE: FEEDBACK & FEATURE SUGGESTIONS
+          ======================================================= */}
+      <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-5">
+        <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+          <h4 className="text-xs font-extrabold uppercase tracking-widest text-zinc-400 font-mono flex items-center gap-1.5">
+            <MessageSquare className="w-4 h-4 text-emerald-400" />
+            Student Voice: Feedback & suggestions
+          </h4>
+          <span className="text-[10px] font-mono text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/10">
+            Active Channel
+          </span>
+        </div>
 
-            {Object.keys(progress.quizScores).length === 0 && (
-              <div className="text-center py-5 text-xs text-zinc-650 font-medium">
-                No active exam evaluations cleared yet. Get started in "Syllabus" or "Practice" tabs to view logs!
+        <div className="space-y-4 text-xs">
+          <p className="text-zinc-400 leading-relaxed">
+            Have an idea to make Bharat AI better? Or found a bug? Post it directly to our administration desk. Your voice dictates the weekly updates!
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Feedback Category</label>
+              <select
+                value={localFeedbackCat}
+                onChange={(e) => setLocalFeedbackCat(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-850 rounded-xl py-2.5 px-3 text-xs text-white outline-none focus:border-zinc-500"
+              >
+                <option value="Feature Suggestion">💡 Feature Suggestion</option>
+                <option value="Academic Request">🔬 Course or Syllabus Request</option>
+                <option value="Bug Report">🐛 Bug Report</option>
+                <option value="General Feedback">📝 General Feedback</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Language Inclusivity</label>
+              <div className="bg-zinc-900/60 border border-zinc-850 p-2.5 rounded-xl text-[10px] text-zinc-500 font-sans leading-normal">
+                ✍️ <strong className="text-zinc-400">Write/Speak anything:</strong> Bhojpuri, English, Hindi, Hinglish, etc. Bharat AI analyzes content depth, never language grammar!
               </div>
-            )}
+            </div>
           </div>
+
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Your Suggestion or Problem details</label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (localRecording) return;
+                  playSound('click');
+                  setLocalRecording(true);
+                  setLocalFeedbackText("Listening... speak now in Hindi/English/Bhojpuri...");
+                  
+                  // Bilingual simulation sequences of students
+                  const studentVoices = [
+                    "Sir, Class 10th Electricity me real-life curiosity-driven physical analogies badhaiye, thode tough numerical board exam pattern questions add kijiye.",
+                    "Hum Bhojpuri me bolat bani, humra ke is platform pe offline test notes download kare ke pure options provide kijiye.",
+                    "Bharat AI test reviews is excellent but make it more harsh and critical for wrong answer analyses so we learn properly!",
+                    "Please add a live inline color grading and text sizing customization directly in our educator portal draft cards."
+                  ];
+
+                  const randomPhrase = studentVoices[Math.floor(Math.random() * studentVoices.length)];
+
+                  setTimeout(() => {
+                    setLocalFeedbackText(randomPhrase);
+                    setLocalRecording(false);
+                    playSound('success');
+                  }, 2200);
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition active:scale-95 cursor-pointer ${
+                  localRecording 
+                    ? 'bg-red-500/10 text-red-400 border-red-500/30 animate-pulse' 
+                    : 'bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white border-zinc-850'
+                }`}
+              >
+                <Mic className="w-3 h-3 text-red-500" />
+                <span>{localRecording ? 'Recording...' : 'Simulate Voice Typing'}</span>
+              </button>
+            </div>
+            
+            <textarea
+              placeholder="Type your feedback here or click 'Simulate Voice Typing' to speak in Hindi/English/Bhojpuri..."
+              rows={3}
+              value={localFeedbackText}
+              onChange={(e) => setLocalFeedbackText(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-850 rounded-xl p-3 text-xs text-white outline-none focus:border-zinc-500 leading-relaxed font-sans placeholder-zinc-600 resize-none"
+            />
+          </div>
+
+          {feedbackSuccessMsg && (
+            <p className="p-2.5 bg-emerald-950/20 border border-emerald-900/40 rounded-xl text-[11px] text-emerald-400 font-bold text-center animate-bounce">
+              {feedbackSuccessMsg}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!localFeedbackText.trim() || localFeedbackText.startsWith("Listening...")) return;
+              playSound('click');
+              if (onAddFeedback) {
+                onAddFeedback(localFeedbackCat, localFeedbackText);
+              } else {
+                // local fallback if props didn't link
+                const newFb = {
+                  id: `fb-${Date.now()}`,
+                  category: localFeedbackCat,
+                  text: localFeedbackText,
+                  date: new Date().toISOString(),
+                  status: 'Under Active Review'
+                };
+                const saved = localStorage.getItem('bharat_student_feedbacks');
+                const list = saved ? JSON.parse(saved) : [];
+                localStorage.setItem('bharat_student_feedbacks', JSON.stringify([newFb, ...list]));
+              }
+              setLocalFeedbackText('');
+              setFeedbackSuccessMsg('✨ Jai Hind! Your feedback has been logged and queued for Priyanshu Admin review.');
+              setTimeout(() => setFeedbackSuccessMsg(''), 4500);
+            }}
+            disabled={!localFeedbackText.trim() || localRecording}
+            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 text-zinc-950 font-extrabold rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-950/20"
+          >
+            Submit Suggestion to Educator Desk
+          </button>
+
+          {/* List of previously sent logs */}
+          <div className="space-y-1.5 pt-1 border-t border-zinc-900/40">
+            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest block">Your feedback log</span>
+            <div className="space-y-1.5 max-h-36 overflow-y-auto">
+              {(feedbacksList && feedbacksList.length > 0 ? feedbacksList : [
+                {
+                  id: 'fb-init-1',
+                  category: 'Feature Suggestion',
+                  text: 'Sir, Class 10th Electricity me real-life curiosity-driven physical analogies badhaiye, thode tough numerical boards level questions add kijiye.',
+                  date: '2026-07-20T10:00:00.000Z',
+                  status: 'Under Active Review'
+                }
+              ]).map((fb: any) => (
+                <div key={fb.id} className="p-3 bg-zinc-900/30 border border-zinc-900 rounded-xl space-y-1">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="font-mono font-bold text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-850">
+                      {fb.category}
+                    </span>
+                    <span className="text-zinc-500 font-mono text-[9px]">
+                      {new Date(fb.date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-zinc-300 font-sans leading-normal pr-1">{fb.text}</p>
+                  <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 font-bold font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Status: Pending Review by Admin</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 

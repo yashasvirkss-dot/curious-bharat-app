@@ -3,15 +3,21 @@
 @layer base {
   body {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }
 
 /* ==========================================================
-   CURIOSITY SKY PREMIUM LIGHT THEME
+   PREMIUM HIGH-READABILITY LIGHT THEME (CRISP EDITORIAL)
    ========================================================== */
 body.light {
-  background-color: #FAFCFF !important;
-  color: #111827 !important;
+  background-color: #F8F9FA !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 103, 31, 0.04) 0px, transparent 60%),
+    radial-gradient(at 100% 100%, rgba(4, 106, 56, 0.04) 0px, transparent 60%),
+    radial-gradient(at 50% 50%, rgba(6, 3, 141, 0.02) 0px, transparent 50%) !important;
+  background-attachment: fixed !important;
+  color: #111111 !important;
 }
 
 body.light .bg-black,
@@ -36,38 +42,36 @@ body.light .bg-zinc-900\/90,
 body.light .bg-zinc-950\/70,
 body.light .bg-zinc-900\/30 {
   background-color: #FFFFFF !important;
-  color: #111827 !important;
-  border-color: #E5E7EB !important;
-  box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.04), 0 2px 6px -1px rgba(37, 99, 235, 0.02) !important;
+  color: #111111 !important;
+  border-color: #E5E5E5 !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
 }
 
-/* Subtle surfaces - premium clean sky-tinted white */
+/* Subtle surfaces - premium clean light gray */
 body.light .bg-zinc-50,
 body.light .bg-slate-50,
 body.light .bg-slate-100,
 body.light .bg-zinc-800,
 body.light .bg-zinc-850,
 body.light .bg-zinc-900/10 {
-  background-color: #F4F8FD !important;
-  color: #111827 !important;
+  background-color: #F5F5F7 !important;
+  color: #111111 !important;
 }
 
-/* ==========================================================
-   SPECIAL PROFILE HUB LIGHT BLUE OVERRIDES IN LIGHT MODE
-   ========================================================== */
+/* Special Profile Hub Overrides in Light Mode */
 body.light #profile-hub-root {
-  background-color: #EBF4FF !important; /* Elegant premium soft light-blue surface */
-  border-color: #BFDBFE !important;
+  background-color: #F9F9FB !important;
+  border-color: #E5E5E5 !important;
 }
 
 body.light #profile-hub-root .bg-zinc-950,
 body.light #profile-hub-root .bg-zinc-900,
 body.light #profile-hub-root .bg-zinc-900\/30,
 body.light #profile-hub-root .bg-zinc-900\/60 {
-  background-color: #DBEAFE !important; /* Beautiful soft sky blue inner card surfaces */
-  border-color: #BFDBFE !important;
-  color: #1E3A8A !important;
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.03) !important;
+  background-color: #FFFFFF !important;
+  border-color: #E5E5E5 !important;
+  color: #111111 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
 }
 
 body.light #profile-hub-root .text-white,
@@ -75,33 +79,33 @@ body.light #profile-hub-root .text-zinc-100,
 body.light #profile-hub-root .text-zinc-200,
 body.light #profile-hub-root .text-zinc-300,
 body.light #profile-hub-root .text-zinc-400 {
-  color: #1E3A8A !important; /* Perfect high-contrast deep royal blue text */
+  color: #111111 !important;
 }
 
 body.light #profile-hub-root .text-zinc-500,
 body.light #profile-hub-root .text-slate-400,
 body.light #profile-hub-root .text-slate-500 {
-  color: #2563EB !important; /* Luminous blue subtexts */
+  color: #E50914 !important;
 }
 
 body.light #profile-hub-root button.bg-white {
-  background-color: #2563EB !important;
+  background-color: #E50914 !important;
   color: #FFFFFF !important;
-  border-color: #2563EB !important;
+  border-color: #E50914 !important;
 }
 
 body.light #profile-hub-root button.bg-white:hover {
-  background-color: #1D4ED8 !important;
+  background-color: #B20710 !important;
 }
 
 body.light #profile-hub-root input,
 body.light #profile-hub-root select {
   background-color: #FFFFFF !important;
-  border-color: #BFDBFE !important;
-  color: #1E3A8A !important;
+  border-color: #DCDCDC !important;
+  color: #111111 !important;
 }
 
-/* Subtle borders for pristine card separation */
+/* Card Borders */
 body.light .border-zinc-900,
 body.light .border-zinc-850,
 body.light .border-zinc-800,
@@ -113,79 +117,94 @@ body.light .border-zinc-700,
 body.light .border-zinc-850\/80,
 body.light .border-white\/10,
 body.light .border-zinc-900\/80 {
-  border-color: #E5E7EB !important;
+  border-color: #E5E5E5 !important;
 }
 
-/* Divider colors */
+/* Dividers */
 body.light hr,
 body.light .divide-y > *,
 body.light .border-t,
 body.light .border-b {
-  border-color: #D1D5DB !important;
+  border-color: #EAEAEA !important;
 }
 
-/* High Legibility text overrides */
-body.light .text-white,
-body.light .text-zinc-100,
-body.light .text-zinc-200,
-body.light .text-zinc-300,
+/* High Legibility text overrides - selective to safeguard readability */
+body.light .text-white:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]):not(.xp-badge *):not(.active-pill *),
+body.light .text-zinc-100:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]):not(.xp-badge *),
+body.light .text-zinc-200:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]),
+body.light .text-zinc-300:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]),
+body.light .text-slate-100:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]),
 body.light .text-slate-900,
 body.light .text-slate-800,
 body.light .text-slate-700,
-body.light .text-slate-600,
-body.light .text-slate-100 {
-  color: #111827 !important;
+body.light .text-slate-600 {
+  color: #111111 !important;
 }
 
-/* Secondary & Subtitle Text */
+/* Active Highlight Safeguards */
+body.light button.bg-white,
+body.light .bg-white.text-white,
+body.light .active-pill,
+body.light .active-tab {
+  color: #FFFFFF !important;
+}
+
+body.light button.bg-white *,
+body.light .bg-white.text-white *,
+body.light .active-pill *,
+body.light .active-tab * {
+  color: #FFFFFF !important;
+}
+
+/* Secondary & Subtitle Text (charcoal-gray) */
 body.light .text-zinc-400,
 body.light .text-zinc-500,
 body.light .text-slate-400,
 body.light .text-slate-500 {
-  color: #4B5563 !important;
+  color: #555555 !important;
 }
 
-/* Disabled Text */
+/* Disabled/Muted text */
 body.light .text-zinc-600,
 body.light .text-slate-300,
 body.light .text-zinc-500\/40 {
-  color: #9CA3AF !important;
+  color: #888888 !important;
 }
 
-/* Hover States for list items and grids */
+/* Hover States */
 body.light .hover\:bg-zinc-900:hover,
 body.light .hover\:bg-zinc-800:hover,
 body.light .hover\:bg-zinc-850:hover,
 body.light .hover\:bg-slate-50:hover {
-  background-color: #F3F4F6 !important;
-  color: #111827 !important;
+  background-color: #F5F5F7 !important;
+  color: #111111 !important;
 }
 
-/* Input Fields and Select Dropdowns */
+/* Input Fields */
 body.light input,
 body.light select,
 body.light textarea {
   background-color: #FFFFFF !important;
-  color: #111827 !important;
-  border-color: #E5E7EB !important;
+  color: #111111 !important;
+  border-color: #DCDCDC !important;
 }
 
 body.light input::placeholder,
 body.light select::placeholder,
 body.light textarea::placeholder {
-  color: #9CA3AF !important;
+  color: #888888 !important;
 }
 
-/* Primary Buttons (Royal Blue #2563EB) */
+/* Primary Light Buttons (Patriotic Saffron Theme) */
 body.light button.bg-white,
 body.light .bg-amber-400,
 body.light .bg-yellow-400,
 body.light .bg-indigo-600,
 body.light .bg-blue-600,
 body.light .bg-orange-600 {
-  background-color: #2563EB !important;
+  background-color: #FF671F !important;
   color: #FFFFFF !important;
-  border-color: #2563EB !important;
+  border-color: #FF671F !important;
 }
 
 body.light button.bg-white:hover,
@@ -194,8 +213,8 @@ body.light .bg-yellow-400:hover,
 body.light .bg-indigo-600:hover,
 body.light .bg-blue-600:hover,
 body.light .bg-orange-600:hover {
-  background-color: #1D4ED8 !important;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+  background-color: #E55310 !important;
+  box-shadow: 0 4px 15px rgba(255, 103, 31, 0.25) !important;
 }
 
 body.light button.bg-white .text-black,
@@ -203,96 +222,56 @@ body.light button.bg-white .text-slate-900 {
   color: #FFFFFF !important;
 }
 
-/* Secondary Buttons (White backgrounds, blue borders #2563EB, and blue text #2563EB) */
+/* Secondary Buttons (Green outlines & Saffron) */
 body.light button.bg-zinc-900,
 body.light button.bg-zinc-950,
 body.light button.bg-slate-100,
 body.light .bg-zinc-800,
 body.light .bg-slate-100\/90 {
   background-color: #FFFFFF !important;
-  color: #2563EB !important;
-  border: 1px solid #2563EB !important;
+  color: #046A38 !important;
+  border: 1px solid #046A38 !important;
 }
 
 body.light button.bg-zinc-900:hover,
 body.light button.bg-zinc-950:hover,
 body.light button.bg-slate-100:hover,
 body.light .bg-zinc-800:hover {
-  background-color: #F3F4F6 !important;
-  color: #1D4ED8 !important;
+  background-color: #F0FFF4 !important;
+  color: #03522C !important;
 }
 
-/* Icons, Sparkles and Highlights (Royal Blue #2563EB, Teal #14B8A6 for active/highlights) */
+/* Highlight Accents (Patriotic Saffron/Green/Navy Blue) */
 body.light .text-blue-500,
 body.light .text-indigo-500,
-body.light .text-amber-500,
-body.light .text-teal-500,
 body.light .text-indigo-400,
+body.light .text-teal-500,
+body.light .text-emerald-400,
+body.light .active-highlight {
+  color: #FF671F !important;
+}
+
+body.light .text-amber-500,
 body.light .text-orange-450,
 body.light .text-yellow-400,
-body.light .text-orange-400 {
-  color: #2563EB !important;
-}
-
-/* Active Highlight / Accent States (Modern Teal #14B8A6) */
-body.light .active-highlight,
+body.light .text-orange-400,
 body.light .text-teal-400,
 body.light .text-emerald-400 {
-  color: #14B8A6 !important;
-}
-
-/* Golden Orange Accent #F59E0B Warnings */
-body.light .text-amber-500,
-body.light .text-yellow-500,
-body.light .text-orange-500 {
-  color: #F59E0B !important;
-}
-
-body.light .bg-yellow-500\/10,
-body.light .bg-amber-500\/10,
-body.light .bg-orange-500\/10,
-body.light .bg-yellow-400\/10 {
-  background-color: rgba(245, 158, 11, 0.1) !important;
-  color: #F59E0B !important;
-  border-color: rgba(245, 158, 11, 0.2) !important;
-}
-
-/* Success Elements (Green #22C55E) */
-body.light .text-green-500,
-body.light .text-emerald-500,
-body.light .text-emerald-400 {
-  color: #22C55E !important;
-}
-
-body.light .bg-emerald-500\/10,
-body.light .bg-green-500\/10,
-body.light .bg-emerald-600\/20,
-body.light .bg-emerald-500\/20 {
-  background-color: rgba(34, 197, 94, 0.1) !important;
-  color: #22C55E !important;
-  border-color: rgba(34, 197, 94, 0.2) !important;
-}
-
-/* Error Elements (Red #EF4444) */
-body.light .text-red-400,
-body.light .text-red-500 {
-  color: #EF4444 !important;
-}
-
-body.light .bg-red-500\/10,
-body.light .bg-red-500\/20 {
-  background-color: rgba(239, 68, 68, 0.1) !important;
-  color: #EF4444 !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
+  color: #046A38 !important;
 }
 
 
 /* ==========================================================
-   PREMIUM DARK THEME (DEEP SPACE NAVY)
+   FASCINATING CINEMATIC NETFLIX DARK THEME (DARK COAL & RED)
    ========================================================== */
 body.dark {
-  background-color: #0B1020 !important;
-  color: #F8FAFC !important;
+  background-color: #080707 !important; /* Pitch cinematic background */
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 103, 31, 0.15) 0px, transparent 65%),
+    radial-gradient(at 100% 100%, rgba(4, 106, 56, 0.15) 0px, transparent 65%),
+    radial-gradient(at 50% 50%, rgba(6, 3, 141, 0.08) 0px, transparent 50%) !important;
+  background-attachment: fixed !important;
+  color: #E5E5E5 !important;
 }
 
 body.dark .bg-black,
@@ -316,26 +295,26 @@ body.dark .stats-card,
 body.dark .bg-zinc-900\/90,
 body.dark .bg-zinc-950\/70,
 body.dark .bg-zinc-900\/30 {
-  background-color: #161B2F !important;
-  color: #F8FAFC !important;
-  border-color: #2A3354 !important;
+  background-color: #181818 !important; /* Elegant solid container dark grey */
+  color: #F5F5F7 !important;
+  border-color: #2D2D2D !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  box-shadow: 0 4px 20px -2px rgba(56, 189, 248, 0.05) !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Secondary Surface #202743 */
+/* Secondary dark surface */
 body.dark .bg-zinc-50,
 body.dark .bg-slate-50,
 body.dark .bg-slate-100,
 body.dark .bg-zinc-800,
 body.dark .bg-zinc-850,
 body.dark .bg-zinc-900/10 {
-  background-color: #202743 !important;
-  color: #F8FAFC !important;
+  background-color: #202020 !important;
+  color: #F5F5F7 !important;
 }
 
-/* Subtle borders for pristine card separation */
+/* Subtle borders for pristine separation */
 body.dark .border-zinc-900,
 body.dark .border-zinc-850,
 body.dark .border-zinc-800,
@@ -347,18 +326,18 @@ body.dark .border-zinc-700,
 body.dark .border-zinc-850\/80,
 body.dark .border-white\/10,
 body.dark .border-zinc-900\/80 {
-  border-color: #2A3354 !important;
+  border-color: #2D2D2D !important;
 }
 
-/* Divider colors #334155 */
+/* Divider colors */
 body.dark hr,
 body.dark .divide-y > *,
 body.dark .border-t,
 body.dark .border-b {
-  border-color: #334155 !important;
+  border-color: #333333 !important;
 }
 
-/* High Legibility text overrides */
+/* High Legibility text */
 body.dark .text-white,
 body.dark .text-zinc-100,
 body.dark .text-zinc-200,
@@ -368,58 +347,58 @@ body.dark .text-slate-800,
 body.dark .text-slate-700,
 body.dark .text-slate-600,
 body.dark .text-slate-100 {
-  color: #F8FAFC !important;
+  color: #F5F5F7 !important;
 }
 
-/* Secondary & Subtitle Text */
+/* Secondary/Subtitle text */
 body.dark .text-zinc-400,
 body.dark .text-zinc-500,
 body.dark .text-slate-400,
 body.dark .text-slate-500 {
-  color: #CBD5E1 !important;
+  color: #A1A1A6 !important; /* Sleek elegant silver gray */
 }
 
-/* Disabled Text */
+/* Disabled text */
 body.dark .text-zinc-600,
 body.dark .text-slate-300,
 body.dark .text-zinc-500\/40 {
-  color: #64748B !important;
+  color: #666666 !important;
 }
 
-/* Hover States for list items and grids */
+/* Hover States */
 body.dark .hover\:bg-zinc-900:hover,
 body.dark .hover\:bg-zinc-800:hover,
 body.dark .hover\:bg-zinc-850:hover,
 body.dark .hover\:bg-slate-50:hover {
-  background-color: #202743 !important;
-  color: #F8FAFC !important;
+  background-color: #262626 !important;
+  color: #F5F5F7 !important;
 }
 
 /* Input Fields and Select Dropdowns */
 body.dark input,
 body.dark select,
 body.dark textarea {
-  background-color: #161B2F !important;
-  color: #F8FAFC !important;
-  border-color: #2A3354 !important;
+  background-color: #1C1C1C !important;
+  color: #F5F5F7 !important;
+  border-color: #3A3A3A !important;
 }
 
 body.dark input::placeholder,
 body.dark select::placeholder,
 body.dark textarea::placeholder {
-  color: #64748B !important;
+  color: #727277 !important;
 }
 
-/* Primary Buttons (Electric Cyan #38BDF8 with dark text #0B1020) */
+/* Primary Tricolor Saffron Buttons (#FF671F) */
 body.dark button.bg-white,
 body.dark .bg-amber-400,
 body.dark .bg-yellow-400,
 body.dark .bg-indigo-600,
 body.dark .bg-blue-600,
 body.dark .bg-orange-600 {
-  background-color: #38BDF8 !important;
-  color: #0B1020 !important;
-  border-color: #38BDF8 !important;
+  background-color: #FF671F !important;
+  color: #FFFFFF !important;
+  border-color: #FF671F !important;
 }
 
 body.dark button.bg-white:hover,
@@ -428,141 +407,118 @@ body.dark .bg-yellow-400:hover,
 body.dark .bg-indigo-600:hover,
 body.dark .bg-blue-600:hover,
 body.dark .bg-orange-600:hover {
-  background-color: #0ea5e9 !important;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3) !important;
+  background-color: #E55310 !important;
+  box-shadow: 0 4px 20px rgba(255, 103, 31, 0.45) !important;
 }
 
 body.dark button.bg-white .text-black,
 body.dark button.bg-white .text-slate-900 {
-  color: #0B1020 !important;
+  color: #FFFFFF !important;
 }
 
-/* Secondary Buttons (Dark background #161B2F with Cyan outline #38BDF8) */
+/* Secondary dark outline buttons */
 body.dark button.bg-zinc-900,
 body.dark button.bg-zinc-950,
 body.dark button.bg-slate-100,
 body.dark .bg-zinc-800,
 body.dark .bg-slate-100\/90 {
-  background-color: #161B2F !important;
-  color: #38BDF8 !important;
-  border: 1px solid #38BDF8 !important;
+  background-color: #121212 !important;
+  color: #046A38 !important;
+  border: 1px solid #046A38 !important;
 }
 
 body.dark button.bg-zinc-900:hover,
 body.dark button.bg-zinc-950:hover,
 body.dark button.bg-slate-100:hover,
 body.dark .bg-zinc-800:hover {
-  background-color: #202743 !important;
-  color: #0ea5e9 !important;
+  background-color: #032011 !important;
+  color: #00E676 !important;
 }
 
-/* Icons, Sparkles and Highlights (Electric Cyan #38BDF8) */
+/* Highlights & Icons */
 body.dark .text-blue-500,
 body.dark .text-indigo-500,
-body.dark .text-amber-500,
 body.dark .text-teal-500,
 body.dark .text-indigo-400,
+body.dark .text-emerald-400,
+body.dark .active-highlight {
+  color: #FF671F !important;
+}
+
+body.dark .text-amber-500,
 body.dark .text-orange-450,
 body.dark .text-yellow-400,
-body.dark .text-orange-400 {
-  color: #38BDF8 !important;
-}
-
-/* Active Highlight / Soft Violet #8B5CF6 reserved for interactive elements */
-body.dark .active-highlight,
+body.dark .text-orange-400,
 body.dark .text-teal-400,
 body.dark .text-emerald-400 {
-  color: #8B5CF6 !important;
-}
-
-/* Golden Amber Accent #FBBF24 Warnings */
-body.dark .text-amber-500,
-body.dark .text-yellow-500,
-body.dark .text-orange-500 {
-  color: #FBBF24 !important;
-}
-
-body.dark .bg-yellow-500\/10,
-body.dark .bg-amber-500\/10,
-body.dark .bg-orange-500\/10,
-body.dark .bg-yellow-400\/10 {
-  background-color: rgba(251, 191, 36, 0.1) !important;
-  color: #FBBF24 !important;
-  border-color: rgba(251, 191, 36, 0.2) !important;
-}
-
-/* Success Elements (Green #22C55E) */
-body.dark .text-green-500,
-body.dark .text-emerald-500,
-body.dark .text-emerald-400 {
-  color: #22C55E !important;
-}
-
-body.dark .bg-emerald-500\/10,
-body.dark .bg-green-500\/10,
-body.dark .bg-emerald-600\/20,
-body.dark .bg-emerald-500\/20 {
-  background-color: rgba(34, 197, 94, 0.1) !important;
-  color: #22C55E !important;
-  border-color: rgba(34, 197, 94, 0.2) !important;
-}
-
-/* Error Elements (Red #EF4444) */
-body.dark .text-red-400,
-body.dark .text-red-500 {
-  color: #EF4444 !important;
-}
-
-body.dark .bg-red-500\/10,
-body.dark .bg-red-500\/20 {
-  background-color: rgba(239, 68, 68, 0.1) !important;
-  color: #EF4444 !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
+  color: #046A38 !important;
 }
 
 
 /* ==========================================================
-   COMMON COMPONENTS & OVERLAYS
+   COMMON UTILITIES & PERFORMANCE ENHANCEMENTS
    ========================================================== */
 
-/* Study Material / Markdown / Explanations Panel */
+/* Study Material Prose styling */
 body.light .markdown-body,
 body.light .prose {
-  color: #111827 !important;
+  color: #222222 !important;
 }
 
 body.dark .markdown-body,
 body.dark .prose {
-  color: #CBD5E1 !important;
+  color: #E5E5E5 !important;
 }
 
 body.light .markdown-body strong {
-  color: #111827 !important;
+  color: #000000 !important;
   font-weight: 700;
 }
 
 body.dark .markdown-body strong {
-  color: #F8FAFC !important;
+  color: #FFFFFF !important;
   font-weight: 700;
 }
 
 body.light .markdown-body p,
 body.light .markdown-body li {
-  color: #4B5563 !important;
+  color: #444444 !important;
 }
 
 body.dark .markdown-body p,
 body.dark .markdown-body li {
-  color: #CBD5E1 !important;
+  color: #D1D1D6 !important;
 }
 
-/* Modal Overlay & Backdrop */
+/* Dialog backdrops */
 body.light .modal-overlay {
-  background-color: rgba(17, 24, 39, 0.4) !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: blur(8px) !important;
 }
 
 body.dark .modal-overlay {
-  background-color: rgba(11, 16, 32, 0.6) !important;
-  backdrop-filter: blur(8px) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Hide webkit scrollbars but support scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Light/Dark Mode Contrast Overrides */
+.text-white-force {
+  color: #FFFFFF !important;
+}
+
+body.dark .profile-label-custom {
+  color: #FFFFFF !important;
+}
+
+body.light .profile-label-custom {
+  color: #111111 !important;
 }

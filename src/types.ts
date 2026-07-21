@@ -11,6 +11,8 @@ export interface QuizQuestion {
   options: string[];
   correctAnswerIndex: number;
   explanation: string;
+  examReference?: string;
+  weightage?: string;
 }
 
 export interface ChapterSection {
@@ -19,6 +21,13 @@ export interface ChapterSection {
   body: string;
   keyPoints?: string[];
   diagramType?: 'cell' | 'atom' | 'circuit' | 'reaction' | 'ray-diagram';
+  hidden?: boolean; // Toggle visibility for student
+}
+
+export interface DPPFile {
+  id: string;
+  name: string;
+  url: string;
 }
 
 export interface Topic {
@@ -31,6 +40,8 @@ export interface Topic {
   lectureUrl?: string; // YouTube embedded link
   pdfUrl?: string;     // Google Drive link
   dppUrl?: string;     // Daily Practice Problems link
+  dppFiles?: DPPFile[]; // Multiple day-wise named PDFs
+  hidden?: boolean;    // Toggle visibility for student
 }
 
 export interface Chapter {
@@ -49,6 +60,8 @@ export interface Chapter {
   lectureUrl?: string; // YouTube embedded link
   pdfUrl?: string;     // Google Drive link
   dppUrl?: string;     // Daily Practice Problems link
+  dppFiles?: DPPFile[]; // Multiple day-wise named PDFs
+  hidden?: boolean;    // Toggle visibility for student
 }
 
 export interface Course {
@@ -62,6 +75,7 @@ export interface Course {
   upiId?: string;
   thumbnailUrl?: string; // Customizable course thumbnail
   specialAIFeature?: string; // AI generated special premium features for that batch
+  hidden?: boolean;      // Toggle visibility for student
 }
 
 export interface AppCustomization {
@@ -95,7 +109,7 @@ export interface UserProgress {
   referralCode?: string;
   referralWallet?: number;
   onboarded?: boolean;
-  mentorPreference?: 'kalu' | 'buddhu' | 'both';
+  mentorPreference?: 'analytical' | 'visual' | 'both';
   storagePermissionGranted?: boolean;
 }
 
@@ -116,6 +130,9 @@ export interface StudentAnalysisRecord {
   paymentDetails: string; // UTR or Ref number
   purchasedAt: string;
   status?: 'pending' | 'approved' | 'denied';
+  diagnosticScore?: number;
+  syllabusChaptersRead?: number;
+  quizSubmissionsSolved?: number;
 }
 
 export interface OwnerProfile {

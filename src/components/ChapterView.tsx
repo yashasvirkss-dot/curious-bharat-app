@@ -774,7 +774,7 @@ export default function ChapterView({
           </div>
 
           {/* Downloadable Google Drive PDF and Practice DPP sheets */}
-          {(chapter.pdfUrl || chapter.dppUrl) && (
+          {(chapter.pdfUrl || chapter.dppUrl || (chapter.dppFiles && chapter.dppFiles.length > 0)) && (
             <div className="bg-zinc-950 border border-zinc-850 p-5 rounded-2xl space-y-3.5 shadow-xl">
               <h4 className="text-xs font-extrabold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
                 <FileText className="w-4 h-4" /> Reference Study Resources
@@ -812,26 +812,52 @@ export default function ChapterView({
                     </div>
                   </button>
                 )}
-                {chapter.dppUrl && (
-                  <button
-                    type="button"
-                    onClick={() => handleDownloadClick(chapter.dppUrl || '', 'Daily Practice DPP Sheet')}
-                    className="w-full px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-805 rounded-xl text-zinc-300 hover:text-white transition text-xs flex items-center justify-between group cursor-pointer font-medium text-left"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-zinc-400" /> Daily Practice DPP Sheet
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      {ownerProfile?.allowDownloads === false ? (
-                        <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg font-mono font-bold flex items-center gap-1">
-                          <Lock className="w-2.5 h-2.5" /> Downloads Locked
-                        </span>
-                      ) : (
-                        <span className="text-[9px] text-zinc-400 group-hover:text-white font-mono font-bold">📥 Download DPP</span>
-                      )}
-                      <ExternalLink className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
-                    </div>
-                  </button>
+
+                {chapter.dppFiles && chapter.dppFiles.length > 0 ? (
+                  chapter.dppFiles.map((file, idx) => (
+                    <button
+                      key={file.id || idx}
+                      type="button"
+                      onClick={() => handleDownloadClick(file.url || '', file.name || `Daily Practice DPP Sheet Day #${idx + 1}`)}
+                      className="w-full px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-805 rounded-xl text-zinc-300 hover:text-white transition text-xs flex items-center justify-between group cursor-pointer font-medium text-left"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-cyan-400" /> {file.name || `Practice Sheet Day #${idx + 1}`}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {ownerProfile?.allowDownloads === false ? (
+                          <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg font-mono font-bold flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5" /> Downloads Locked
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-zinc-400 group-hover:text-white font-mono font-bold">📥 Download sheet</span>
+                        )}
+                        <ExternalLink className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  chapter.dppUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadClick(chapter.dppUrl || '', 'Daily Practice DPP Sheet')}
+                      className="w-full px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-805 rounded-xl text-zinc-300 hover:text-white transition text-xs flex items-center justify-between group cursor-pointer font-medium text-left"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-zinc-400" /> Daily Practice DPP Sheet
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {ownerProfile?.allowDownloads === false ? (
+                          <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg font-mono font-bold flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5" /> Downloads Locked
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-zinc-400 group-hover:text-white font-mono font-bold">📥 Download DPP</span>
+                        )}
+                        <ExternalLink className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
+                      </div>
+                    </button>
+                  )
                 )}
               </div>
             </div>

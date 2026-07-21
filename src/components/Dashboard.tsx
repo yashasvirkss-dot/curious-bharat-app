@@ -34,6 +34,12 @@ import { Chapter, Course, UserProgress, AppCustomization, Topic, StudentAnalysis
 import EditableText from './EditableText';
 import ScienceGames from './ScienceGames';
 import { translations } from '../lib/translations';
+import ThreeDElement from './ThreeDElement';
+import AshokChakra from './AshokChakra';
+import CommunityComments from './CommunityComments';
+import { getTenQuestions } from '../utils/quizGenerator';
+import FlashcardsView from './FlashcardsView';
+import HorizontalScrollContainer from './HorizontalScrollContainer';
 
 interface DashboardProps {
   courses: Course[];
@@ -55,6 +61,7 @@ interface DashboardProps {
   setSelectedTopic?: (topic: any | null) => void;
   viewStyle?: 'grid' | 'list';
   isDarkMode?: boolean;
+  onOpenCheckout?: (course: Course) => void;
 }
 
 export default function Dashboard({ 
@@ -76,7 +83,8 @@ export default function Dashboard({
   selectedTopic: propsSelectedTopic,
   setSelectedTopic: propsSetSelectedTopic,
   viewStyle = 'grid',
-  isDarkMode = true
+  isDarkMode = true,
+  onOpenCheckout
 }: DashboardProps) {
   const t = translations[appLanguage];
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +117,19 @@ export default function Dashboard({
   const selectedTopic = propsSelectedTopic !== undefined ? propsSelectedTopic : localSelectedTopic;
   const setSelectedTopic = propsSetSelectedTopic !== undefined ? propsSetSelectedTopic : setLocalSelectedTopic;
   const [activeTopicTab, setActiveTopicTab] = useState<'lecture' | 'notes' | 'quiz' | 'flashcards' | 'dpp'>('lecture');
+
+  // Synchronize locked course selection in useEffect to prevent render-phase state updates
+  React.useEffect(() => {
+    if (selectedCourse) {
+      const isCurrentCoursePaid = selectedCourse.isPaid;
+      const isCurrentUnlocked = !isCurrentCoursePaid || (progress.purchasedCourses || []).includes(selectedCourse.id);
+      if (!isCurrentUnlocked) {
+        setSelectedCourse(null);
+        setSelectedChapter(null);
+        setSelectedTopic(null);
+      }
+    }
+  }, [selectedCourse, progress.purchasedCourses, setSelectedCourse, setSelectedChapter, setSelectedTopic]);
 
   // File Download & Storage Permission States
   const [showStorageModal, setShowStorageModal] = useState(false);
@@ -304,13 +325,17 @@ export default function Dashboard({
 
   // Payment triggers
   const triggerUnlock = (course: Course) => {
-    setCheckoutCourse(course);
-    setUserUTR('');
-    setUtrError('');
-    setStudentName('');
-    setStudentContact('');
-    setStudentNameError('');
-    setStudentContactError('');
+    if (onOpenCheckout) {
+      onOpenCheckout(course);
+    } else {
+      setCheckoutCourse(course);
+      setUserUTR('');
+      setUtrError('');
+      setStudentName('');
+      setStudentContact('');
+      setStudentNameError('');
+      setStudentContactError('');
+    }
   };
 
   const handleConfirmPurchase = () => {
@@ -709,45 +734,126 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl bg-gradient-to-br from-[#4F9DFF]/5 via-zinc-950 to-[#14b8a6]/5"
+            className="relative overflow-hidden rounded-3xl bg-black border border-zinc-800/80 p-8 sm:p-10 shadow-2xl"
           >
-            {/* Premium background accents */}
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6] z-20"></div>
-            <div className="absolute top-4 right-4 w-40 h-40 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-4 left-4 w-40 h-40 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Premium Indian Tricolor background accent line */}
+            <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[#FF671F] via-[#FFFFFF] to-[#046A38] z-20"></div>
+            <div className="absolute top-4 right-4 w-40 h-40 bg-[#FF671F]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-4 left-4 w-40 h-40 bg-[#046A38]/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 max-w-3xl space-y-4 text-left">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 font-medium">
-                <Sparkles className="w-3.5 h-3.5 text-white" /> {appLanguage === 'hi' ? 'जिज्ञासा को सशक्त बनाना' : 'Empowering Curiosities'}
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+              <div className="md:col-span-8 space-y-4 text-left">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950 border border-zinc-850 text-xs text-zinc-300 font-medium shadow-md">
+                  <AshokChakra size={16} animateRotation={true} glow={false} />
+                  <span className="text-zinc-200">{appLanguage === 'hi' ? 'जिज्ञासा को सशक्त बनाना' : 'Empowering Curiosities'}</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-extrabold tracking-tight text-white leading-tight">
+                  <EditableText
+                    value={customization.brandingTitle}
+                    onSave={(v) => {}}
+                    isEditMode={isEditMode}
+                    as="span"
+                  />
+                </h1>
+                <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                  {appLanguage === 'hi'
+                    ? 'आपके प्रीमियम अध्ययन इंटरफ़ेस में आपका स्वागत है। व्यवस्थित सार्वजनिक पाठ्यक्रम अध्यायों को ब्राउज़ करें, परीक्षणों के साथ अभ्यास करें, और अपने गतिशील एआई मेंटर के साथ संदेहों को तुरंत हल करें।'
+                    : 'Welcome to your premium study interface. Browse structured public master syllabus chapters, lock and unlock paid batches, train with customized test cards, and solve doubts with your dynamic mentor assistant.'}
+                </p>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button
+                    onClick={() => onOpenAI('doubt', 'General Science doubts')}
+                    className="px-5 py-2.5 bg-white text-black hover:bg-zinc-200 active:scale-95 transition font-bold rounded-xl flex items-center gap-2 shadow cursor-pointer text-xs"
+                    id="btn-ask-ai"
+                  >
+                    <Brain className="w-4 h-4 text-black" /> {appLanguage === 'hi' ? 'एआई मेंटर से संदेह पूछें' : 'Ask AI Mentor doubts'}
+                  </button>
+                </div>
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-extrabold tracking-tight text-white leading-tight">
-                <EditableText
-                  value={customization.brandingTitle}
-                  onSave={(v) => {}}
-                  isEditMode={isEditMode}
-                  as="span"
-                />
-              </h1>
-              <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-                {appLanguage === 'hi'
-                  ? 'आपके प्रीमियम अध्ययन इंटरफ़ेस में आपका स्वागत है। व्यवस्थित सार्वजनिक पाठ्यक्रम अध्यायों को ब्राउज़ करें, परीक्षणों के साथ अभ्यास करें, और अपने गतिशील एआई मेंटर के साथ संदेहों को तुरंत हल करें।'
-                  : 'Welcome to your premium study interface. Browse structured public master syllabus chapters, lock and unlock paid batches, train with customized test cards, and solve doubts with your dynamic mentor assistant.'}
-              </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  onClick={() => onOpenAI('doubt', 'General Science doubts')}
-                  className="px-5 py-2.5 bg-white text-black hover:bg-zinc-200 active:scale-95 transition font-bold rounded-xl flex items-center gap-2 shadow cursor-pointer text-xs"
-                  id="btn-ask-ai"
-                >
-                  <Brain className="w-4 h-4 text-black" /> {appLanguage === 'hi' ? 'एआई मेंटर से संदेह पूछें' : 'Ask AI Mentor doubts'}
-                </button>
+
+              {/* Magnificent Mascots 3D Element with background AshokChakra */}
+              <div className="md:col-span-4 h-44 sm:h-52 relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#FF671F]/15 to-[#046A38]/15 rounded-full blur-2xl animate-pulse" />
+                <AshokChakra size={140} animateRotation={true} glow={true} className="absolute opacity-25 z-0" />
+                <ThreeDElement type="hometown_mascots" className="w-44 h-44 sm:w-48 sm:h-48 relative z-10" />
               </div>
             </div>
           </motion.div>
         );
 
       case 'stats':
-        return null;
+        if (selectedCourse) return null;
+        return (
+          <div key="stats" className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
+            
+            {/* Card 1: Study Coins / XP */}
+            <div className="p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group min-h-[160px] bg-zinc-950 border-zinc-900/85 hover:border-zinc-800">
+              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#ef4444]" />
+              <div className="flex justify-between items-start w-full">
+                <div className="space-y-1 relative z-10 text-left">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500 block">
+                    {appLanguage === 'hi' ? 'अर्जित सिक्के' : 'ACADEMIC COINS'}
+                  </span>
+                  <h4 className="text-3xl font-sans font-black text-white leading-none">
+                    {progress.totalXP || 0}
+                  </h4>
+                  <p className="text-[10px] text-zinc-400 font-medium pt-1">
+                    {appLanguage === 'hi' ? 'क्विज़ और अध्ययन से अर्जित' : 'Earned via quizzes & training'}
+                  </p>
+                </div>
+                {/* Prominent 3D Coins */}
+                <div className="w-24 h-24 relative -mr-4 -mt-4 shrink-0">
+                  <ThreeDElement type="coins_3d_academic" className="w-full h-full" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Learning Streak */}
+            <div className="p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group min-h-[160px] bg-zinc-950 border-zinc-900/85 hover:border-zinc-800">
+              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#14b8a6]" />
+              <div className="flex justify-between items-start w-full">
+                <div className="space-y-1 relative z-10 text-left">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500 block">
+                    {appLanguage === 'hi' ? 'सक्रियता क्रम' : 'DAILY STUDY STREAK'}
+                  </span>
+                  <h4 className="text-3xl font-sans font-black text-white leading-none flex items-center gap-1.5">
+                    {progress.streak || 0} <span className="text-sm font-bold text-teal-400">Days</span>
+                  </h4>
+                  <p className="text-[10px] text-zinc-400 font-medium pt-1">
+                    {appLanguage === 'hi' ? 'दैनिक निरंतर अध्ययन लक्ष्य' : 'Keep learning to sustain streak'}
+                  </p>
+                </div>
+                {/* Prominent 3D Cap */}
+                <div className="w-24 h-24 relative -mr-4 -mt-4 shrink-0">
+                  <ThreeDElement type="cap" className="w-full h-full" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Doubts Asked */}
+            <div className="p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group min-h-[160px] bg-zinc-950 border-zinc-900/85 hover:border-zinc-800">
+              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#fbbf24]" />
+              <div className="flex justify-between items-start w-full">
+                <div className="space-y-1 relative z-10 text-left">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500 block">
+                    {appLanguage === 'hi' ? 'संदेह और प्रश्न' : 'DOUBTS SOLVED'}
+                  </span>
+                  <h4 className="text-3xl font-sans font-black text-white leading-none">
+                    {progress.aiDoubtsAsked || 0}
+                  </h4>
+                  <p className="text-[10px] text-zinc-400 font-medium pt-1">
+                    {appLanguage === 'hi' ? 'भारत एआई सलाहकार द्वारा समाधान' : 'Resolved by Bharat AI mentor'}
+                  </p>
+                </div>
+                {/* Prominent 3D Question Mark */}
+                <div className="w-24 h-24 relative -mr-4 -mt-4 shrink-0">
+                  <ThreeDElement type="question_mark_3d" className="w-full h-full" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        );
 
       case 'courses':
         if (selectedCourse) {
@@ -755,9 +861,6 @@ export default function Dashboard({
           const isCurrentUnlocked = !isCurrentCoursePaid || (progress.purchasedCourses || []).includes(selectedCourse.id);
 
           if (!isCurrentUnlocked) {
-            setSelectedCourse(null);
-            setSelectedChapter(null);
-            setSelectedTopic(null);
             return null;
           }
 
@@ -834,27 +937,29 @@ export default function Dashboard({
                     </p>
                   </div>
 
-                  {/* Tabs layout */}
-                  <div className="flex flex-wrap gap-2 border-b border-zinc-900 pb-3 relative z-10">
-                    {[
-                      { id: 'lecture', label: '🎥 Video Lecture' },
-                      { id: 'notes', label: '📝 Study Notes' },
-                      { id: 'quiz', label: '🎯 MCQ Quiz' },
-                      { id: 'flashcards', label: '⚡ Flashcards' },
-                      { id: 'dpp', label: '📂 DPP & PDF' }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => { playSound('click'); setActiveTopicTab(tab.id as any); }}
-                        className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
-                          activeTopicTab === tab.id
-                            ? 'bg-white text-black shadow'
-                            : 'bg-zinc-900/60 text-zinc-400 hover:text-white border border-zinc-850 hover:border-zinc-800'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
+                  {/* Tabs layout with horizontal scroll and responsive audio effects */}
+                  <div className="border-b border-zinc-900 pb-3 relative z-10">
+                    <HorizontalScrollContainer>
+                      {[
+                        { id: 'lecture', label: '🎥 Video Lecture' },
+                        { id: 'notes', label: '📝 Study Notes' },
+                        { id: 'quiz', label: '🎯 MCQ Quiz' },
+                        { id: 'flashcards', label: '🧠 Concept Mind Map' },
+                        { id: 'dpp', label: '📂 DPP & PDF' }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => { playSound('click'); setActiveTopicTab(tab.id as any); }}
+                          className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer shrink-0 ${
+                            activeTopicTab === tab.id
+                              ? 'bg-white text-black shadow'
+                              : 'bg-zinc-900/60 text-zinc-400 hover:text-white border border-zinc-850 hover:border-zinc-800'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </HorizontalScrollContainer>
                   </div>
 
                   {/* Tab Contents */}
@@ -898,46 +1003,115 @@ export default function Dashboard({
                       <div className="space-y-6">
                         <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                            Interactive Core Syllabus Theory
+                            📚 CONSOLIDATED STUDY VAULT & EXPERIMENTAL HUBS
                           </h3>
                         </div>
 
                         {selectedTopic.sections && selectedTopic.sections.length > 0 ? (
-                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                            
-                            {/* Left Text Notes */}
-                            <div className="lg:col-span-7 space-y-6">
-                              {selectedTopic.sections.map((sec: any) => (
-                                <div key={sec.id} className="space-y-3 bg-zinc-900/20 border border-zinc-900 p-5 rounded-2xl">
-                                  <h4 className="text-sm font-bold text-white leading-normal">
-                                    {sec.title}
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                              
+                              {/* Left Text Notes */}
+                              <div className="lg:col-span-7 space-y-6">
+                                {selectedTopic.sections.map((sec: any) => (
+                                  <div key={sec.id} className="space-y-3 bg-zinc-900/20 border border-zinc-900 p-5 rounded-2xl">
+                                    <h4 className="text-sm font-bold text-white leading-normal">
+                                      {sec.title}
+                                    </h4>
+                                    <p className="text-xs text-zinc-400 leading-relaxed whitespace-pre-line">
+                                      {sec.body}
+                                    </p>
+                                    {sec.keyPoints && sec.keyPoints.length > 0 && (
+                                      <div className="pt-2.5 space-y-1.5 border-t border-zinc-900">
+                                        <span className="text-[9px] uppercase tracking-wider font-bold text-zinc-500">Key Takeaways</span>
+                                        {sec.keyPoints.map((pt: string, idx: number) => (
+                                          <div key={idx} className="flex items-start gap-1.5 text-[11px] text-zinc-300">
+                                            <span className="text-zinc-500 font-bold font-mono mt-0.5">•</span>
+                                            <span>{pt}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {/* Extra Downloadable Notes PDFs Section (Provide 2 more PDFs!) */}
+                                <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-5 space-y-4">
+                                  <h4 className="text-xs font-extrabold uppercase tracking-widest text-orange-400 font-mono">
+                                    📂 DOWNLOAD EXTRA HIGH-VALUE STUDY MATERIAL (PDF)
                                   </h4>
-                                  <p className="text-xs text-zinc-400 leading-relaxed whitespace-pre-line">
-                                    {sec.body}
-                                  </p>
-                                  {sec.keyPoints && sec.keyPoints.length > 0 && (
-                                    <div className="pt-2.5 space-y-1.5 border-t border-zinc-900">
-                                      <span className="text-[9px] uppercase tracking-wider font-bold text-zinc-500">Key Takeaways</span>
-                                      {sec.keyPoints.map((pt: string, idx: number) => (
-                                        <div key={idx} className="flex items-start gap-1.5 text-[11px] text-zinc-300">
-                                          <span className="text-zinc-500 font-bold font-mono mt-0.5">•</span>
-                                          <span>{pt}</span>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <a
+                                      href="#"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        alert("Success! 'Advanced Formula Sheet & Concept Blueprint (PDF)' is downloaded for offline study.");
+                                      }}
+                                      className="flex items-center justify-between p-3 bg-zinc-900/30 hover:bg-zinc-900/80 border border-zinc-900 hover:border-zinc-700 rounded-xl transition cursor-pointer text-left"
+                                    >
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="p-2 bg-orange-950/20 border border-orange-900/40 text-orange-400 rounded-lg">
+                                          <FileText className="w-4 h-4" />
                                         </div>
-                                      ))}
-                                    </div>
-                                  )}
+                                        <div>
+                                          <p className="text-xs font-bold text-white">Advanced Formula & Concept Guide</p>
+                                          <p className="text-[9px] text-zinc-500 font-mono">2.4 MB • Complete formulas</p>
+                                        </div>
+                                      </div>
+                                      <Download className="w-4 h-4 text-zinc-500" />
+                                    </a>
+
+                                    <a
+                                      href="#"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        alert("Success! 'NCERT Exemplar Solved Practice Notes (PDF)' is downloaded for offline study.");
+                                      }}
+                                      className="flex items-center justify-between p-3 bg-zinc-900/30 hover:bg-zinc-900/80 border border-zinc-900 hover:border-zinc-700 rounded-xl transition cursor-pointer text-left"
+                                    >
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="p-2 bg-purple-950/20 border border-purple-900/40 text-purple-400 rounded-lg">
+                                          <FileText className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                          <p className="text-xs font-bold text-white">NCERT Exemplar Solved Practice</p>
+                                          <p className="text-[9px] text-zinc-500 font-mono">3.1 MB • Question bank</p>
+                                        </div>
+                                      </div>
+                                      <Download className="w-4 h-4 text-zinc-500" />
+                                    </a>
+                                  </div>
                                 </div>
-                              ))}
+                              </div>
+
+                              {/* Right Dynamic Live Interactive Simulation Widget */}
+                              <div className="lg:col-span-5 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-850 h-fit space-y-4">
+                                <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-extrabold block font-mono">
+                                  🔮 LIVE EXPERIMENTAL SIMULATOR
+                                </span>
+                                {renderSimulationWidget()}
+                              </div>
+
                             </div>
 
-                            {/* Right Dynamic Live Interactive Simulation Widget */}
-                            <div className="lg:col-span-5 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-850 h-fit space-y-4">
-                              <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-extrabold block font-mono">
-                                🔮 LIVE EXPERIMENTAL SIMULATOR
-                              </span>
-                              {renderSimulationWidget()}
+                            {/* Inline Comment Options in Study Notes Section */}
+                            <div className="border-t border-zinc-900 pt-6 mt-6">
+                              <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-5 space-y-4 shadow-xl">
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-black text-white uppercase tracking-tight font-mono">
+                                    💬 Study Note Doubts & Discussions
+                                  </h4>
+                                  <p className="text-xs text-zinc-500 leading-normal">
+                                    Discuss formulas, core concept questions, or leave comments on the study notes with peers.
+                                  </p>
+                                </div>
+                                <CommunityComments
+                                  lectureId={`${selectedTopic.id}-notes`}
+                                  studentName={studentName || "Anonymous Learner"}
+                                  isTeacher={studentName === 'Priyanshu'}
+                                />
+                              </div>
                             </div>
-
                           </div>
                         ) : (
                           <div className="text-xs text-zinc-500 text-center py-8">
@@ -961,7 +1135,7 @@ export default function Dashboard({
 
                         {selectedTopic.quiz && selectedTopic.quiz.length > 0 ? (
                           (() => {
-                            const qList = selectedTopic.quiz;
+                            const qList = getTenQuestions(selectedTopic.quiz, selectedTopic.id, selectedTopic.title, selectedTopic.subject || '');
                             const isFinished = topicQuizIndex >= qList.length;
 
                             if (isFinished) {
@@ -1032,6 +1206,18 @@ export default function Dashboard({
                                   <span>Current Coins: <strong className="text-white">{progress.totalXP}</strong></span>
                                 </div>
 
+                                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                  {activeQ.examReference && (
+                                    <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-lg">
+                                      🏆 {activeQ.examReference}
+                                    </span>
+                                  )}
+                                  {activeQ.weightage && (
+                                    <span className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-lg">
+                                      {activeQ.weightage}
+                                    </span>
+                                  )}
+                                </div>
                                 <h4 className="text-xs sm:text-sm font-bold text-white leading-relaxed">
                                   {activeQ.question}
                                 </h4>
@@ -1110,86 +1296,36 @@ export default function Dashboard({
                       </div>
                     )}
 
-                    {/* Tab 4: Memory Flashcards */}
+                    {/* Tab 4: Memory Flashcards (Rendered as Interactive Concept Mind Map) */}
                     {activeTopicTab === 'flashcards' && (
-                      <div className="space-y-4 max-w-sm mx-auto bg-zinc-900/20 border border-zinc-900 p-6 rounded-2xl">
-                        <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-                          <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                            Active Recall Space-Repetition
-                          </h3>
-                          <span className="text-[10px] bg-zinc-900 px-2 py-0.5 rounded text-yellow-550 font-mono font-bold">
-                            +5 Coins / Review
-                          </span>
-                        </div>
-
-                        {selectedTopic.flashcards && selectedTopic.flashcards.length > 0 ? (
-                          (() => {
-                            const fcList = selectedTopic.flashcards;
-                            const activeFc = fcList[topicFcIndex];
-
-                            const handleRate = (right: boolean) => {
-                              playSound(right ? 'correct' : 'wrong');
-                              
-                              if (right) {
-                                onUpdateProgress({
-                                  ...progress,
-                                  totalXP: progress.totalXP + 5
-                                });
+                      <div className="w-full">
+                        <FlashcardsView
+                          embedded={true}
+                          chapter={selectedChapter || {
+                            id: selectedTopic.id,
+                            title: selectedTopic.title,
+                            description: selectedTopic.description,
+                            classLevel: 9,
+                            subject: selectedTopic.subject || 'Syllabus Focus',
+                            readingTime: '10 mins',
+                            keyConcepts: [],
+                            sections: [],
+                            flashcards: selectedTopic.flashcards || []
+                          }}
+                          progress={progress}
+                          onRateCard={(cardId, rating) => {
+                            const existingStatus = progress.flashcardStatus[cardId];
+                            onUpdateProgress({
+                              ...progress,
+                              totalXP: progress.totalXP + (existingStatus ? 0 : 5),
+                              flashcardStatus: {
+                                ...progress.flashcardStatus,
+                                [cardId]: rating
                               }
-
-                              setTopicFcFlipped(false);
-                              setTimeout(() => {
-                                setTopicFcIndex(prev => (prev + 1) % fcList.length);
-                              }, 200);
-                            };
-
-                            return (
-                              <div className="space-y-4">
-                                <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
-                                  <span>CARD {topicFcIndex + 1} OF {fcList.length}</span>
-                                  <span>Spaced Interval</span>
-                                </div>
-
-                                <div 
-                                  onClick={() => { playSound('click'); setTopicFcFlipped(!topicFcFlipped); }}
-                                  className="h-44 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer hover:border-zinc-500 transition-colors relative select-none"
-                                >
-                                  <div className="flex-1 flex items-center justify-center">
-                                    <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">
-                                      {topicFcFlipped ? activeFc.back : activeFc.front}
-                                    </p>
-                                  </div>
-                                  <span className="text-[9px] uppercase font-bold tracking-widest text-zinc-500 font-mono">
-                                    {topicFcFlipped ? '✓ Answer' : '⚡ Click to Reveal Answer'}
-                                  </span>
-                                </div>
-
-                                {topicFcFlipped && (
-                                  <div className="grid grid-cols-2 gap-2 pt-2 animate-pulse">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRate(false)}
-                                      className="py-2 bg-zinc-900 border border-zinc-800 hover:border-rose-900/30 hover:text-rose-400 text-zinc-400 font-bold text-xs rounded-xl transition cursor-pointer"
-                                    >
-                                      Needs Review
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRate(true)}
-                                      className="py-2 bg-white text-black font-bold text-xs rounded-xl hover:bg-zinc-200 transition cursor-pointer"
-                                    >
-                                      Got it right! (+5)
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <div className="text-xs text-zinc-500 text-center py-8">
-                            Flashcards are being prepared for active recollection study.
-                          </div>
-                        )}
+                            });
+                          }}
+                          onOpenAI={onOpenAI}
+                        />
                       </div>
                     )}
 
@@ -1222,24 +1358,43 @@ export default function Dashboard({
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
-                            <div className="space-y-0.5">
-                              <span className="text-xs font-bold text-white block font-sans">Daily Practice Problems (DPP)</span>
-                              <span className="text-[10px] text-zinc-500 block font-sans">Homework Assignment Sheet</span>
+                          {selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0 ? (
+                            selectedTopic.dppFiles.map((file, idx) => (
+                              <div key={file.id || idx} className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
+                                <div className="space-y-0.5 text-left">
+                                  <span className="text-xs font-bold text-white block font-sans">{file.name || `Practice Sheet Day #${idx + 1}`}</span>
+                                  <span className="text-[10px] text-zinc-500 block font-sans">Homework Sheet • Day Wise</span>
+                                </div>
+                                <a
+                                  href={file.url || '#'}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-3 py-1.5 bg-cyan-950/40 border border-cyan-800/40 hover:bg-cyan-900/50 text-cyan-400 rounded-lg font-bold text-[10px] transition shrink-0"
+                                >
+                                  Download
+                                </a>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
+                              <div className="space-y-0.5 text-left">
+                                <span className="text-xs font-bold text-white block font-sans">Daily Practice Problems (DPP)</span>
+                                <span className="text-[10px] text-zinc-500 block font-sans">Homework Assignment Sheet</span>
+                              </div>
+                              {selectedTopic.dppUrl ? (
+                                <a
+                                  href={selectedTopic.dppUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition shrink-0"
+                                >
+                                  Download DPP
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-zinc-600 font-mono">🔒 Unlinked</span>
+                              )}
                             </div>
-                            {selectedTopic.dppUrl ? (
-                              <a
-                                href={selectedTopic.dppUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition"
-                              >
-                                Download DPP
-                              </a>
-                            ) : (
-                              <span className="text-[10px] text-zinc-600 font-mono">🔒 Unlinked</span>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1591,12 +1746,13 @@ export default function Dashboard({
                         {/* Status overlay */}
                         <div className="absolute top-3 right-3 flex gap-1.5 z-10">
                           {isUnlocked ? (
-                            <span className="text-[9px] bg-emerald-500 text-black px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md">
+                            <span className="text-[9px] bg-emerald-500 text-black px-2.5 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md">
                               <Unlock className="w-2.5 h-2.5" /> Unlocked
                             </span>
                           ) : isCoursePending ? (
-                            <span className="text-[9px] bg-amber-500 text-black px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md animate-pulse">
-                              ⏳ Pending Approval
+                            <span className="text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/40 px-2.5 py-0.5 rounded-lg font-extrabold flex items-center gap-1.5 shadow-md animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                              Under Verification
                             </span>
                           ) : isCourseDenied ? (
                             <span className="text-[9px] bg-rose-500 text-white px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-md">
@@ -1711,17 +1867,21 @@ export default function Dashboard({
                             <ArrowRight className={`w-3.5 h-3.5 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`} />
                           </button>
                         ) : isCoursePending ? (
-                          <div className={`px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase font-mono ${isDarkMode ? 'bg-zinc-900/80 text-zinc-400 border border-zinc-800' : 'bg-amber-50 text-amber-700 border border-amber-100'} animate-pulse flex items-center gap-1`}>
-                            ⏳ Verification
-                          </div>
+                          <button
+                            disabled={true}
+                            className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-not-allowed opacity-85"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            <span>{appLanguage === 'hi' ? 'सत्यापन जारी है' : 'Under Process of Verification'}</span>
+                          </button>
                         ) : isCourseDenied ? (
                           <div className="flex flex-col items-end gap-1">
                             <span className="text-[9px] text-rose-500 font-bold">{appLanguage === 'hi' ? 'अस्वीकृत (पुनः प्रयास करें)' : 'Denied (Try Again)'}</span>
                             <button
                               onClick={() => triggerUnlock(course)}
-                              className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition cursor-pointer shadow-sm flex items-center gap-1 ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-orange-600 text-white hover:bg-orange-700'}`}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-sm ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-orange-600 text-white hover:bg-orange-700'}`}
                             >
-                              <Lock className="w-3 h-3" /> {appLanguage === 'hi' ? 'अनलॉक' : 'Unlock'}
+                              <Lock className="w-3 h-3" /> {appLanguage === 'hi' ? 'बैच खरीदें' : 'Buy the Batch'}
                             </button>
                           </div>
                         ) : (
@@ -1732,7 +1892,7 @@ export default function Dashboard({
                             }`}
                           >
                             <Lock className="w-3.5 h-3.5 text-black" />
-                            <span>{appLanguage === 'hi' ? 'अनलॉक' : 'Unlock'}</span>
+                            <span>{appLanguage === 'hi' ? 'बैच खरीदें' : 'Buy the Batch'}</span>
                           </button>
                         )}
                       </div>
