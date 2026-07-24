@@ -224,21 +224,8 @@ export default function AIAssistant({
         }
       } else {
         let errorMessage = appLanguage === 'hi' 
-          ? "एआई सहायक अस्थायी रूप से ऑफ़लाइन है। कृपया अपनी एपीआई कुंजी की जांच करें।"
-          : 'The AI Assistant experienced a conceptual hiccup. Please verify if your API key is correctly configured.';
-        if (contentType.includes('application/json')) {
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.error || errorMessage;
-          } catch (e) {
-            // ignore
-          }
-        } else {
-          const text = await response.text();
-          if (text && text.length < 200 && !text.includes('<!doctype') && !text.includes('<!DOCTYPE')) {
-            errorMessage = text;
-          }
-        }
+          ? "इंटरनेट कनेक्शन उपलब्ध नहीं है।"
+          : "Internet connection not provided.";
         throw new Error(errorMessage);
       }
       
@@ -271,7 +258,7 @@ export default function AIAssistant({
       const assistantMsg: ChatMessage = {
         id: Math.random().toString(),
         sender: 'assistant',
-        text: `⚠️ [${appLanguage === 'hi' ? 'ऑफ़लाइन मोड' : 'Offline Mode'}] ${fallbackText}`,
+        text: `⚠️ [${appLanguage === 'hi' ? 'इंटरनेट कनेक्शन उपलब्ध नहीं है' : 'Internet connection not provided'}] ${fallbackText}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -460,8 +447,8 @@ export default function AIAssistant({
   const BharatRobotAvatar = ({ className = "w-16 h-16" }: { className?: string }) => (
     <div className={`relative flex items-center justify-center select-none ${className}`}>
       {/* Premium Glow Aura */}
-      <div className="absolute -inset-3 rounded-full bg-[#14b8a6]/15 opacity-60 blur-[8px] animate-pulse"></div>
-      <ThreeDElement type="robot_3d_assistant" className="w-full h-full relative z-10" />
+      <div className="absolute -inset-3 rounded-full bg-[#14b8a6]/20 opacity-70 blur-[10px] animate-pulse"></div>
+      <ThreeDElement type="futuristic_ai_robot" className="w-full h-full relative z-10" autoRotate={true} interactive={true} />
     </div>
   );
 

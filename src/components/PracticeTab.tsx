@@ -396,26 +396,7 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
             <div className="absolute -top-12 -left-12 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl animate-pulse" />
             <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" />
             
-            {/* Ashok Chakra watermark in background */}
-            <div className="absolute right-6 sm:right-20 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
-              <svg className="w-24 h-24 sm:w-28 sm:h-28 text-blue-500/80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100" fill="none" stroke="currentColor">
-                <circle cx="50" cy="50" r="45" strokeWidth="2" />
-                <circle cx="50" cy="50" r="8" strokeWidth="1.5" />
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const angle = (i * 360) / 24;
-                  return (
-                    <line
-                      key={i}
-                      x1="50"
-                      y1="50"
-                      x2={50 + 45 * Math.cos((angle * Math.PI) / 180)}
-                      y2={50 + 45 * Math.sin((angle * Math.PI) / 180)}
-                      strokeWidth="1"
-                    />
-                  );
-                })}
-              </svg>
-            </div>
+
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
               <div className="space-y-1.5 text-left flex-1">
@@ -433,9 +414,10 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                 </p>
               </div>
 
-              {/* Responsive 3D Student Solving Paper Mascot */}
-              <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-zinc-900/50 border border-zinc-800/80 rounded-3xl p-1.5 flex items-center justify-center relative shadow-lg">
-                <ThreeDElement type="student_solving_3d" className="w-full h-full" autoRotate={true} interactive={true} />
+              {/* Responsive 3D Student Solving Paper Mascot - Extra Prominent Large Size */}
+              <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 shrink-0 bg-gradient-to-b from-zinc-900/90 to-zinc-950/90 border border-zinc-800/90 rounded-3xl p-4 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-teal-500/10 rounded-3xl blur-md" />
+                <ThreeDElement type="boy_practicing_questions" className="w-full h-full relative z-10" autoRotate={true} interactive={true} />
               </div>
             </div>
           </div>

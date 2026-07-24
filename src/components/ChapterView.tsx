@@ -347,7 +347,7 @@ export default function ChapterView({
             <div className="relative w-full h-56 bg-black border border-zinc-900 rounded-xl flex items-center justify-center">
               <div className="absolute inset-0 flex items-center justify-center">
                 {/* K Shell (n=1) */}
-                <div className="w-24 h-24 rounded-full border border-dashed border-zinc-800 flex items-center justify-center animate-[spin_10s_linear_infinite]">
+                <div className="w-24 h-24 rounded-full border border-dashed border-zinc-800 flex items-center justify-center animate-pulse">
                   {atom.electrons >= 1 && <div className="absolute top-0 w-2.5 h-2.5 bg-white rounded-full"></div>}
                   {atom.electrons >= 2 && <div className="absolute bottom-0 w-2.5 h-2.5 bg-white rounded-full"></div>}
                 </div>
@@ -356,7 +356,7 @@ export default function ChapterView({
               {atom.electrons >= 3 && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   {/* L Shell (n=2) */}
-                  <div className="w-40 h-40 rounded-full border border-dashed border-zinc-800 flex items-center justify-center animate-[spin_15s_linear_infinite_reverse]">
+                  <div className="w-40 h-40 rounded-full border border-dashed border-zinc-800 flex items-center justify-center animate-pulse">
                     <div className="absolute top-0 w-2.5 h-2.5 bg-zinc-400 rounded-full"></div>
                     {atom.electrons >= 4 && <div className="absolute right-0 w-2.5 h-2.5 bg-zinc-400 rounded-full"></div>}
                     {atom.electrons >= 5 && <div className="absolute bottom-0 w-2.5 h-2.5 bg-zinc-400 rounded-full"></div>}

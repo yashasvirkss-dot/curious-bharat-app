@@ -1,22 +1,55 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bharat AI Science Academy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <title>Curious Bharat - Bharat AI Science Academy</title>
+    
+    <!-- PWA Web Manifest & Theme Colors -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#09090b" />
-    <link rel="apple-touch-icon" href="/src/assets/images/kalu_and_buddhu_1784268211413.jpg" />
+    <meta name="theme-color" content="#080707" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F8F9FA" media="(prefers-color-scheme: light)" />
+    <meta name="background-color" content="#080707" />
+    
+    <!-- Mobile & iOS Web App Capabilities -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Curious Bharat" />
+    <meta name="application-name" content="Curious Bharat" />
+    <meta name="format-detection" content="telephone=no, address=no, email=no" />
+    
+    <!-- Apple Touch Icons & Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/src/assets/images/boy_girl_curious_bharat_1784813567963.jpg" />
+    <link rel="icon" type="image/jpeg" href="/src/assets/images/boy_girl_curious_bharat_1784813567963.jpg" />
+
+    <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((reg) => {
+              // Check for SW updates periodically
+              reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                if (installingWorker) {
+                  installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.log('New PWA update available.');
+                    }
+                  };
+                }
+              };
+            })
+            .catch((err) => {
+              console.warn('Service Worker registration failed:', err);
+            });
         });
       }
     </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="h-full bg-[#080707] text-[#E5E5E5] antialiased select-none sm:select-text overflow-x-hidden">
+    <div id="root" class="h-full flex flex-col"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

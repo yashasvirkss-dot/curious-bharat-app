@@ -1,5 +1,7 @@
 import { Course } from '../types';
 import { chaptersData } from './chapters';
+// @ts-ignore
+import boyGirlCuriousBharat from '../assets/images/boy_girl_curious_bharat_1784813567963.jpg';
 
 export const defaultCourses: Course[] = [
   {
@@ -109,13 +111,17 @@ export const defaultCourses: Course[] = [
     isPaid: false,
     price: '0',
     subject: 'Physics',
-    thumbnailUrl: 'https://img.youtube.com/vi/URUJD5NEXC8/maxresdefault.jpg',
     chapters: [
       {
         ...chaptersData[8], // Light: Reflection, Refraction & Optical Phenomena
         lectureUrl: 'https://www.youtube.com/embed/videoseries?list=PLDvpX1-ojGyI',
         pdfUrl: 'https://drive.google.com/file/d/1Optics_Master_Notes_PDF/view',
-        dppUrl: 'https://drive.google.com/file/d/1Optics_Master_DPP_Problems/view'
+        dppUrl: 'https://drive.google.com/file/d/1Optics_Master_DPP_Problems/view',
+        dppFiles: [
+          { id: 'dpp-opt-1', name: 'Day 1: Reflection from Spherical Mirrors', url: 'https://drive.google.com/file/d/1SAMPLE_DPP_DAY1/view' },
+          { id: 'dpp-opt-2', name: 'Day 2: Refraction and Snell\'s Law', url: 'https://drive.google.com/file/d/1SAMPLE_DPP_DAY2/view' },
+          { id: 'dpp-opt-3', name: 'Day 3: Lens Formula and Magnification', url: 'https://drive.google.com/file/d/1SAMPLE_DPP_DAY3/view' }
+        ]
       }
     ]
   }
@@ -132,5 +138,6 @@ export const defaultCustomization = {
   shapeStyle: 'curved' as const,
   textHeadingStyle: 'normal' as const,
   appLogoText: 'CB',
-  appLogoIcon: 'graduation-cap' as const
+  appLogoIcon: 'graduation-cap' as const,
+  appLogoUrl: boyGirlCuriousBharat
 };

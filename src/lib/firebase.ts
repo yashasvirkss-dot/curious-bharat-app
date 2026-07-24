@@ -396,5 +396,76 @@ export const dbService = {
       return item;
     });
     localStorage.setItem('offline_db_join_requests', JSON.stringify(updated));
+  },
+
+  // 7. Global Courses Firestore Realtime Sync
+  subscribeCourses(callback: (courses: any[]) => void): () => void {
+    if (isFirebaseConfigured && firestoreDb) {
+      try {
+        const q = query(collection(firestoreDb, 'courses'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          if (!snapshot.empty) {
+            const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            callback(list);
+          }
+        }, (err) => {
+          console.warn("Firestore courses snapshot failed:", err);
+        });
+        return unsubscribe;
+      } catch (err) {
+        console.warn("subscribeCourses error:", err);
+      }
+    }
+    return offlineDb.subscribe('courses', callback);
+  },
+
+  async saveCoursesToFirebase(courses: any[]): Promise<void> {
+    if (isFirebaseConfigured && firestoreDb) {
+      try {
+        for (const course of courses) {
+          await setDoc(doc(firestoreDb, 'courses', course.id), course, { merge: true });
+        }
+      } catch (err) {
+        console.warn("saveCoursesToFirebase error:", err);
+      }
+    }
+    localStorage.setItem('curious_db_courses', JSON.stringify(courses));
+  },
+
+  // 8. Global Customization Firestore Realtime Sync
+  subscribeCustomization(callback: (customization: any) => void): () => void {
+    if (isFirebaseConfigured && firestoreDb) {
+      try {
+        const docRef = doc(firestoreDb, 'system', 'customization');
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            callback(docSnap.data());
+          }
+        }, (err) => {
+          console.warn("Firestore customization snapshot failed:", err);
+        });
+        return unsubscribe;
+      } catch (err) {
+        console.warn("subscribeCustomization error:", err);
+      }
+    }
+    const handler = (e: Event) => callback((e as CustomEvent).detail);
+    window.addEventListener('curious_db_update_customization', handler);
+    const saved = localStorage.getItem('curious_customization');
+    if (saved) {
+      try { callback(JSON.parse(saved)); } catch (e) {}
+    }
+    return () => window.removeEventListener('curious_db_update_customization', handler);
+  },
+
+  async saveCustomizationToFirebase(customization: any): Promise<void> {
+    if (isFirebaseConfigured && firestoreDb) {
+      try {
+        await setDoc(doc(firestoreDb, 'system', 'customization'), customization, { merge: true });
+      } catch (err) {
+        console.warn("saveCustomizationToFirebase error:", err);
+      }
+    }
+    localStorage.setItem('curious_customization', JSON.stringify(customization));
   }
 };

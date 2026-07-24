@@ -1,18 +1,41 @@
 {
-  "short_name": "BharatSci",
-  "name": "Bharat AI Science Academy",
-  "description": "Interactive AI-powered CBSE Science Hub with mind maps, quizzes, and simulation models.",
+  "short_name": "CuriousBharat",
+  "name": "Curious Bharat - Bharat AI Science Academy",
+  "description": "Interactive AI-powered CBSE Science Hub with mind maps, quizzes, 3D simulation models, and Bharat AI mentor.",
   "icons": [
     {
-      "src": "/src/assets/images/kalu_and_buddhu_1784268211413.jpg",
+      "src": "/src/assets/images/boy_girl_curious_bharat_1784813567963.jpg",
       "sizes": "192x192 512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/images/boy_practicing_questions_1784813608667.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ],
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#09090b",
-  "theme_color": "#09090b"
+  "orientation": "any",
+  "background_color": "#080707",
+  "theme_color": "#080707",
+  "categories": ["education", "productivity", "books"],
+  "shortcuts": [
+    {
+      "name": "Bharat AI Mentor",
+      "short_name": "Bharat AI",
+      "description": "Open AI study assistant and doubt solver",
+      "url": "/?tab=ai"
+    },
+    {
+      "name": "Batches & Courses",
+      "short_name": "Batches",
+      "description": "Browse master syllabus courses and lectures",
+      "url": "/?tab=batches"
+    }
+  ]
 }

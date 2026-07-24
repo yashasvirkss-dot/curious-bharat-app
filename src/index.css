@@ -85,17 +85,7 @@ body.light #profile-hub-root .text-zinc-400 {
 body.light #profile-hub-root .text-zinc-500,
 body.light #profile-hub-root .text-slate-400,
 body.light #profile-hub-root .text-slate-500 {
-  color: #E50914 !important;
-}
-
-body.light #profile-hub-root button.bg-white {
-  background-color: #E50914 !important;
-  color: #FFFFFF !important;
-  border-color: #E50914 !important;
-}
-
-body.light #profile-hub-root button.bg-white:hover {
-  background-color: #B20710 !important;
+  color: #64748B !important;
 }
 
 body.light #profile-hub-root input,
@@ -522,3 +512,59 @@ body.dark .profile-label-custom {
 body.light .profile-label-custom {
   color: #111111 !important;
 }
+
+/* ==========================================================
+   CROSS-PLATFORM PWA & ADAPTIVE SAFE-AREA INSET UTILITIES
+   ========================================================== */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+.safe-pt {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+.safe-pb {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.safe-pl {
+  padding-left: max(0px, env(safe-area-inset-left));
+}
+
+.safe-pr {
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+.safe-p-all {
+  padding-top: max(0px, env(safe-area-inset-top));
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+/* Ensure smooth interactive response on touch devices without click delay */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Landscape orientation optimization for phones & tablets */
+@media (max-height: 500px) and (orientation: landscape) {
+  header {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+}
+
+/* High-DPI Display pixel crispness */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+

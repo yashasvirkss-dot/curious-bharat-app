@@ -49,12 +49,12 @@ export default function AshokChakra({
         viewBox="0 0 200 200"
         animate={
           animateRotation
-            ? { rotate: 360 }
+            ? { y: [-2, 2, -2], rotate: [-1.5, 1.5, -1.5], scale: [1, 1.015, 1] }
             : {}
         }
         transition={
           animateRotation
-            ? { repeat: Infinity, duration: 40, ease: 'linear' }
+            ? { repeat: Infinity, duration: 4.5, ease: 'easeInOut' }
             : {}
         }
         className="relative z-10 drop-shadow-[0_2px_8px_rgba(6,3,141,0.4)]"

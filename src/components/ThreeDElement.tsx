@@ -19,6 +19,20 @@ import robot3dAssistant from '../assets/images/robot_3d_assistant_1784615870300.
 import trophy3dGold from '../assets/images/trophy_3d_gold_1784615885843.jpg';
 // @ts-ignore
 import priceTag3D from '../assets/images/price_tag_3d_1784616757364.jpg';
+// @ts-ignore
+import boyGirlCuriousBharat from '../assets/images/boy_girl_curious_bharat_1784813567963.jpg';
+// @ts-ignore
+import academicCoins3d from '../assets/images/academic_coins_3d_1784813643748.jpg';
+// @ts-ignore
+import questionMark3dNew from '../assets/images/question_mark_3d_1784813584005.jpg';
+// @ts-ignore
+import futuristicAiRobot from '../assets/images/futuristic_ai_robot_1784813596003.jpg';
+// @ts-ignore
+import boyPracticingQuestions from '../assets/images/boy_practicing_questions_1784813608667.jpg';
+// @ts-ignore
+import ashokChakra3d from '../assets/images/ashok_chakra_3d_1784813619883.jpg';
+// @ts-ignore
+import priceTag3dNew from '../assets/images/price_tag_3d_1784813631541.jpg';
 
 export type ThreeDElementType = 
   | 'priceTag' 
@@ -44,12 +58,17 @@ export type ThreeDElementType =
   | 'bottleGirl'
   | 'hometown_mascots'
   | 'coins_3d_academic'
+  | 'academic_coins_3d'
   | 'question_mark_3d'
   | 'books_bundle_3d'
   | 'student_solving_3d'
+  | 'boy_practicing_questions'
   | 'robot_3d_assistant'
+  | 'futuristic_ai_robot'
   | 'trophy_3d_gold'
-  | 'price_tag_3d';
+  | 'price_tag_3d'
+  | 'boy_girl_curious_bharat'
+  | 'ashok_chakra_3d';
 
 interface ThreeDElementProps {
   type: ThreeDElementType;
@@ -90,23 +109,33 @@ const SPRITE_MAP: Record<ThreeDElementType, { x: string; y: string; zoom: string
   // Custom 3D elements
   hometown_mascots: { x: '0%', y: '0%', zoom: '100%', label: 'Kalu & Buddhu Mascots' },
   coins_3d_academic: { x: '0%', y: '0%', zoom: '100%', label: 'Academic Coins' },
+  academic_coins_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Academic Coins Stack' },
   question_mark_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Doubt Resolved' },
   books_bundle_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Books Bundle' },
   student_solving_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Exam Practice' },
+  boy_practicing_questions: { x: '0%', y: '0%', zoom: '100%', label: 'Boy Solving Questions' },
   robot_3d_assistant: { x: '0%', y: '0%', zoom: '100%', label: 'Bharat AI Robot' },
+  futuristic_ai_robot: { x: '0%', y: '0%', zoom: '100%', label: 'Futuristic AI Robot' },
   trophy_3d_gold: { x: '0%', y: '0%', zoom: '100%', label: 'Championship Trophy' },
-  price_tag_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Special Discount Tag' }
+  price_tag_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Special Discount Tag' },
+  boy_girl_curious_bharat: { x: '0%', y: '0%', zoom: '100%', label: 'Curious Bharat Boy & Girl' },
+  ashok_chakra_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Ashok Chakra Seal' }
 };
 
 const CUSTOM_IMAGES_MAP: Record<string, string> = {
   hometown_mascots: hometownMascots,
-  coins_3d_academic: coins3dAcademic,
-  question_mark_3d: questionMark3d,
+  coins_3d_academic: academicCoins3d || coins3dAcademic,
+  academic_coins_3d: academicCoins3d,
+  question_mark_3d: questionMark3dNew || questionMark3d,
   books_bundle_3d: booksBundle3d,
-  student_solving_3d: studentSolving3d,
-  robot_3d_assistant: robot3dAssistant,
+  student_solving_3d: boyPracticingQuestions || studentSolving3d,
+  boy_practicing_questions: boyPracticingQuestions,
+  robot_3d_assistant: futuristicAiRobot || robot3dAssistant,
+  futuristic_ai_robot: futuristicAiRobot,
   trophy_3d_gold: trophy3dGold,
-  price_tag_3d: priceTag3D
+  price_tag_3d: priceTag3dNew || priceTag3D,
+  boy_girl_curious_bharat: boyGirlCuriousBharat,
+  ashok_chakra_3d: ashokChakra3d
 };
 
 // Global transparent asset cache to prevent recalculating textures on every state render
@@ -220,19 +249,41 @@ export default function ThreeDElement({
     const height = rect.height || 128;
 
     // 1. Create Scene & Camera
+    const aspect = width / height;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.z = 4.2;
+    const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
+    
+    // Dynamically adjust camera Z distance on mobile portrait/narrow aspect ratios to prevent 3D clipping
+    const baseZ = 4.2;
+    if (aspect < 1.0) {
+      camera.position.z = baseZ / Math.max(0.45, aspect);
+    } else {
+      camera.position.z = baseZ;
+    }
 
-    // 2. Create WebGL Renderer with Alpha transparent channel
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance'
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 2. Create WebGL Renderer with Alpha transparent channel and mobile fallback safety
+    let renderer: THREE.WebGLRenderer | null = null;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: 'default',
+        failIfMajorPerformanceCaveat: false
+      });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    } catch (e) {
+      console.warn("WebGL renderer creation failed, using 2D image fallback:", e);
+      return;
+    }
+
+    // Handle WebGL context loss gracefully on mobile devices
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
 
     // 3. Load transparent keyed texture
     const textureLoader = new THREE.TextureLoader();
@@ -254,21 +305,21 @@ export default function ThreeDElement({
     let animationFrameId: number;
     let clock = new THREE.Clock();
 
-    // Mouse movement state
+    // Mouse/Touch movement state
     let targetRotationX = 0;
     let targetRotationY = 0;
     let currentRotationX = 0;
     let currentRotationY = 0;
 
-    // Pointer move listener for interactive 3D parallax tilt
+    // Pointer move listener for interactive 3D parallax tilt (supports touch & mouse)
     const handlePointerMove = (e: PointerEvent) => {
       if (!interactive) return;
       const rect = container.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
       const y = (e.clientY - rect.top) / rect.height - 0.5;
 
-      targetRotationY = x * 0.7; // Maximum tilt angle
-      targetRotationX = y * 0.7;
+      targetRotationY = x * 0.6; // Maximum tilt angle
+      targetRotationX = y * 0.6;
     };
 
     const handlePointerLeave = () => {
@@ -281,22 +332,28 @@ export default function ThreeDElement({
 
     // 6. Animation Render Loop
     const animate = () => {
+      if (!renderer) return;
       const elapsedTime = clock.getElapsedTime();
 
-      // Gentle floating up and down
+      // Subtle, non-distracting idle animations (gentle float, tiny tilt, breathing scale)
       if (autoRotate) {
-        mesh.position.y = Math.sin(elapsedTime * 2.2) * 0.12;
-        // Slow continuous rotation around Y axis
-        mesh.rotation.y = elapsedTime * 0.4;
+        // Gentle floating up & down (2-4px equivalent in WebGL space)
+        mesh.position.y = Math.sin(elapsedTime * 1.5) * 0.08;
+        // Subtle tilt sway on Z axis (±1.8°)
+        mesh.rotation.z = Math.sin(elapsedTime * 1.2) * 0.03;
+        // Breathing scale oscillation (1.00 - 1.012)
+        const scale = 1 + Math.sin(elapsedTime * 1.0) * 0.012;
+        mesh.scale.set(scale, scale, scale);
       }
 
       // Smooth interpolation (lerp) for cursor tilt physics
       currentRotationX += (targetRotationX - currentRotationX) * 0.12;
       currentRotationY += (targetRotationY - currentRotationY) * 0.12;
 
-      mesh.rotation.x = -currentRotationX;
-      // Combine manual continuous spin with mouse movement displacement
-      mesh.rotation.y = (autoRotate ? elapsedTime * 0.4 : 0) + currentRotationY;
+      // Gentle Y angle oscillation (tiny ±2.5° tilt) instead of continuous 360° rotation
+      const idleYAngle = autoRotate ? Math.sin(elapsedTime * 0.8) * 0.045 : 0;
+      mesh.rotation.x = -currentRotationX + (autoRotate ? Math.cos(elapsedTime * 1.1) * 0.02 : 0);
+      mesh.rotation.y = idleYAngle + currentRotationY;
 
       renderer.render(scene, camera);
       animationFrameId = requestAnimationFrame(animate);
@@ -306,10 +363,16 @@ export default function ThreeDElement({
 
     // 7. Handle dynamic parent layout resizing
     const resizeObserver = new ResizeObserver((entries) => {
-      if (!entries || entries.length === 0) return;
+      if (!entries || entries.length === 0 || !renderer) return;
       const { width: newW, height: newH } = entries[0].contentRect;
       if (newW > 0 && newH > 0) {
-        camera.aspect = newW / newH;
+        const newAspect = newW / newH;
+        camera.aspect = newAspect;
+        if (newAspect < 1.0) {
+          camera.position.z = baseZ / Math.max(0.45, newAspect);
+        } else {
+          camera.position.z = baseZ;
+        }
         camera.updateProjectionMatrix();
         renderer.setSize(newW, newH);
       }
@@ -321,12 +384,13 @@ export default function ThreeDElement({
       cancelAnimationFrame(animationFrameId);
       container.removeEventListener('pointermove', handlePointerMove);
       container.removeEventListener('pointerleave', handlePointerLeave);
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
       resizeObserver.disconnect();
       
       geometry.dispose();
       material.dispose();
       texture.dispose();
-      renderer.dispose();
+      if (renderer) renderer.dispose();
     };
   }, [transparentSrc, autoRotate, interactive]);
 

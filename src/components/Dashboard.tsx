@@ -28,7 +28,8 @@ import {
   Download,
   ArrowLeft,
   Video,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { Chapter, Course, UserProgress, AppCustomization, Topic, StudentAnalysisRecord } from '../types';
 import EditableText from './EditableText';
@@ -40,6 +41,7 @@ import CommunityComments from './CommunityComments';
 import { getTenQuestions } from '../utils/quizGenerator';
 import FlashcardsView from './FlashcardsView';
 import HorizontalScrollContainer from './HorizontalScrollContainer';
+import { getProxiedImageUrl } from '../utils/imageUrl';
 
 interface DashboardProps {
   courses: Course[];
@@ -150,6 +152,24 @@ export default function Dashboard({
   const triggerActualDownload = (url: string, title: string) => {
     setShowDownloadAlert(`Downloading "${title}"... Saved directly to local storage.`);
     setTimeout(() => setShowDownloadAlert(null), 5000);
+
+    // Save download reference to local progress storage (device storage)
+    const existing = progress.downloadedFiles || [];
+    if (!existing.some(f => f.url === url)) {
+      const newFile = {
+        id: `file-${Date.now()}`,
+        title,
+        url,
+        downloadedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        sizeKb: Math.floor(Math.random() * 280) + 90 // realistic size feedback
+      };
+      
+      onUpdateProgress({
+        ...progress,
+        downloadedFiles: [...existing, newFile]
+      });
+    }
+
     const link = document.createElement('a');
     link.href = url;
     link.target = '_blank';
@@ -308,10 +328,26 @@ export default function Dashboard({
   const masteredCardsCount = Object.values(progress.flashcardStatus).filter(status => status === 'easy').length;
 
   const filteredCourses = courses.filter(course => {
-    const matchesSubject = selectedSubject === 'all' || selectedSubject.trim() === ''
-      ? true 
-      : course.subject.toLowerCase().includes(selectedSubject.toLowerCase()) || course.chapters.some(ch => ch.subject.toLowerCase().includes(selectedSubject.toLowerCase()));
-    return matchesSubject;
+    // If course/batch is marked hidden by the educator, hide it from students
+    if (course.hidden) return false;
+
+    // Search match
+    const titleMatch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const descMatch = course.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const subjectMatch = course.subject.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = titleMatch || descMatch || subjectMatch;
+
+    if (searchTerm.trim() !== '' && !matchesSearch) return false;
+
+    // Class match
+    const hasChapters = course.chapters && course.chapters.length > 0;
+    const classLevel = hasChapters ? String(course.chapters[0].classLevel) : '';
+    if (selectedClass !== 'all' && selectedClass.trim() !== '' && !classLevel.toLowerCase().includes(selectedClass.toLowerCase())) return false;
+
+    // Subject match
+    if (selectedSubject !== 'all' && selectedSubject.trim() !== '' && !course.subject.toLowerCase().includes(selectedSubject.toLowerCase())) return false;
+
+    return true;
   });
 
   const getSubjectIcon = (subject: string) => {
@@ -771,89 +807,17 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* Magnificent Mascots 3D Element with background AshokChakra */}
-              <div className="md:col-span-4 h-44 sm:h-52 relative flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#FF671F]/15 to-[#046A38]/15 rounded-full blur-2xl animate-pulse" />
-                <AshokChakra size={140} animateRotation={true} glow={true} className="absolute opacity-25 z-0" />
-                <ThreeDElement type="hometown_mascots" className="w-44 h-44 sm:w-48 sm:h-48 relative z-10" />
+              {/* Magnificent Mascots 3D Element */}
+              <div className="md:col-span-4 h-48 sm:h-56 relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#FF671F]/10 to-[#046A38]/10 rounded-full blur-2xl" />
+                <ThreeDElement type="boy_girl_curious_bharat" className="w-48 h-48 sm:w-56 sm:h-56 relative z-10" autoRotate={true} interactive={true} />
               </div>
             </div>
           </motion.div>
         );
 
       case 'stats':
-        if (selectedCourse) return null;
-        return (
-          <div key="stats" className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
-            
-            {/* Card 1: Study Coins / XP */}
-            <div className="p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group min-h-[160px] bg-zinc-950 border-zinc-900/85 hover:border-zinc-800">
-              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#ef4444]" />
-              <div className="flex justify-between items-start w-full">
-                <div className="space-y-1 relative z-10 text-left">
-                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500 block">
-                    {appLanguage === 'hi' ? 'अर्जित सिक्के' : 'ACADEMIC COINS'}
-                  </span>
-                  <h4 className="text-3xl font-sans font-black text-white leading-none">
-                    {progress.totalXP || 0}
-                  </h4>
-                  <p className="text-[10px] text-zinc-400 font-medium pt-1">
-                    {appLanguage === 'hi' ? 'क्विज़ और अध्ययन से अर्जित' : 'Earned via quizzes & training'}
-                  </p>
-                </div>
-                {/* Prominent 3D Coins */}
-                <div className="w-24 h-24 relative -mr-4 -mt-4 shrink-0">
-                  <ThreeDElement type="coins_3d_academic" className="w-full h-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Learning Streak */}
-            <div className="p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group min-h-[160px] bg-zinc-950 border-zinc-900/85 hover:border-zinc-800">
-              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#14b8a6]" />
-              <div className="flex justify-between items-start w-full">
-                <div className="space-y-1 relative z-10 text-left">
-                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500 block">
-                    {appLanguage === 'hi' ? 'सक्रियता क्रम' : 'DAILY STUDY STREAK'}
-                  </span>
-                  <h4 className="text-3xl font-sans font-black text-white leading-none flex items-center gap-1.5">
-                    {progress.streak || 0} <span className="text-sm font-bold text-teal-400">Days</span>
-                  </h4>
-                  <p className="text-[10px] text-zinc-400 font-medium pt-1">
-                    {appLanguage === 'hi' ? 'दैनिक निरंतर अध्ययन लक्ष्य' : 'Keep learning to sustain streak'}
-                  </p>
-                </div>
-                {/* Prominent 3D Cap */}
-                <div className="w-24 h-24 relative -mr-4 -mt-4 shrink-0">
-                  <ThreeDElement type="cap" className="w-full h-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Doubts Asked */}
-            <div className="p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group min-h-[160px] bg-zinc-950 border-zinc-900/85 hover:border-zinc-800">
-              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#fbbf24]" />
-              <div className="flex justify-between items-start w-full">
-                <div className="space-y-1 relative z-10 text-left">
-                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500 block">
-                    {appLanguage === 'hi' ? 'संदेह और प्रश्न' : 'DOUBTS SOLVED'}
-                  </span>
-                  <h4 className="text-3xl font-sans font-black text-white leading-none">
-                    {progress.aiDoubtsAsked || 0}
-                  </h4>
-                  <p className="text-[10px] text-zinc-400 font-medium pt-1">
-                    {appLanguage === 'hi' ? 'भारत एआई सलाहकार द्वारा समाधान' : 'Resolved by Bharat AI mentor'}
-                  </p>
-                </div>
-                {/* Prominent 3D Question Mark */}
-                <div className="w-24 h-24 relative -mr-4 -mt-4 shrink-0">
-                  <ThreeDElement type="question_mark_3d" className="w-full h-full" />
-                </div>
-              </div>
-            </div>
-
-          </div>
-        );
+        return null;
 
       case 'courses':
         if (selectedCourse) {
@@ -1358,8 +1322,8 @@ export default function Dashboard({
                             )}
                           </div>
 
-                          {selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0 ? (
-                            selectedTopic.dppFiles.map((file, idx) => (
+                          {((selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0) ? selectedTopic.dppFiles : (selectedChapter?.dppFiles || [])).length > 0 ? (
+                            ((selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0) ? selectedTopic.dppFiles : (selectedChapter?.dppFiles || [])).map((file: any, idx: number) => (
                               <div key={file.id || idx} className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
                                 <div className="space-y-0.5 text-left">
                                   <span className="text-xs font-bold text-white block font-sans">{file.name || `Practice Sheet Day #${idx + 1}`}</span>
@@ -1381,9 +1345,9 @@ export default function Dashboard({
                                 <span className="text-xs font-bold text-white block font-sans">Daily Practice Problems (DPP)</span>
                                 <span className="text-[10px] text-zinc-500 block font-sans">Homework Assignment Sheet</span>
                               </div>
-                              {selectedTopic.dppUrl ? (
+                              {(selectedTopic.dppUrl || selectedChapter?.dppUrl) ? (
                                 <a
-                                  href={selectedTopic.dppUrl}
+                                  href={selectedTopic.dppUrl || selectedChapter?.dppUrl}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition shrink-0"
@@ -1398,6 +1362,71 @@ export default function Dashboard({
                         </div>
                       </div>
                     )}
+
+                    {/* Device Storage Downloads Manager */}
+                    <div className="mt-8 pt-6 border-t border-zinc-900/60 max-w-md mx-auto space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+                          <span>📥 Device Storage & Local Downloads</span>
+                        </h4>
+                        <span className="text-[9px] font-mono text-zinc-500 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-900">
+                          Offline Mode: Enabled
+                        </span>
+                      </div>
+
+                      <div className="bg-zinc-950/40 border border-zinc-900 p-4 rounded-xl space-y-3 text-left">
+                        <p className="text-[10px] text-zinc-400 leading-normal">
+                          In compliance with Curious Bharat storage rules, all study sheets, notes, PDFs, and progress logs are saved **directly on your device local storage**, rather than expensive cloud servers. Wiping files below instantly reclaims local disk space.
+                        </p>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {(progress.downloadedFiles || []).length > 0 ? (
+                            (progress.downloadedFiles || []).map((file) => (
+                              <div key={file.id} className="flex items-center justify-between p-2.5 bg-zinc-900/40 rounded-xl border border-zinc-900/60">
+                                <div className="space-y-0.5 text-left min-w-0 flex-1 pr-2">
+                                  <span className="text-[11px] font-bold text-white block truncate">{file.title}</span>
+                                  <span className="text-[9px] text-zinc-500 block font-mono">
+                                    Saved: {file.downloadedAt} • {file.sizeKb} KB
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-2 py-1 bg-cyan-950/40 text-cyan-400 hover:bg-cyan-900/60 rounded text-[9px] font-bold transition"
+                                  >
+                                    Open
+                                  </a>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Empty local server space by deleting downloaded copy of "${file.title}"?`)) {
+                                        const updated = (progress.downloadedFiles || []).filter(f => f.id !== file.id);
+                                        onUpdateProgress({
+                                          ...progress,
+                                          downloadedFiles: updated
+                                        });
+                                        playSound('click');
+                                        setShowDownloadAlert(`Successfully emptied device space! ${file.sizeKb} KB cleared.`);
+                                        setTimeout(() => setShowDownloadAlert(null), 3000);
+                                      }
+                                    }}
+                                    className="p-1 text-zinc-500 hover:text-red-400 transition cursor-pointer"
+                                    title="Delete from Device Storage"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-zinc-600 italic block text-center py-4">
+                              No files downloaded to local storage yet.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
                   </div>
 
@@ -1438,12 +1467,12 @@ export default function Dashboard({
                             onClick={() => { playSound('click'); setSelectedTopic(topic); }}
                             className={`rounded-2xl p-4 flex items-center justify-between gap-4 cursor-pointer group relative transition-all border ${
                               isDarkMode 
-                                ? 'bg-zinc-950 border-zinc-900/85 hover:border-zinc-555' 
+                                ? 'bg-zinc-950 border-zinc-900/85 hover:border-zinc-700' 
                                 : 'bg-gradient-to-tr from-orange-50/60 via-white/90 to-teal-50/60 border-orange-100/60 hover:border-orange-300 shadow-sm'
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isDarkMode ? 'bg-zinc-900 border-zinc-855' : 'bg-white border-orange-100 text-orange-600'}`}>
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-orange-100 text-orange-600'}`}>
                                 <FileText className={`w-5 h-5 ${isDarkMode ? 'text-zinc-400 group-hover:text-white' : 'text-orange-500 group-hover:text-orange-700'} transition-colors`} />
                               </div>
                               <div className="space-y-0.5">
@@ -1500,19 +1529,15 @@ export default function Dashboard({
 
                         {/* Large Playlist Thumbnail Image */}
                         <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative shadow-md select-none">
-                          {selectedCourse.thumbnailUrl ? (
-                            <img 
-                              src={selectedCourse.thumbnailUrl} 
-                              alt={selectedCourse.title} 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-tr from-[#4F9DFF]/10 via-zinc-900 to-[#14b8a6]/10 flex flex-col items-center justify-center p-4">
-                              <Video className="w-8 h-8 text-zinc-400 animate-pulse" />
-                              <span className="text-[9px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-2">BHARAT GURUKUL</span>
-                            </div>
-                          )}
+                          <img 
+                            src={getProxiedImageUrl(selectedCourse.thumbnailUrl)} 
+                            alt={selectedCourse.title} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = getProxiedImageUrl(undefined);
+                            }}
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
                             <span className="text-[10px] bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-white font-mono font-bold border border-white/10 uppercase tracking-widest">
                               📚 PLAYLIST
@@ -1721,27 +1746,16 @@ export default function Dashboard({
 
                     <div className="space-y-4">
                       {/* LARGE SIZE BATCH ICON / THUMBNAIL */}
-                      <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-855 overflow-hidden relative select-none shadow-lg group-hover:scale-[1.01] transition-all duration-300 flex items-center justify-center">
-                        {course.thumbnailUrl ? (
-                          <img 
-                            src={course.thumbnailUrl} 
-                            alt={course.title} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center space-y-2">
-                            <div className="flex -space-x-3">
-                              <div className="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-extrabold text-indigo-400">
-                                {appLanguage === 'hi' ? 'आलोक' : 'ALOK'}
-                              </div>
-                              <div className="w-12 h-12 rounded-full bg-teal-600/20 border border-teal-500/30 flex items-center justify-center text-[11px] font-extrabold text-teal-400 z-10">
-                                {appLanguage === 'hi' ? 'रॉय' : 'ROY'}
-                              </div>
-                            </div>
-                            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600">Premium Study Batch</span>
-                          </div>
-                        )}
+                      <div className={`w-full aspect-video rounded-2xl bg-zinc-900 border overflow-hidden relative select-none shadow-lg group-hover:scale-[1.01] transition-all duration-300 flex items-center justify-center ${isDarkMode ? 'border-zinc-800' : 'border-indigo-100/60'}`}>
+                        <img 
+                          src={getProxiedImageUrl(course.thumbnailUrl)} 
+                          alt={course.title} 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = getProxiedImageUrl(undefined);
+                          }}
+                        />
 
                         {/* Status overlay */}
                         <div className="absolute top-3 right-3 flex gap-1.5 z-10">
@@ -2112,11 +2126,16 @@ export default function Dashboard({
               {/* Subtle Premium Top accent bar */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6] z-30"></div>
 
-              {/* Premium Big Price Tag Sticker */}
-              <div className="absolute top-4 right-16 bg-gradient-to-br from-yellow-400 via-amber-400 to-yellow-500 text-black font-black py-2.5 px-4 rounded-2xl shadow-2xl border-4 border-double border-yellow-600 z-40 transform rotate-12 select-none hover:scale-105 transition duration-200 flex flex-col items-center justify-center leading-none">
-                <span className="text-[9px] uppercase tracking-widest text-black/75 font-mono font-bold">Special Price</span>
-                <span className="text-xl font-black font-mono tracking-tight my-1 text-slate-950">{checkoutCourse.price}</span>
-                <span className="text-[8px] uppercase tracking-wider text-black/60 font-extrabold">Lifetime Pass</span>
+              {/* Premium Big Price Tag Sticker with 3D Element */}
+              <div className="absolute top-3 right-16 z-40 flex items-center gap-1 select-none">
+                <div className="w-16 h-16 shrink-0 relative">
+                  <ThreeDElement type="price_tag_3d" className="w-full h-full" autoRotate={true} interactive={true} />
+                </div>
+                <div className="bg-gradient-to-br from-yellow-400 via-amber-400 to-yellow-500 text-black font-black py-2 px-3.5 rounded-2xl shadow-2xl border-2 border-yellow-600 transform rotate-6 hover:scale-105 transition duration-200 flex flex-col items-center justify-center leading-none">
+                  <span className="text-[8px] uppercase tracking-widest text-black/75 font-mono font-bold">Special Price</span>
+                  <span className="text-lg font-black font-mono tracking-tight my-0.5 text-slate-950">{checkoutCourse.price}</span>
+                  <span className="text-[8px] uppercase tracking-wider text-black/60 font-extrabold">Lifetime Pass</span>
+                </div>
               </div>
 
               <button

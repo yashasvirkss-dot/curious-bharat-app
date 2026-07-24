@@ -78,6 +78,106 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Proxy and resolve Google Photos, Google Drive, and external links directly to image binary data
+app.get('/api/proxy-image', async (req, res) => {
+  try {
+    const rawUrl = req.query.url as string;
+    if (!rawUrl) {
+      return res.status(400).send('Missing url parameter');
+    }
+
+    let url = decodeURIComponent(rawUrl).trim();
+    let targetImageUrl = url;
+
+    // 1. Google Drive Link Handling
+    if (url.includes('drive.google.com')) {
+      let fileId = '';
+      const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (fileIdMatch) {
+        fileId = fileIdMatch[1];
+      } else {
+        const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (idMatch) {
+          fileId = idMatch[1];
+        }
+      }
+
+      if (fileId) {
+        targetImageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+      }
+    }
+
+    // 2. Google Photos Link Handling
+    if (url.includes('photos.app.goo.gl') || url.includes('photos.google.com')) {
+      try {
+        const pageRes = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
+          redirect: 'follow'
+        });
+
+        if (pageRes.ok) {
+          const html = await pageRes.text();
+          
+          const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+                               html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+          
+          const twitterImageMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
+                                    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
+
+          const lhMatch = html.match(/"(https:\/\/lh3\.googleusercontent\.com\/[a-zA-Z0-9_-]+)"/);
+
+          if (ogImageMatch && ogImageMatch[1]) {
+            targetImageUrl = ogImageMatch[1];
+          } else if (twitterImageMatch && twitterImageMatch[1]) {
+            targetImageUrl = twitterImageMatch[1];
+          } else if (lhMatch && lhMatch[1]) {
+            targetImageUrl = lhMatch[1];
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to extract Google Photos HTML, attempting direct fetch:", err);
+      }
+    }
+
+    // Append sizing parameters to googleusercontent links if missing
+    if (targetImageUrl.includes('lh3.googleusercontent.com') && !targetImageUrl.includes('=') && !targetImageUrl.includes('/d/')) {
+      targetImageUrl += '=w1200-h800-no';
+    }
+
+    // 3. Directly stream image binary content to browser
+    const imageRes = await fetch(targetImageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+      }
+    });
+
+    if (imageRes.ok) {
+      const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+      const arrayBuffer = await imageRes.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+
+    // Fallback redirect if fetch fails
+    return res.redirect(targetImageUrl);
+  } catch (err) {
+    console.error('Error resolving proxy image:', err);
+    try {
+      const url = decodeURIComponent(req.query.url as string);
+      if (url) {
+        return res.redirect(url);
+      }
+    } catch (_) {}
+    return res.status(500).send('Failed to proxy image');
+  }
+});
+
 // Real-time synchronization version endpoint
 app.get('/api/sync-version', (req, res) => {
   res.json(syncVersions);
@@ -505,6 +605,97 @@ Custom Batch Goal/Desired Focus: "${promptGoal || 'Add active game challenges an
     }
 
     res.json({ text: offlineFeatures });
+  }
+});
+
+// AI Course Content Section-Wise Generator Endpoint
+app.post('/api/generate-course-content', async (req, res) => {
+  try {
+    const { contentType, topicTitle, chapterTitle, subject, customInstruction } = req.body;
+    const ai = getGeminiClient();
+
+    let systemInstruction = "";
+    let prompt = "";
+    let responseMimeType: string | undefined = undefined;
+
+    if (contentType === 'study_notes') {
+      systemInstruction = `You are "Bharat AI Content Writer", an expert Indian Science and Mathematics textbook author.
+Generate high-quality, comprehensive revision study notes for a Class 10/12 CBSE topic.
+The notes should have a professional educational layout, simple everyday Indian analogies, and standard scientific formulas/definitions inside code blocks (e.g. \`\`\`physics, \`\`\`chemistry, \`\`\`biology).
+${customInstruction ? `CRITICAL INSTRUCTION TO FOLLOW EXACTLY: "${customInstruction}"` : ''}
+Return a JSON array of section objects, each object containing:
+{
+  "title": "A descriptive title (e.g., 1. Laws of Refraction)",
+  "body": "Detailed paragraph explaining the physics/chemistry principles with rich formulas and examples",
+  "keyPoints": ["Key takeaway point 1", "Key takeaway point 2"]
+}`;
+      prompt = `Generate 2-3 detailed study note sections on the Topic: "${topicTitle}" from Chapter: "${chapterTitle}" of Subject: "${subject}".`;
+      responseMimeType = 'application/json';
+
+    } else if (contentType === 'mcq') {
+      systemInstruction = `You are "Bharat AI Test Architect". Generate 3 high-quality CBSE board multiple choice questions (MCQs).
+${customInstruction ? `CRITICAL INSTRUCTION TO FOLLOW EXACTLY: "${customInstruction}"` : ''}
+Return a JSON array of question objects, each object containing:
+{
+  "question": "The question text...",
+  "options": ["Option A", "Option B", "Option C", "Option D"],
+  "answer": 0, // the index of the correct option (0 to 3)
+  "explanation": "Brief step-by-step NCERT proof explaining why this option is correct."
+}`;
+      prompt = `Generate exactly 3 MCQs on the Topic: "${topicTitle}" from Chapter: "${chapterTitle}" of Subject: "${subject}".`;
+      responseMimeType = 'application/json';
+
+    } else if (contentType === 'mind_map') {
+      systemInstruction = `You are "Bharat AI Revision Guru". Generate 3 highly conceptual revision flashcards that form an interactive Mind Map.
+${customInstruction ? `CRITICAL INSTRUCTION TO FOLLOW EXACTLY: "${customInstruction}"` : ''}
+Return a JSON array of flashcard objects, each containing:
+{
+  "front": "A key question or conceptual prompt...",
+  "back": "A precise, easy-to-remember conceptual summary/answer...",
+  "category": "Recall" | "Formula" | "Application"
+}`;
+      prompt = `Generate exactly 3 concept mind-map flashcards on the Topic: "${topicTitle}" from Chapter: "${chapterTitle}" of Subject: "${subject}".`;
+      responseMimeType = 'application/json';
+
+    } else if (contentType === 'dpp') {
+      systemInstruction = `You are "Bharat AI DPP Creator". Generate a high-yield Daily Practice Problem (DPP) sheet.
+${customInstruction ? `CRITICAL INSTRUCTION TO FOLLOW EXACTLY: "${customInstruction}"` : ''}
+Return a JSON object containing:
+{
+  "sheetName": "Day 1 DPP: Formula Sprint",
+  "markdown": "# Daily Practice Problems... [markdown content with questions, formulas, diagrams, and solutions]"
+}`;
+      prompt = `Generate a Daily Practice Problems (DPP) markdown worksheet on the Topic: "${topicTitle}" from Chapter: "${chapterTitle}".`;
+      responseMimeType = 'application/json';
+
+    } else if (contentType === 'pdf') {
+      systemInstruction = `You are "Bharat AI PDF Author". Generate a comprehensive reference study notes PDF text guide.
+${customInstruction ? `CRITICAL INSTRUCTION TO FOLLOW EXACTLY: "${customInstruction}"` : ''}
+Return a JSON object containing:
+{
+  "fileName": "Class 10 Revision Master PDF Guide",
+  "markdown": "# CBSE Board Revision PDF Guide... [comprehensive syllabus sheet, conceptual definitions, exam blueprints, and derivations]"
+}`;
+      prompt = `Generate a printable study guide markdown for Topic: "${topicTitle}" from Chapter: "${chapterTitle}".`;
+      responseMimeType = 'application/json';
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+        responseMimeType
+      }
+    });
+
+    const text = response.text || "{}";
+    res.json(JSON.parse(text));
+
+  } catch (error: any) {
+    console.error('API Course Content Generation Error:', error);
+    res.status(500).json({ error: error.message || 'Error occurred during AI generation' });
   }
 });
 

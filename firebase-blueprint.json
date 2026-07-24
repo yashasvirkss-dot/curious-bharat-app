@@ -1,0 +1,151 @@
+{
+  "entities": {
+    "courses": {
+      "title": "Courses and Batches",
+      "description": "Educational courses and batches offered on Curious Bharat",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "grade": { "type": "string" },
+        "price": { "type": "string" },
+        "isPaid": { "type": "boolean" },
+        "description": { "type": "string" },
+        "subjects": { "type": "array" },
+        "enrolledStudents": { "type": "array" },
+        "isPinned": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title"]
+    },
+    "customization": {
+      "title": "Platform Customization",
+      "description": "Global theme and platform branding configuration",
+      "type": "object",
+      "properties": {
+        "instituteName": { "type": "string" },
+        "heroTagline": { "type": "string" },
+        "activeTheme": { "type": "string" },
+        "bannerAnnouncement": { "type": "string" },
+        "showBanner": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": []
+    },
+    "owner_profile": {
+      "title": "Owner Profile",
+      "description": "Educator or Institute Admin Profile Information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "qualifications": { "type": "string" },
+        "upiId": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "aboutText": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": []
+    },
+    "student_analysis": {
+      "title": "Student Analysis Records",
+      "description": "Performance tracking and test analysis records for students",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "testResults": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["studentId"]
+    },
+    "comments": {
+      "title": "Lecture Comments",
+      "description": "Community comments and discussions under video lectures",
+      "type": "object",
+      "properties": {
+        "lectureId": { "type": "string" },
+        "userName": { "type": "string" },
+        "text": { "type": "string" },
+        "isPinned": { "type": "boolean" },
+        "likes": { "type": "number" },
+        "likedBy": { "type": "array" },
+        "replies": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["lectureId", "text"]
+    },
+    "announcements": {
+      "title": "Broadcast Announcements",
+      "description": "Announcements broadcast by educators to all students",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["text"]
+    },
+    "join_requests": {
+      "title": "Batch Join Requests",
+      "description": "Student enrollment requests for approval",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseTitle": { "type": "string" },
+        "isPaid": { "type": "boolean" },
+        "price": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentId", "courseId"]
+    },
+    "students": {
+      "title": "Student Profiles & Progress",
+      "description": "Individual student progress, XP, coins, and enrollment data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "xp": { "type": "number" },
+        "coins": { "type": "number" },
+        "streak": { "type": "number" },
+        "bookmarks": { "type": "array" },
+        "enrolledCourses": { "type": "array" },
+        "referralBalance": { "type": "number" },
+        "referrals": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": []
+    },
+    "feedback": {
+      "title": "User Feedback",
+      "description": "Feedback, ratings, and bug reports from users",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "text": { "type": "string" },
+        "rating": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["text"]
+    },
+    "system": {
+      "title": "System Settings",
+      "description": "System metadata like APK versions and app configuration",
+      "type": "object",
+      "properties": {
+        "version": { "type": "string" },
+        "url": { "type": "string" },
+        "notes": { "type": "string" },
+        "sizeMB": { "type": "number" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": []
+    }
+  }
+}

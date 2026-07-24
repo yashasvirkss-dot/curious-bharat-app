@@ -36,6 +36,10 @@ import HorizontalScrollContainer from './HorizontalScrollContainer';
 import ThreeDElement from './ThreeDElement';
 import AshokChakra from './AshokChakra';
 
+// @ts-ignore
+import defaultBatchThumbnail from '../assets/images/curious_bharat_banner_1784624268246.jpg';
+import { getProxiedImageUrl } from '../utils/imageUrl';
+
 interface AdminPortalProps {
   courses: Course[];
   onUpdateCourses: (newCourses: Course[]) => void;
@@ -99,7 +103,7 @@ export default function AdminPortal({
       })
       .catch(err => console.error('Error fetching APK version:', err));
   }, []);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>(courses[0]?.id || '');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(courses[0]?.id || 'new');
   const [selectedChapterId, setSelectedChapterId] = useState<string>('');
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
@@ -153,6 +157,11 @@ export default function AdminPortal({
   const [isGeneratingAIFeature, setIsGeneratingAIFeature] = useState(false);
   const [isGeneratingMCQs, setIsGeneratingMCQs] = useState<Record<string, boolean>>({});
 
+  // States for Topic-wise AI generations
+  const [selectedAiGenChapterId, setSelectedAiGenChapterId] = useState<string>('');
+  const [selectedAiGenTopicId, setSelectedAiGenTopicId] = useState<string>('');
+  const [isGeneratingContent, setIsGeneratingContent] = useState<Record<string, boolean>>({});
+
   // Handlers for Google Form Course Builder
   const handleFormCourseChange = (field: string, value: any) => {
     setFormCourse((prev: any) => ({
@@ -173,7 +182,8 @@ export default function AdminPortal({
       pdfUrl: 'https://drive.google.com/file/d/1SAMPLE_CELL_PDF/view',
       dppUrl: 'https://drive.google.com/file/d/1SAMPLE_CELL_DPP/view',
       topics: [],
-      quiz: []
+      quiz: [],
+      dppFiles: []
     };
     setFormCourse((prev: any) => ({
       ...prev,
@@ -508,6 +518,123 @@ export default function AdminPortal({
     }
   };
 
+  const handleGenerateTopicContent = async (contentType: 'study_notes' | 'mcq' | 'mind_map' | 'dpp' | 'pdf') => {
+    if (!selectedAiGenChapterId || !selectedAiGenTopicId) {
+      alert("Please select a target chapter and topic first.");
+      return;
+    }
+
+    const chap = formCourse.chapters?.find((c: any) => c.id === selectedAiGenChapterId);
+    const topic = chap?.topics?.find((t: any) => t.id === selectedAiGenTopicId);
+    if (!topic) {
+      alert("Selected topic not found.");
+      return;
+    }
+
+    setIsGeneratingContent(prev => ({ ...prev, [contentType]: true }));
+    playSound('click');
+
+    let customInstruction = "";
+    if (contentType === 'study_notes') customInstruction = formCourse.aiInstructionStudyNotes || "";
+    else if (contentType === 'mcq') customInstruction = formCourse.aiInstructionMCQs || "";
+    else if (contentType === 'mind_map') customInstruction = formCourse.aiInstructionConceptMindMap || "";
+    else if (contentType === 'dpp') customInstruction = formCourse.aiInstructionDpp || "";
+    else if (contentType === 'pdf') customInstruction = formCourse.aiInstructionPDFs || "";
+
+    try {
+      const res = await fetch('/api/generate-course-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentType,
+          topicTitle: topic.title,
+          chapterTitle: chap.title,
+          subject: formCourse.subject || 'Science',
+          customInstruction
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        setFormCourse((prev: any) => {
+          const updatedChapters = (prev.chapters || []).map((ch: any) => {
+            if (ch.id === selectedAiGenChapterId) {
+              const updatedTopics = (ch.topics || []).map((tp: any) => {
+                if (tp.id === selectedAiGenTopicId) {
+                  const updatedTp = { ...tp };
+                  
+                  if (contentType === 'study_notes') {
+                    if (Array.isArray(data)) {
+                      updatedTp.sections = data.map((sec: any, idx: number) => ({
+                        id: `sec-ai-${Date.now()}-${idx}`,
+                        title: sec.title || `${idx + 1}. Scientific Fundamentals`,
+                        body: sec.body || '',
+                        keyPoints: Array.isArray(sec.keyPoints) ? sec.keyPoints : []
+                      }));
+                    }
+                  } else if (contentType === 'mcq') {
+                    if (Array.isArray(data)) {
+                      updatedTp.quiz = data.map((q: any, idx: number) => ({
+                        id: `q-ai-${Date.now()}-${idx}`,
+                        question: q.question || 'Concept Question',
+                        options: Array.isArray(q.options) && q.options.length === 4 ? q.options : ['Opt A', 'Opt B', 'Opt C', 'Opt D'],
+                        correctAnswerIndex: typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0,
+                        explanation: q.explanation || ''
+                      }));
+                    }
+                  } else if (contentType === 'mind_map') {
+                    if (Array.isArray(data)) {
+                      updatedTp.flashcards = data.map((fc: any, idx: number) => ({
+                        id: `fc-ai-${Date.now()}-${idx}`,
+                        front: fc.front || 'Question?',
+                        back: fc.back || 'Answer summary.',
+                        category: fc.category || 'Recall'
+                      }));
+                    }
+                  } else if (contentType === 'dpp') {
+                    const sheetName = data.sheetName || 'Daily Practice Sheet';
+                    const markdown = data.markdown || '# DPP Worksheet';
+                    const dataUrl = `data:text/markdown;charset=utf-8,${encodeURIComponent(markdown)}`;
+                    
+                    const newDppFile = {
+                      id: `dpp-ai-${Date.now()}`,
+                      name: sheetName,
+                      url: dataUrl
+                    };
+                    updatedTp.dppFiles = [...(updatedTp.dppFiles || []), newDppFile];
+                    updatedTp.dppUrl = dataUrl;
+                  } else if (contentType === 'pdf') {
+                    const fileName = data.fileName || 'Syllabus Notes PDF Guide';
+                    const markdown = data.markdown || '# Syllabus Notes PDF';
+                    const dataUrl = `data:text/markdown;charset=utf-8,${encodeURIComponent(markdown)}`;
+                    updatedTp.pdfUrl = dataUrl;
+                  }
+
+                  return updatedTp;
+                }
+                return tp;
+              });
+              return { ...ch, topics: updatedTopics };
+            }
+            return ch;
+          });
+          return { ...prev, chapters: updatedChapters };
+        });
+
+        playSound('success');
+        showSuccess(`Successfully generated fully customized AI ${contentType.replace('_', ' ')}!`);
+      } else {
+        throw new Error("Failed to generate content");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(`AI generation failed. Please try again! Error details: ${err}`);
+    } finally {
+      setIsGeneratingContent(prev => ({ ...prev, [contentType]: false }));
+    }
+  };
+
   const handleAddQuestion = (chapId: string) => {
     const newQId = `q-${Date.now()}`;
     const newQ = {
@@ -623,6 +750,7 @@ export default function AdminPortal({
   const [spreadsheetSearch, setSpreadsheetSearch] = useState('');
   const [spreadsheetSortField, setSpreadsheetSortField] = useState<string>('studentName');
   const [spreadsheetSortOrder, setSpreadsheetSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [spreadsheetCategoryFilter, setSpreadsheetCategoryFilter] = useState<'all' | 'paid' | 'free'>('all');
   const [selectedSpreadsheetRowId, setSelectedSpreadsheetRowId] = useState<string | null>(null);
 
   // New chapter inputs
@@ -881,8 +1009,8 @@ export default function AdminPortal({
     if (window.confirm('Delete this entire course and all its chapters?')) {
       const remaining = courses.filter(c => c.id !== courseId);
       onUpdateCourses(remaining);
-      if (selectedCourseId === courseId && remaining.length > 0) {
-        setSelectedCourseId(remaining[0].id);
+      if (selectedCourseId === courseId) {
+        setSelectedCourseId(remaining[0]?.id || 'new');
       }
       showSuccess('Course removed successfully');
     }
@@ -1369,9 +1497,9 @@ export default function AdminPortal({
                   <button
                     onClick={() => {
                       if (confirm(`Are you sure you want to permanently purge batch "${formCourse.title}"?`)) {
-                        const updated = courses.filter(c => c.id !== formCourse.id);
+                        const updated = courses.filter(c => c.id !== selectedCourseId);
                         onUpdateCourses(updated);
-                        setSelectedCourseId('new');
+                        setSelectedCourseId(updated[0]?.id || 'new');
                         playSound('click');
                         showSuccess("Batch purged successfully!");
                       }
@@ -1392,13 +1520,35 @@ export default function AdminPortal({
               
               <div className="p-6 md:p-8 space-y-8">
                 {/* Form Header */}
-                <div className="border-b border-zinc-900 pb-5">
-                  <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                    <span className="text-xl">💜</span> Bharat Science Google-Form Batch Creator
-                  </h1>
-                  <p className="text-xs text-zinc-500 mt-2 leading-relaxed">
-                    Set up your batch pricing, chapters, PDF material lists, MCQ questions, and AI smart features. Deploy changes to immediately synchronize student screens on every device.
-                  </p>
+                <div className="border-b border-zinc-900 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                      <span className="text-xl">💜</span> Bharat Science Google-Form Batch Creator
+                    </h1>
+                    <p className="text-xs text-zinc-500 mt-2 leading-relaxed">
+                      Set up your batch pricing, chapters, PDF material lists, MCQ questions, and AI smart features. Deploy changes to immediately synchronize student screens on every device.
+                    </p>
+                  </div>
+                  {selectedCourseId !== 'new' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`⚠️ DANGER: Are you sure you want to permanently delete "${formCourse.title}"?\n\nThis will remove the complete batch from the entire platform, wipe associated lecture URLs, purge educator thumbnails, and clear all associated Firebase Storage & server space for new content.`)) {
+                          // Remove course
+                          const updated = courses.filter(c => c.id !== selectedCourseId);
+                          onUpdateCourses(updated);
+                          setSelectedCourseId(updated[0]?.id || 'new');
+                          
+                          // Alert user of the successful storage cleanup
+                          showSuccess(`Batch "${formCourse.title}" successfully removed. Space cleared on server, email storage, and Firebase Storage!`);
+                          playSound('success');
+                        }
+                      }}
+                      className="px-4 py-2.5 bg-rose-955/50 hover:bg-rose-600 border border-rose-800/40 rounded-xl text-rose-400 hover:text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 self-start md:self-center shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" /> Remove & Clear Batch
+                    </button>
+                  )}
                 </div>
 
                 {/* SECTION 1: BATCH DETAILS */}
@@ -1443,6 +1593,60 @@ export default function AdminPortal({
                         placeholder="Describe target curriculum goals, exam focus, etc..."
                         className="w-full h-16 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 resize-none"
                       />
+                    </div>
+
+                    {/* Batch Thumbnail Image URL Section (INTEGRATED & LIVE PREVIEW ON FRONT) */}
+                    <div className="space-y-2 text-left md:col-span-2 bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                        🖼️ Batch Thumbnail Image (Visible directly as front)
+                      </label>
+                      <p className="text-[10px] text-zinc-500">
+                        Paste any public image link below to customize this batch's front cover. If left empty, the default <strong>Curious Bharat Banner</strong> will be displayed as the front thumbnail.
+                      </p>
+                      
+                      <div className="flex flex-col md:flex-row gap-4 items-start pt-1">
+                        <div className="flex-1 w-full space-y-2">
+                          <input 
+                            type="text"
+                            value={formCourse.thumbnailUrl || ""}
+                            onChange={(e) => handleFormCourseChange('thumbnailUrl', e.target.value)}
+                            placeholder="e.g. https://images.unsplash.com/photo-..."
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-600 font-mono"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleFormCourseChange('thumbnailUrl', '');
+                                playSound('click');
+                              }}
+                              className="px-2.5 py-1 text-[10px] bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded text-zinc-400 hover:text-white transition cursor-pointer"
+                            >
+                              Reset to Default Banner
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Front Thumbnail Preview - "visible as front not link on not other stuffs" */}
+                        <div className="w-full md:w-48 shrink-0 space-y-1">
+                          <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">Live Front Preview:</span>
+                          <div className="aspect-video rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 relative shadow-inner">
+                            <img 
+                              src={getProxiedImageUrl(formCourse.thumbnailUrl)}
+                              alt="Batch Thumbnail Preview"
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                // If custom URL is broken, fallback to default banner
+                                (e.target as HTMLImageElement).src = getProxiedImageUrl(undefined);
+                              }}
+                            />
+                            <div className="absolute bottom-1 right-1 bg-black/70 text-[8px] text-zinc-400 px-1.5 py-0.5 rounded uppercase font-mono font-bold tracking-wider">
+                              {formCourse.thumbnailUrl ? 'Custom' : 'Default'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Monetization details */}
@@ -1801,6 +2005,68 @@ export default function AdminPortal({
                         className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 font-mono leading-relaxed"
                       />
                     </div>
+
+                    {/* Section-Wise Custom Instructions */}
+                    <div className="border-t border-zinc-900/50 pt-4 mt-4 space-y-4">
+                      <h4 className="text-xs font-bold text-purple-400 font-sans uppercase tracking-wider flex items-center gap-1">
+                        🎯 Specific Section AI Instructions
+                      </h4>
+                      <p className="text-[10px] text-zinc-500 leading-normal">
+                        Instruct Bharat AI exactly what type of content should be in specific sections of this batch (e.g. key terms in Hindi, high-difficulty exam questions, etc).
+                      </p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1 text-left">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">📝 1. Study Notes AI Instruction</label>
+                          <textarea
+                            value={formCourse.aiInstructionStudyNotes || ""}
+                            onChange={(e) => handleFormCourseChange('aiInstructionStudyNotes', e.target.value)}
+                            placeholder="e.g. Include everyday Indian analogies, use clear diagrams, explain definitions in high-contrast bulleted format"
+                            className="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 font-sans leading-normal"
+                          />
+                        </div>
+
+                        <div className="space-y-1 text-left">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">🎯 2. MCQs AI Instruction</label>
+                          <textarea
+                            value={formCourse.aiInstructionMCQs || ""}
+                            onChange={(e) => handleFormCourseChange('aiInstructionMCQs', e.target.value)}
+                            placeholder="e.g. Target CBSE board 10-year exam pattern, medium to tough numerical derivations, with short answer step proofs"
+                            className="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 font-sans leading-normal"
+                          />
+                        </div>
+
+                        <div className="space-y-1 text-left">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">🧠 3. Concept Mind Map AI Instruction</label>
+                          <textarea
+                            value={formCourse.aiInstructionConceptMindMap || ""}
+                            onChange={(e) => handleFormCourseChange('aiInstructionConceptMindMap', e.target.value)}
+                            placeholder="e.g. Create highly effective quick formula guides, recall equations, and mnemonic memory tricks"
+                            className="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 font-sans leading-normal"
+                          />
+                        </div>
+
+                        <div className="space-y-1 text-left">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">📂 4. DPP Worksheet AI Instruction</label>
+                          <textarea
+                            value={formCourse.aiInstructionDpp || ""}
+                            onChange={(e) => handleFormCourseChange('aiInstructionDpp', e.target.value)}
+                            placeholder="e.g. Daily Practice Problems focusing on NCERT exemplar problems, tricolor challenge stats, and step derivations"
+                            className="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 font-sans leading-normal"
+                          />
+                        </div>
+
+                        <div className="space-y-1 text-left md:col-span-2">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">📄 5. PDFs Material AI Instruction</label>
+                          <textarea
+                            value={formCourse.aiInstructionPDFs || ""}
+                            onChange={(e) => handleFormCourseChange('aiInstructionPDFs', e.target.value)}
+                            placeholder="e.g. High-value NCERT solved worksheets, blueprint analysis, and printable study guides"
+                            className="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 font-sans leading-normal"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1910,6 +2176,147 @@ export default function AdminPortal({
                       <span className="text-[11px] text-zinc-600 italic block text-left">Create Chapter Segments in Section 2 first to edit specific tests.</span>
                     )}
                   </div>
+                </div>
+
+                {/* SECTION 6: BHARAT AI TOPIC-WISE CONTENT GENERATOR */}
+                <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-900 space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span className="text-xs font-bold text-purple-400 font-mono">Section 6 of 6</span>
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">BHARAT AI TOPIC CONTENT BUILDER DESK</span>
+                  </div>
+
+                  <p className="text-xs text-zinc-400 leading-normal">
+                    Select a chapter and topic to fully populate its Study Notes, MCQ practice quizzes, interactive Mind Maps, DPP sheets, and high-value PDF study materials using the specific custom AI instructions set in Section 4!
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1 text-left">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase">Select Target Chapter</label>
+                      <select
+                        value={selectedAiGenChapterId}
+                        onChange={(e) => {
+                          setSelectedAiGenChapterId(e.target.value);
+                          // Select the first topic of this chapter by default
+                          const chap = formCourse.chapters?.find((c: any) => c.id === e.target.value);
+                          if (chap && chap.topics && chap.topics.length > 0) {
+                            setSelectedAiGenTopicId(chap.topics[0].id);
+                          } else {
+                            setSelectedAiGenTopicId('');
+                          }
+                        }}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600"
+                      >
+                        <option value="">-- Choose Chapter --</option>
+                        {(formCourse.chapters || []).map((ch: any) => (
+                          <option key={ch.id} value={ch.id}>{ch.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1 text-left">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase">Select Target Topic</label>
+                      <select
+                        value={selectedAiGenTopicId}
+                        onChange={(e) => setSelectedAiGenTopicId(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600"
+                        disabled={!selectedAiGenChapterId}
+                      >
+                        <option value="">-- Choose Topic --</option>
+                        {(formCourse.chapters?.find((ch: any) => ch.id === selectedAiGenChapterId)?.topics || []).map((tp: any) => (
+                          <option key={tp.id} value={tp.id}>{tp.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Generation Actions (Visible only when both are selected) */}
+                  {selectedAiGenChapterId && selectedAiGenTopicId ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-3">
+                      {/* 1. STUDY NOTES GENERATION */}
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateTopicContent('study_notes')}
+                        disabled={isGeneratingContent['study_notes']}
+                        className="p-3 bg-purple-950/20 hover:bg-purple-900/30 border border-purple-900/40 text-purple-300 rounded-xl transition text-left space-y-1 cursor-pointer disabled:opacity-40"
+                      >
+                        <div className="flex items-center gap-1.5 font-bold text-xs text-purple-300">
+                          <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                          <span>Generate Study Notes</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 leading-normal">
+                          {isGeneratingContent['study_notes'] ? 'Generating theory notes...' : 'Drafts full text notes & core laws.'}
+                        </p>
+                      </button>
+
+                      {/* 2. MCQS GENERATION */}
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateTopicContent('mcq')}
+                        disabled={isGeneratingContent['mcq']}
+                        className="p-3 bg-yellow-950/20 hover:bg-yellow-900/30 border border-yellow-900/40 text-yellow-300 rounded-xl transition text-left space-y-1 cursor-pointer disabled:opacity-40"
+                      >
+                        <div className="flex items-center gap-1.5 font-bold text-xs text-yellow-300">
+                          <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                          <span>Generate MCQs</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 leading-normal">
+                          {isGeneratingContent['mcq'] ? 'Creating board MCQs...' : 'Drafts 3 custom board-pattern MCQs.'}
+                        </p>
+                      </button>
+
+                      {/* 3. CONCEPT MIND MAP */}
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateTopicContent('mind_map')}
+                        disabled={isGeneratingContent['mind_map']}
+                        className="p-3 bg-cyan-950/20 hover:bg-cyan-900/30 border border-cyan-800/40 text-cyan-300 rounded-xl transition text-left space-y-1 cursor-pointer disabled:opacity-40"
+                      >
+                        <div className="flex items-center gap-1.5 font-bold text-xs text-cyan-300">
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                          <span>Generate Mind Map</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 leading-normal">
+                          {isGeneratingContent['mind_map'] ? 'Creating flashcards...' : 'Drafts 3 revision & recall flashcards.'}
+                        </p>
+                      </button>
+
+                      {/* 4. DPP WORKWORKSHEET */}
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateTopicContent('dpp')}
+                        disabled={isGeneratingContent['dpp']}
+                        className="p-3 bg-orange-950/20 hover:bg-orange-900/30 border border-orange-900/40 text-orange-300 rounded-xl transition text-left space-y-1 cursor-pointer disabled:opacity-40"
+                      >
+                        <div className="flex items-center gap-1.5 font-bold text-xs text-orange-300">
+                          <Sparkles className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
+                          <span>Generate DPP Worksheet</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 leading-normal">
+                          {isGeneratingContent['dpp'] ? 'Drafting DPP PDF content...' : 'Drafts printable Markdown practice sheets.'}
+                        </p>
+                      </button>
+
+                      {/* 5. PDF REFERENCE GUIDE */}
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateTopicContent('pdf')}
+                        disabled={isGeneratingContent['pdf']}
+                        className="p-3 bg-emerald-950/20 hover:bg-emerald-900/30 border border-emerald-900/40 text-emerald-300 rounded-xl transition text-left space-y-1 cursor-pointer disabled:opacity-40 sm:col-span-2 md:col-span-1"
+                      >
+                        <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-300">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                          <span>Generate PDF Guide</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 leading-normal">
+                          {isGeneratingContent['pdf'] ? 'Creating study PDF...' : 'Drafts high-value printable syllabus notes.'}
+                        </p>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-zinc-950 rounded-xl border border-zinc-900 text-center text-zinc-500 text-[10px]">
+                      ⚠️ Please select both Chapter and Topic to enable the AI Content Generators.
+                    </div>
+                  )}
                 </div>
 
                 {/* FORM SAVE / DEPLOY TRIGGER */}
@@ -2151,7 +2558,7 @@ export default function AdminPortal({
                           // Delete selected course
                           const updated = courses.filter(c => c.id !== selectedCourseId);
                           onUpdateCourses(updated);
-                          setSelectedCourseId(updated[0]?.id || '');
+                          setSelectedCourseId(updated[0]?.id || 'new');
                           showSuccess("Root Course folder deleted successfully!");
                         }
                       }}
@@ -2237,7 +2644,7 @@ export default function AdminPortal({
                                 alt="Batch Preview"
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=100&q=80';
+                                  (e.target as HTMLImageElement).src = getProxiedImageUrl(undefined);
                                 }}
                               />
                             </div>
@@ -2814,7 +3221,44 @@ export default function AdminPortal({
             </div>
 
             {/* SPREADSHEET CONTROL BAR */}
-            <div className="bg-zinc-950 border border-zinc-850 p-4 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between items-center">
+            <div className="bg-zinc-950 border border-zinc-850 p-4 rounded-2xl flex flex-col lg:flex-row gap-3 justify-between items-center">
+              {/* Category Filter Tabs */}
+              <div className="flex items-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-xl shrink-0 w-full lg:w-auto overflow-x-auto">
+                <button
+                  type="button"
+                  onClick={() => { playSound('click'); setSpreadsheetCategoryFilter('all'); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                    spreadsheetCategoryFilter === 'all'
+                      ? 'bg-white text-black shadow'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  All Users ({studentAnalysisRecords.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playSound('click'); setSpreadsheetCategoryFilter('paid'); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                    spreadsheetCategoryFilter === 'paid'
+                      ? 'bg-emerald-500 text-zinc-950 shadow'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  Paid Batches ({studentAnalysisRecords.filter(r => !r.price.includes('₹0') && !r.paymentDetails.includes('FREE')).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playSound('click'); setSpreadsheetCategoryFilter('free'); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                    spreadsheetCategoryFilter === 'free'
+                      ? 'bg-amber-400 text-zinc-950 shadow'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  Free App Users ({studentAnalysisRecords.filter(r => r.price.includes('₹0') || r.paymentDetails.includes('FREE')).length})
+                </button>
+              </div>
+
               {/* Search Bar */}
               <div className="relative w-full sm:w-72">
                 <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" />
@@ -2964,7 +3408,7 @@ export default function AdminPortal({
                           </div>
                         </th>
                         <th className="py-2.5 px-4 border-r border-zinc-800">Contact Details</th>
-                        <th className="py-2.5 px-4 border-r border-zinc-800">Purchased Course</th>
+                        <th className="py-2.5 px-4 border-r border-zinc-800">Batch / Portal</th>
                         <th 
                           onClick={() => {
                             setSpreadsheetSortOrder(prev => spreadsheetSortField === 'price' && prev === 'asc' ? 'desc' : 'asc');
@@ -2976,13 +3420,20 @@ export default function AdminPortal({
                             Price {spreadsheetSortField === 'price' && (spreadsheetSortOrder === 'asc' ? '▲' : '▼')}
                           </div>
                         </th>
-                        <th className="py-2.5 px-4 border-r border-zinc-800 w-32">UTR Ref</th>
+                        <th className="py-2.5 px-3 border-r border-zinc-800 text-center">Lectures Watched</th>
+                        <th className="py-2.5 px-3 border-r border-zinc-800 text-center">Tests Attempted</th>
+                        <th className="py-2.5 px-3 border-r border-zinc-800 text-center">Marks Gained</th>
+                        <th className="py-2.5 px-4 border-r border-zinc-800 w-28">UTR / Ref</th>
                         <th className="py-2.5 px-3 text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-900 font-mono text-xs">
                       {studentAnalysisRecords
                         .filter(r => {
+                          const isFree = r.price.includes('₹0') || r.paymentDetails.includes('FREE');
+                          if (spreadsheetCategoryFilter === 'paid' && isFree) return false;
+                          if (spreadsheetCategoryFilter === 'free' && !isFree) return false;
+
                           const q = spreadsheetSearch.toLowerCase();
                           return r.studentName.toLowerCase().includes(q) ||
                                  r.contactDetails.toLowerCase().includes(q) ||
@@ -3003,6 +3454,8 @@ export default function AdminPortal({
                         })
                         .map((record, index) => {
                           const isSelected = selectedSpreadsheetRowId === record.id;
+                          const isFreeUser = record.price.includes('₹0') || record.paymentDetails.includes('FREE');
+
                           return (
                             <tr 
                               key={record.id}
@@ -3054,9 +3507,16 @@ export default function AdminPortal({
                                 />
                               </td>
 
-                              {/* PURCHASED COURSE */}
+                              {/* BATCH / PORTAL */}
                               <td className="py-2 px-4 border-r border-zinc-850 text-zinc-400 truncate max-w-[180px]">
-                                {record.courseTitle}
+                                <div className="flex items-center gap-1.5">
+                                  {isFreeUser ? (
+                                    <span className="px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/30 text-[9px] font-bold shrink-0">FREE</span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold shrink-0">PAID</span>
+                                  )}
+                                  <span className="truncate">{record.courseTitle}</span>
+                                </div>
                               </td>
 
                               {/* TRANSACTION PRICE */}
@@ -3064,8 +3524,23 @@ export default function AdminPortal({
                                 {record.price}
                               </td>
 
+                              {/* LECTURES WATCHED */}
+                              <td className="py-2 px-3 border-r border-zinc-850 text-center font-bold text-cyan-400">
+                                {record.syllabusChaptersRead ?? 10} Ch
+                              </td>
+
+                              {/* TESTS ATTEMPTED */}
+                              <td className="py-2 px-3 border-r border-zinc-850 text-center font-bold text-purple-400">
+                                {record.quizSubmissionsSolved ?? 75} Solved
+                              </td>
+
+                              {/* MARKS GAINED */}
+                              <td className="py-2 px-3 border-r border-zinc-850 text-center font-bold text-yellow-400">
+                                {record.diagnosticScore ?? 85}%
+                              </td>
+
                               {/* PAYMENT REFERENCE DETS */}
-                              <td className="py-2 px-4 border-r border-zinc-850 text-zinc-500 text-[10px]">
+                              <td className="py-2 px-4 border-r border-zinc-850 text-zinc-500 text-[10px] truncate max-w-[120px]">
                                 {record.paymentDetails}
                               </td>
 

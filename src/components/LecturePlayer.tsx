@@ -481,7 +481,7 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
           <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
               <div className="flex items-center gap-2">
-                <Settings className="w-4 h-4 text-orange-400 animate-spin-slow" />
+                <Settings className="w-4 h-4 text-orange-400 hover:rotate-45 transition-transform duration-300" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-350 font-mono">
                   Lecture Action desk & offline download
                 </h4>

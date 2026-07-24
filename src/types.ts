@@ -76,6 +76,11 @@ export interface Course {
   thumbnailUrl?: string; // Customizable course thumbnail
   specialAIFeature?: string; // AI generated special premium features for that batch
   hidden?: boolean;      // Toggle visibility for student
+  aiInstructionStudyNotes?: string;
+  aiInstructionMCQs?: string;
+  aiInstructionConceptMindMap?: string;
+  aiInstructionDpp?: string;
+  aiInstructionPDFs?: string;
 }
 
 export interface AppCustomization {
@@ -105,12 +110,14 @@ export interface UserProgress {
   studentName?: string;
   studentGrade?: string;
   studentSchool?: string;
+  contactNumber?: string;
   profilePic?: string;
   referralCode?: string;
   referralWallet?: number;
   onboarded?: boolean;
   mentorPreference?: 'analytical' | 'visual' | 'both';
   storagePermissionGranted?: boolean;
+  downloadedFiles?: Array<{ id: string; title: string; url: string; downloadedAt: string; sizeKb: number }>;
 }
 
 export interface ChatMessage {

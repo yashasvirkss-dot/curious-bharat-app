@@ -27,6 +27,11 @@ import { playSound } from '../utils/audio';
 import { getTenQuestions } from '../utils/quizGenerator';
 import FlashcardsView from './FlashcardsView';
 import ThreeDElement from './ThreeDElement';
+import ChildScientistCanvas from './ChildScientistCanvas';
+
+// @ts-ignore
+import defaultBatchThumbnail from '../assets/images/curious_bharat_banner_1784624268246.jpg';
+import { getProxiedImageUrl } from '../utils/imageUrl';
 
 interface BatchesTabProps {
   courses: Course[];
@@ -216,7 +221,8 @@ export default function BatchesTab({
           quiz: chapter.quiz || [],
           lectureUrl: chapter.lectureUrl,
           pdfUrl: chapter.pdfUrl,
-          dppUrl: chapter.dppUrl
+          dppUrl: chapter.dppUrl,
+          dppFiles: chapter.dppFiles
         }
       ];
     }
@@ -638,41 +644,41 @@ export default function BatchesTab({
                       )}
                     </div>
 
-                    {selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0 ? (
-                      selectedTopic.dppFiles.map((file, idx) => (
-                        <div key={file.id || idx} className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
-                          <div className="space-y-0.5 text-left">
-                            <span className="text-xs font-bold text-white block">{file.name || `Practice Sheet Day #${idx + 1}`}</span>
-                            <span className="text-[10px] text-zinc-500 block">Homework Sheet • Day Wise</span>
-                          </div>
-                          <button
-                            onClick={() => handleDownloadClick(file.url || '', file.name || `Daily Practice DPP Sheet Day #${idx + 1}`)}
-                            className="px-3 py-1.5 bg-cyan-950/40 border border-cyan-800/40 hover:bg-cyan-900/50 text-cyan-400 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 shrink-0"
-                          >
-                            <Download className="w-3 h-3 text-cyan-400" />
-                            <span>Download</span>
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
-                        <div className="space-y-0.5 text-left">
-                          <span className="text-xs font-bold text-white block">Daily Practice Problems (DPP)</span>
-                          <span className="text-[10px] text-zinc-500 block">Homework Worksheet Challenge</span>
-                        </div>
-                        {selectedTopic.dppUrl ? (
-                          <button
-                            onClick={() => handleDownloadClick(selectedTopic.dppUrl || '', `${selectedTopic.title} DPP Sheet`)}
-                            className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 shrink-0"
-                          >
-                            <Download className="w-3 h-3 text-sky-400" />
-                            <span>Download</span>
-                          </button>
-                        ) : (
-                          <span className="text-[10px] text-zinc-600 font-mono">🔒 Unlinked</span>
-                        )}
-                      </div>
-                    )}
+                     {((selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0) ? selectedTopic.dppFiles : (selectedChapter?.dppFiles || [])).length > 0 ? (
+                       ((selectedTopic.dppFiles && selectedTopic.dppFiles.length > 0) ? selectedTopic.dppFiles : (selectedChapter?.dppFiles || [])).map((file: any, idx: number) => (
+                         <div key={file.id || idx} className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
+                           <div className="space-y-0.5 text-left">
+                             <span className="text-xs font-bold text-white block">{file.name || `Practice Sheet Day #${idx + 1}`}</span>
+                             <span className="text-[10px] text-zinc-500 block">Homework Sheet • Day Wise</span>
+                           </div>
+                           <button
+                             onClick={() => handleDownloadClick(file.url || '', file.name || `Daily Practice DPP Sheet Day #${idx + 1}`)}
+                             className="px-3 py-1.5 bg-cyan-950/40 border border-cyan-800/40 hover:bg-cyan-900/50 text-cyan-400 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 shrink-0"
+                           >
+                             <Download className="w-3 h-3 text-cyan-400" />
+                             <span>Download</span>
+                           </button>
+                         </div>
+                       ))
+                     ) : (
+                       <div className="flex items-center justify-between p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-850">
+                         <div className="space-y-0.5 text-left">
+                           <span className="text-xs font-bold text-white block">Daily Practice Problems (DPP)</span>
+                           <span className="text-[10px] text-zinc-500 block">Homework Worksheet Challenge</span>
+                         </div>
+                         {(selectedTopic.dppUrl || selectedChapter?.dppUrl) ? (
+                           <button
+                             onClick={() => handleDownloadClick(selectedTopic.dppUrl || selectedChapter?.dppUrl || '', `${selectedTopic.title} DPP Sheet`)}
+                             className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 shrink-0"
+                           >
+                             <Download className="w-3 h-3 text-sky-400" />
+                             <span>Download</span>
+                           </button>
+                         ) : (
+                           <span className="text-[10px] text-zinc-600 font-mono">🔒 Unlinked</span>
+                         )}
+                       </div>
+                     )}
                   </div>
                 </div>
               )}
@@ -727,7 +733,7 @@ export default function BatchesTab({
                     className="rounded-2xl p-4 flex items-center justify-between gap-4 cursor-pointer group relative transition border bg-zinc-950 border-zinc-900/85 hover:border-zinc-700"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border bg-zinc-900 border-zinc-855">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border bg-zinc-900 border-zinc-800">
                         <FileText className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
                       </div>
                       <div className="space-y-0.5">
@@ -776,19 +782,15 @@ export default function BatchesTab({
 
                 {/* Large Playlist Thumbnail Image */}
                 <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative shadow-md select-none">
-                  {selectedCourse.thumbnailUrl ? (
-                    <img 
-                      src={selectedCourse.thumbnailUrl} 
-                      alt={selectedCourse.title} 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-tr from-orange-600/20 via-zinc-900 to-emerald-600/20 flex flex-col items-center justify-center p-4">
-                      <Video className="w-8 h-8 text-zinc-400 animate-pulse" />
-                      <span className="text-[9px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-2">BHARAT GURUKUL</span>
-                    </div>
-                  )}
+                  <img 
+                    src={getProxiedImageUrl(selectedCourse.thumbnailUrl)} 
+                    alt={selectedCourse.title} 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = getProxiedImageUrl(undefined);
+                    }}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
                     <span className="text-[10px] bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-white font-mono font-bold border border-white/10 uppercase tracking-widest">
                       📚 PLAYLIST
@@ -928,6 +930,9 @@ export default function BatchesTab({
         // LEVEL 0: Grid/List View of Batches (Now refactored into a super prominent visual grid with premium lines)
         <div className="space-y-6">
           
+          {/* 3D Child Scientist Animation Canvas at top-most place */}
+          <ChildScientistCanvas appLanguage={appLanguage} />
+
           {/* Batches Header with Premium theme */}
           <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 sm:p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#4F9DFF] to-[#14b8a6]"></div>
@@ -948,9 +953,7 @@ export default function BatchesTab({
               </p>
             </div>
 
-            <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center bg-zinc-900/40 rounded-full border border-zinc-850 p-2">
-              <ThreeDElement type="books_bundle_3d" className="w-full h-full" />
-            </div>
+            {/* Banner Content */}
           </div>
 
           {/* Embedded Search and Toggleable Filter Bar */}
@@ -1096,24 +1099,16 @@ export default function BatchesTab({
                       <div className="space-y-4">
                         {/* LARGE SIZE BATCH ICON / THUMBNAIL */}
                         <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-850 overflow-hidden relative select-none shadow-lg group-hover:scale-[1.01] transition-all duration-300 flex items-center justify-center">
-                          {course.thumbnailUrl ? (
-                            <img 
-                              src={course.thumbnailUrl} 
-                              alt={course.title} 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center p-4 text-center">
-                              <div className="w-20 h-20 relative mb-1 flex items-center justify-center">
-                                <ThreeDElement 
-                                  type={course.id.includes('biology') ? 'walkingGirl' : (course.id.includes('chemistry') ? 'shortsBoy' : 'backpackBoy')} 
-                                  className="w-full h-full" 
-                                />
-                              </div>
-                              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500">Premium Study Batch</span>
-                            </div>
-                          )}
+                          <img 
+                            src={getProxiedImageUrl(course.thumbnailUrl)} 
+                            alt={course.title} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              // Fallback if URL fails to load
+                              (e.target as HTMLImageElement).src = getProxiedImageUrl(undefined);
+                            }}
+                          />
 
                           {/* Status overlay */}
                           <div className="absolute top-3 right-3 flex gap-1.5 z-10">

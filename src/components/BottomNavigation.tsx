@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Bookmark, BookOpen, Brain, User, ShieldAlert, ChevronUp } from 'lucide-react';
+import { Home, Bookmark, BookOpen, User, Bot, ShieldAlert, ChevronUp } from 'lucide-react';
 import { playSound } from '../utils/audio';
 
 interface BottomNavigationProps {
@@ -22,15 +22,14 @@ export default function BottomNavigation({
     id: 'home' | 'batches' | 'practice' | 'ai' | 'profile';
     label: string;
     icon: React.ComponentType<any>;
-    isAccent?: boolean;
   }
 
   const tabs: TabItem[] = [
     { id: 'home', label: appLanguage === 'hi' ? 'होम' : 'Home', icon: Home },
     { id: 'batches', label: appLanguage === 'hi' ? 'बैच' : 'Batches', icon: BookOpen },
     { id: 'practice', label: appLanguage === 'hi' ? 'अभ्यास' : 'Practice', icon: Bookmark },
-    { id: 'ai', label: 'Bharat AI', icon: Brain, isAccent: true },
-    { id: 'profile', label: appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile', icon: User }
+    { id: 'ai', label: appLanguage === 'hi' ? 'भारत AI' : 'Bharat AI', icon: Bot },
+    { id: 'profile', label: appLanguage === 'hi' ? 'विश्लेषण' : 'Analysis', icon: User }
   ];
 
   // Disappearing/Consolidating timer: 20 seconds of user idleness
@@ -75,6 +74,7 @@ export default function BottomNavigation({
     resetTimer();
   };
 
+
   if (isCollapsed) {
     return (
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">
@@ -94,16 +94,16 @@ export default function BottomNavigation({
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-zinc-900 z-40 pb-safe shadow-2xl transition-all duration-300">
+    <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-zinc-850 z-40 shadow-2xl transition-all duration-300 safe-pb">
       {/* Offline Alert Strip */}
       {!isOnline && (
-        <div className="bg-red-950/40 border-b border-red-900/60 text-red-400 py-1 text-[10px] font-mono font-semibold tracking-wider flex items-center justify-center gap-1">
-          <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
-          <span>{appLanguage === 'hi' ? 'ऑफ़लाइन-प्रथम मोड सक्रिय — स्थानीय डेटाबेस उपयोग में है' : 'OFFLINE-FIRST MODE ACTIVE — LOCAL DATABASE IN USE'}</span>
+        <div className="bg-red-950/60 border-b border-red-900/60 text-red-400 py-1 px-3 text-[10px] font-mono font-semibold tracking-wider flex items-center justify-center gap-1.5 text-center">
+          <ShieldAlert className="w-3.5 h-3.5 animate-pulse shrink-0" />
+          <span>{appLanguage === 'hi' ? 'ऑफ़लाइन-प्रथम मोड सक्रिय — स्थानीय डेटाबेस उपयोग में है' : 'OFFLINE MODE ACTIVE — LOCAL STORAGE SYNCED'}</span>
         </div>
       )}
 
-      <div className="max-w-md mx-auto flex justify-around items-center h-16 px-2">
+      <div className="max-w-xl mx-auto flex justify-around items-center h-16 px-2 sm:px-4">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -116,20 +116,16 @@ export default function BottomNavigation({
             >
               <div
                 className={`flex items-center justify-center rounded-xl transition-all duration-300 ${
-                  tab.isAccent
-                    ? isActive
-                      ? 'bg-white text-black p-2.5 scale-110 shadow-lg'
-                      : 'bg-zinc-900 text-yellow-400 p-2 hover:bg-zinc-850 hover:scale-105'
-                    : isActive
-                    ? 'text-white'
+                  isActive
+                    ? 'text-white scale-105'
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                <Icon className={`${tab.isAccent ? 'w-5 h-5' : 'w-5.5 h-5.5'}`} />
+                <Icon className="w-5.5 h-5.5" />
               </div>
 
-              {/* Dot Indicator for Regular Tabs */}
-              {!tab.isAccent && isActive && (
+              {/* Dot Indicator for Active Tab */}
+              {isActive && (
                 <span className="absolute bottom-1 w-1 h-1 bg-white rounded-full animate-pulse" />
               )}
 

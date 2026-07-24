@@ -275,6 +275,32 @@ export default function ProfileHub({
   const chemRate = chemTotal > 0 ? Math.round((chemCompleted / chemTotal) * 100) : 0;
   const bioRate = bioTotal > 0 ? Math.round((bioCompleted / bioTotal) * 100) : 0;
 
+  // Accurate subject-specific quiz performance for active student
+  const physicsQuizScores = physicsChapters
+    .map(ch => progress.quizScores[ch.id]?.highscore)
+    .filter((s): s is number => s !== undefined);
+  const physicsAvgScore = physicsQuizScores.length > 0 
+    ? Math.round(physicsQuizScores.reduce((a, b) => a + b, 0) / physicsQuizScores.length)
+    : (totalTestsTaken > 0 ? averageQuizScore : 0);
+
+  const chemQuizScores = chemChapters
+    .map(ch => progress.quizScores[ch.id]?.highscore)
+    .filter((s): s is number => s !== undefined);
+  const chemAvgScore = chemQuizScores.length > 0 
+    ? Math.round(chemQuizScores.reduce((a, b) => a + b, 0) / chemQuizScores.length)
+    : (totalTestsTaken > 0 ? averageQuizScore : 0);
+
+  const bioQuizScores = bioChapters
+    .map(ch => progress.quizScores[ch.id]?.highscore)
+    .filter((s): s is number => s !== undefined);
+  const bioAvgScore = bioQuizScores.length > 0 
+    ? Math.round(bioQuizScores.reduce((a, b) => a + b, 0) / bioQuizScores.length)
+    : (totalTestsTaken > 0 ? averageQuizScore : 0);
+
+  const physicsAttempts = physicsChapters.reduce((sum, ch) => sum + (progress.quizScores[ch.id]?.attempts || (progress.quizScores[ch.id] ? 1 : 0)), 0);
+  const chemAttempts = chemChapters.reduce((sum, ch) => sum + (progress.quizScores[ch.id]?.attempts || (progress.quizScores[ch.id] ? 1 : 0)), 0);
+  const bioAttempts = bioChapters.reduce((sum, ch) => sum + (progress.quizScores[ch.id]?.attempts || (progress.quizScores[ch.id] ? 1 : 0)), 0);
+
   // Concentric circle path constants
   // Outermost (Physics): Radius = 38, Middle (Chemistry): Radius = 28, Innermost (Biology): Radius = 18
   const physDash = Math.round(2 * Math.PI * 38);
@@ -429,6 +455,96 @@ export default function ProfileHub({
             <div className="text-center">
               <span className="text-sm font-bold font-mono text-white block">{progress.totalXP}</span>
               <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-mono">Rank Coins</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* =======================================================
+          ACADEMIC COINS & SCHOLAR REWARDS SECTION
+          ======================================================= */}
+      <div className="bg-gradient-to-br from-zinc-950 via-black to-zinc-950 border border-amber-500/30 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-900/90 pb-4 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-950/40 border border-amber-800/40 flex items-center justify-center p-1">
+              <Coins className="w-6 h-6 text-yellow-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
+                {appLanguage === 'hi' ? 'एकेडमिक कॉइन्स वॉलेट और पुरस्कार' : 'Academic Coins Wallet & Scholar Rewards'}
+                <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/30 font-mono px-2 py-0.5 rounded-full uppercase font-bold">
+                  {appLanguage === 'hi' ? 'सक्रिय बैलेंस' : 'ACTIVE BALANCE'}
+                </span>
+              </h3>
+              <p className="text-xs text-zinc-400">
+                {appLanguage === 'hi' ? 'पाठ, क्विज़ और संदेह समाधान से अर्जित सिक्के' : 'Coins earned through video lessons, quizzes, practice tests, and doubt clearing.'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-2xl shadow-inner">
+            <Coins className="w-5 h-5 text-yellow-400 animate-bounce" />
+            <span className="text-2xl font-black font-mono text-white leading-none">
+              {progress.totalXP || 0}
+            </span>
+            <span className="text-xs font-bold text-zinc-400 font-mono uppercase">Coins</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Main 3D Coins Card */}
+          <div className="bg-zinc-900/40 border border-amber-500/20 rounded-2xl p-5 flex items-center justify-between relative overflow-hidden group hover:border-amber-500/40 transition">
+            <div className="space-y-1 relative z-10 text-left">
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-400 block">
+                {appLanguage === 'hi' ? 'कुल अर्जित कॉइन्स' : 'TOTAL ACADEMIC COINS'}
+              </span>
+              <h4 className="text-3xl font-black text-white font-mono leading-none">
+                {progress.totalXP || 0}
+              </h4>
+              <p className="text-[11px] text-zinc-400 font-medium pt-1">
+                {appLanguage === 'hi' ? 'राष्ट्रीय स्तर पर रैंक में सुधार करें' : 'Earned through quizzes & studies'}
+              </p>
+            </div>
+            <div className="w-24 h-24 relative shrink-0">
+              <ThreeDElement type="academic_coins_3d" className="w-full h-full" autoRotate={true} interactive={true} />
+            </div>
+          </div>
+
+          {/* Chapters Mastered Stats */}
+          <div className="bg-zinc-900/40 border border-teal-500/20 rounded-2xl p-5 flex items-center justify-between relative overflow-hidden group hover:border-teal-500/40 transition">
+            <div className="space-y-1 relative z-10 text-left">
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-teal-400 block">
+                {appLanguage === 'hi' ? 'पूर्ण किए गए अध्याय' : 'CHAPTERS MASTERED'}
+              </span>
+              <h4 className="text-3xl font-black text-white font-mono leading-none flex items-baseline gap-1.5">
+                {completedLecturesCount} <span className="text-xs font-bold text-teal-400">/ {totalLecturesCount} Ch</span>
+              </h4>
+              <p className="text-[11px] text-zinc-400 font-medium pt-1">
+                {appLanguage === 'hi' ? 'पाठ्यक्रम पूरा होने की वास्तविक स्थिति' : 'Real-time syllabus completion'}
+              </p>
+            </div>
+            <div className="w-20 h-20 relative shrink-0">
+              <ThreeDElement type="cap" className="w-full h-full" autoRotate={true} interactive={true} />
+            </div>
+          </div>
+
+          {/* Doubts & Accuracy Stats */}
+          <div className="bg-zinc-900/40 border border-yellow-500/20 rounded-2xl p-5 flex items-center justify-between relative overflow-hidden group hover:border-yellow-500/40 transition">
+            <div className="space-y-1 relative z-10 text-left">
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-yellow-400 block">
+                {appLanguage === 'hi' ? 'संदेह और प्रश्न' : 'DOUBTS SOLVED'}
+              </span>
+              <h4 className="text-3xl font-black text-white font-mono leading-none">
+                {progress.aiDoubtsAsked || 0}
+              </h4>
+              <p className="text-[11px] text-zinc-400 font-medium pt-1">
+                {appLanguage === 'hi' ? 'भारत एआई सलाहकार द्वारा समाधान' : 'Resolved with Bharat AI mentor'}
+              </p>
+            </div>
+            <div className="w-20 h-20 relative shrink-0">
+              <ThreeDElement type="question_mark_3d" className="w-full h-full" autoRotate={true} interactive={true} />
             </div>
           </div>
         </div>
@@ -920,7 +1036,7 @@ export default function ProfileHub({
                 </div>
                 <div className="space-y-1 text-right flex-1">
                   <span className="text-[9px] text-zinc-500 font-mono block">AVERAGE EVALUATION</span>
-                  <span className="text-sm font-black font-mono text-cyan-400">{totalTestsTaken > 0 ? `${averageQuizScore}%` : '—'}</span>
+                  <span className="text-sm font-black font-mono text-cyan-400">{physicsAvgScore > 0 ? `${physicsAvgScore}%` : '—'}</span>
                 </div>
               </div>
 
@@ -966,7 +1082,7 @@ export default function ProfileHub({
                 </div>
                 <div className="space-y-1 text-right flex-1">
                   <span className="text-[9px] text-zinc-500 font-mono block">AVERAGE EVALUATION</span>
-                  <span className="text-sm font-black font-mono text-emerald-400">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 0.95)}%` : '—'}</span>
+                  <span className="text-sm font-black font-mono text-emerald-400">{chemAvgScore > 0 ? `${chemAvgScore}%` : '—'}</span>
                 </div>
               </div>
 
@@ -1012,7 +1128,7 @@ export default function ProfileHub({
                 </div>
                 <div className="space-y-1 text-right flex-1">
                   <span className="text-[9px] text-zinc-500 font-mono block">AVERAGE EVALUATION</span>
-                  <span className="text-sm font-black font-mono text-amber-400">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 1.05)}%` : '—'}</span>
+                  <span className="text-sm font-black font-mono text-amber-400">{bioAvgScore > 0 ? `${bioAvgScore}%` : '—'}</span>
                 </div>
               </div>
 
@@ -1060,9 +1176,9 @@ export default function ProfileHub({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center font-mono text-zinc-300">{physicsCompleted} / {physicsTotal}</td>
-                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{totalTestsTaken > 0 ? `${averageQuizScore}%` : '—'}</td>
+                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{physicsAvgScore > 0 ? `${physicsAvgScore}%` : '—'}</td>
                     <td className="py-3 px-4 text-center font-mono text-zinc-400">
-                      {totalTestsTaken > 0 ? Object.values(progress.quizScores).reduce((sum, item) => sum + (item.attempts || 1), 0) : 0}
+                      {physicsAttempts}
                     </td>
                     <td className="py-3 px-4 text-right font-mono text-cyan-400 font-bold">⭐ ⭐ ⭐ ⭐</td>
                   </tr>
@@ -1079,8 +1195,8 @@ export default function ProfileHub({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center font-mono text-zinc-300">{chemCompleted} / {chemTotal}</td>
-                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 0.95)}%` : '—'}</td>
-                    <td className="py-3 px-4 text-center font-mono text-zinc-400">{totalTestsTaken > 0 ? 1 : 0}</td>
+                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{chemAvgScore > 0 ? `${chemAvgScore}%` : '—'}</td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-400">{chemAttempts}</td>
                     <td className="py-3 px-4 text-right font-mono text-emerald-400 font-bold">⭐ ⭐ ⭐</td>
                   </tr>
 
@@ -1096,8 +1212,8 @@ export default function ProfileHub({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center font-mono text-zinc-300">{bioCompleted} / {bioTotal}</td>
-                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{totalTestsTaken > 0 ? `${Math.round(averageQuizScore * 1.05)}%` : '—'}</td>
-                    <td className="py-3 px-4 text-center font-mono text-zinc-400">{totalTestsTaken > 0 ? 1 : 0}</td>
+                    <td className="py-3 px-4 text-center font-mono text-white font-bold">{bioAvgScore > 0 ? `${bioAvgScore}%` : '—'}</td>
+                    <td className="py-3 px-4 text-center font-mono text-zinc-400">{bioAttempts}</td>
                     <td className="py-3 px-4 text-right font-mono text-amber-400 font-bold">⭐ ⭐ ⭐ ⭐ ⭐</td>
                   </tr>
                 </tbody>

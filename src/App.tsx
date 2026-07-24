@@ -4,6 +4,7 @@ import {
   Flame, 
   Award, 
   Brain, 
+  Bot,
   Sparkles, 
   RotateCcw,
   Sliders,
@@ -27,12 +28,17 @@ import {
   CreditCard,
   X,
   ArrowRight,
+  ArrowLeft,
   Phone,
   Mail,
   MessageSquare,
-  Mic
+  Mic,
+  Download,
+  Smartphone,
+  WifiOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { usePWA } from './hooks/usePWA';
 import { defaultCourses, defaultCustomization } from './data/defaultCourses';
 import { UserProgress, Chapter, Course, AppCustomization, StudentAnalysisRecord, OwnerProfile } from './types';
 import Dashboard from './components/Dashboard';
@@ -48,7 +54,12 @@ import ProfileHub from './components/ProfileHub';
 import OnboardingWizard from './components/OnboardingWizard';
 import ThreeDElement from './components/ThreeDElement';
 import AshokChakra from './components/AshokChakra';
+import PullToRefresh from './components/PullToRefresh';
 import { playSound } from './utils/audio';
+import { dbService } from './lib/firebase';
+import { getProxiedImageUrl } from './utils/imageUrl';
+// @ts-ignore
+import boyGirlCuriousBharat from './assets/images/boy_girl_curious_bharat_1784813567963.jpg';
 
 const INITIAL_PROGRESS: UserProgress = {
   completedChapters: [],
@@ -88,7 +99,8 @@ if (typeof window !== 'undefined') {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin'>('dashboard');
+  const { isInstallable, installApp, isOffline, isPWA } = usePWA();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin' | 'admin-login' | 'ai' | 'feedback' | 'checkout'>('dashboard');
   const [activeTab, setActiveTab] = useState<'home' | 'batches' | 'practice' | 'ai' | 'profile'>('home');
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [progress, setProgress] = useState<UserProgress>(() => {
@@ -245,79 +257,66 @@ export default function App() {
     }, 1500);
   };
 
-  // Track if we are navigating via popstate so we don't double-push history state
-  const isPoppingRef = useRef(false);
+  // Navigation helper for full-screen page routing with browser history support
+  const navigateToView = (
+    newView: 'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin' | 'admin-login' | 'ai' | 'feedback' | 'checkout',
+    newTab?: 'home' | 'batches' | 'practice' | 'ai' | 'profile',
+    chapterObj?: Chapter | null
+  ) => {
+    playSound('click');
+    const targetTab = newTab || activeTab;
+    if (chapterObj !== undefined) {
+      setSelectedChapter(chapterObj);
+    }
+    if (newTab) {
+      setActiveTab(newTab);
+    }
+    setCurrentView(newView);
+
+    window.history.pushState({
+      view: newView,
+      tab: targetTab,
+      chapterId: chapterObj ? chapterObj.id : (selectedChapter ? selectedChapter.id : null)
+    }, '');
+  };
+
+  // Student Analysis Records
+  const [studentAnalysisRecords, setStudentAnalysisRecords] = useState<StudentAnalysisRecord[]>([]);
+
+  // Courses and Theme Customization State
+  const [courses, setCourses] = useState<Course[]>(defaultCourses);
+  const [customization, setCustomization] = useState<AppCustomization>(defaultCustomization);
 
   useEffect(() => {
-    // Initial history state seed
+    // Seed history state on initial app mount
     if (window.history.state === null) {
-      window.history.replaceState({ tab: 'home', view: 'dashboard' }, '');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isPoppingRef.current) {
-      isPoppingRef.current = false;
-      return;
+      window.history.replaceState({ view: 'dashboard', tab: 'home' }, '');
     }
 
-    const isRoot = activeTab === 'home' && 
-                   selectedCourse === null && 
-                   selectedChapterDashboard === null && 
-                   selectedTopicDashboard === null && 
-                   currentView === 'dashboard';
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state) {
+        const stateView = e.state.view || 'dashboard';
+        const stateTab = e.state.tab || 'home';
+        setCurrentView(stateView);
+        setActiveTab(stateTab);
 
-    if (!isRoot) {
-      window.history.pushState({ 
-        activeTab, 
-        currentView,
-        hasCourse: selectedCourse !== null,
-        hasChapter: selectedChapterDashboard !== null,
-        hasTopic: selectedTopicDashboard !== null
-      }, '');
-    }
-  }, [activeTab, selectedCourse, selectedChapterDashboard, selectedTopicDashboard, currentView]);
-
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      isPoppingRef.current = true;
-      
-      const isRoot = activeTab === 'home' && 
-                     selectedCourse === null && 
-                     selectedChapterDashboard === null && 
-                     selectedTopicDashboard === null && 
-                     currentView === 'dashboard';
-
-      if (!isRoot) {
-        // Reverse folder navigation step
-        if (currentView !== 'dashboard') {
-          setCurrentView('dashboard');
-        } else if (selectedTopicDashboard !== null) {
-          setSelectedTopicDashboard(null);
-        } else if (selectedChapterDashboard !== null) {
-          setSelectedChapterDashboard(null);
-        } else if (selectedCourse !== null) {
-          setSelectedCourse(null);
-        } else if (activeTab !== 'home') {
-          setActiveTab('home');
+        if (e.state.chapterId && courses) {
+          const found = courses.flatMap(c => c.chapters).find(ch => ch.id === e.state.chapterId);
+          if (found) setSelectedChapter(found);
         }
-        
-        // Re-push state so back-interception remains active
-        window.history.pushState({ 
-          activeTab, 
-          currentView,
-          hasCourse: selectedCourse !== null,
-          hasChapter: selectedChapterDashboard !== null,
-          hasTopic: selectedTopicDashboard !== null
-        }, '');
+      } else {
+        setCurrentView('dashboard');
+        setActiveTab('home');
+        setSelectedChapter(null);
+        setSelectedCourse(null);
+        setSelectedChapterDashboard(null);
+        setSelectedTopicDashboard(null);
       }
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [activeTab, selectedCourse, selectedChapterDashboard, selectedTopicDashboard, currentView]);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [courses]);
 
   // Sync and load theme settings
   useEffect(() => {
@@ -412,13 +411,6 @@ export default function App() {
       });
     }, 200);
   };
-
-  // Student Analysis Records
-  const [studentAnalysisRecords, setStudentAnalysisRecords] = useState<StudentAnalysisRecord[]>([]);
-
-  // Courses and Theme Customization State
-  const [courses, setCourses] = useState<Course[]>(defaultCourses);
-  const [customization, setCustomization] = useState<AppCustomization>(defaultCustomization);
 
   // Student Feedback modal state
   const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
@@ -602,6 +594,48 @@ export default function App() {
                 diagnosticScore: 45,
                 syllabusChaptersRead: 4,
                 quizSubmissionsSolved: 28
+              },
+              {
+                id: 'rec-free-1',
+                studentName: 'Rohan Verma (Free Scholar)',
+                contactDetails: 'rohan.v.study@gmail.com',
+                courseId: 'free-app-ncert',
+                courseTitle: 'Free App NCERT Science Portal',
+                price: '₹0 (Free User)',
+                paymentDetails: 'FREE-APP-ACTIVE',
+                purchasedAt: new Date(Date.now() - 3600000 * 48).toLocaleString(),
+                status: 'approved',
+                diagnosticScore: 88,
+                syllabusChaptersRead: 12,
+                quizSubmissionsSolved: 94
+              },
+              {
+                id: 'rec-free-2',
+                studentName: 'Ananya Sen (Free Scholar)',
+                contactDetails: '+91 91234 56789',
+                courseId: 'free-app-ncert',
+                courseTitle: 'Free App NCERT Science Portal',
+                price: '₹0 (Free User)',
+                paymentDetails: 'FREE-APP-ACTIVE',
+                purchasedAt: new Date(Date.now() - 3600000 * 36).toLocaleString(),
+                status: 'approved',
+                diagnosticScore: 95,
+                syllabusChaptersRead: 16,
+                quizSubmissionsSolved: 120
+              },
+              {
+                id: 'rec-free-3',
+                studentName: 'Curious Scholar (Current Active User)',
+                contactDetails: 'Active Device Session',
+                courseId: 'free-app-ncert',
+                courseTitle: 'Free App NCERT Science Portal',
+                price: '₹0 (Free User)',
+                paymentDetails: 'LIVE-APP-SESSION',
+                purchasedAt: new Date().toLocaleString(),
+                status: 'approved',
+                diagnosticScore: 84,
+                syllabusChaptersRead: 10,
+                quizSubmissionsSolved: 76
               }
             ];
             await fetch('/api/student-analysis', {
@@ -643,6 +677,19 @@ export default function App() {
     };
 
     bootstrapData();
+
+    // Subscribe to Firebase / Realtime Database Firestore listeners
+    const unsubCourses = dbService.subscribeCourses((latestCourses) => {
+      if (latestCourses && latestCourses.length > 0) {
+        setCourses(latestCourses);
+      }
+    });
+
+    const unsubCustom = dbService.subscribeCustomization((latestCustom) => {
+      if (latestCustom) {
+        setCustomization(latestCustom);
+      }
+    });
 
     // Snappy background poll interval to synchronize modifications across student and educator screens immediately
     const intervalId = setInterval(async () => {
@@ -693,10 +740,50 @@ export default function App() {
       } catch (err) {
         // Silent background sync failsafe
       }
-    }, 4000);
+    }, 2000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+      unsubCourses();
+      unsubCustom();
+    };
   }, []);
+
+  const handleManualSync = async () => {
+    try {
+      const syncRes = await fetch('/api/sync-version');
+      if (syncRes.ok) {
+        const serverVersions = await syncRes.json();
+        lastSyncRef.current = serverVersions;
+      }
+
+      const [cRes, custRes, saRes, opRes] = await Promise.all([
+        fetch('/api/courses'),
+        fetch('/api/customization'),
+        fetch('/api/student-analysis'),
+        fetch('/api/owner-profile')
+      ]);
+
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        if (cData) setCourses(cData);
+      }
+      if (custRes.ok) {
+        const custData = await custRes.json();
+        if (custData) setCustomization(custData);
+      }
+      if (saRes.ok) {
+        const saData = await saRes.json();
+        if (saData) setStudentAnalysisRecords(saData);
+      }
+      if (opRes.ok) {
+        const opData = await opRes.json();
+        if (opData) setOwnerProfile(opData);
+      }
+    } catch (err) {
+      console.warn("Manual sync error:", err);
+    }
+  };
 
   const handleUpdateOwnerProfile = async (newProfile: OwnerProfile) => {
     setOwnerProfile(newProfile);
@@ -829,6 +916,34 @@ export default function App() {
   const handleUpdateCourses = async (newCourses: Course[]) => {
     setCourses(newCourses);
     localStorage.setItem('curious_courses', JSON.stringify(newCourses));
+
+    // Clear stale selections if the selected course was deleted
+    if (selectedCourse && !newCourses.some(c => c.id === selectedCourse.id)) {
+      setSelectedCourse(null);
+      setSelectedChapterDashboard(null);
+      setSelectedTopicDashboard(null);
+    }
+
+    // Clean up student analysis records of deleted courses from the owner portal / educator desk
+    const activeCourseIds = newCourses.map(c => c.id);
+    const filteredRecords = studentAnalysisRecords.filter(r => activeCourseIds.includes(r.courseId));
+    if (filteredRecords.length !== studentAnalysisRecords.length) {
+      handleUpdateStudentAnalysisRecords(filteredRecords);
+    }
+
+    // Clean up purchased courses lists on the device storage / progress
+    if (progress && progress.purchasedCourses) {
+      const filteredPurchased = progress.purchasedCourses.filter(id => activeCourseIds.includes(id));
+      if (filteredPurchased.length !== progress.purchasedCourses.length) {
+        saveProgressState({
+          ...progress,
+          purchasedCourses: filteredPurchased
+        });
+      }
+    }
+
+    dbService.saveCoursesToFirebase(newCourses);
+
     try {
       const res = await fetch('/api/courses', {
         method: 'POST',
@@ -847,6 +962,7 @@ export default function App() {
   const handleUpdateCustomization = async (newCustom: AppCustomization) => {
     setCustomization(newCustom);
     localStorage.setItem('curious_customization', JSON.stringify(newCustom));
+    dbService.saveCustomizationToFirebase(newCustom);
     try {
       const res = await fetch('/api/customization', {
         method: 'POST',
@@ -985,7 +1101,8 @@ export default function App() {
     : 'rounded-2xl';
 
   return (
-    <div className={`min-h-screen relative overflow-x-hidden ${isDarkMode ? 'bg-[#080707] text-slate-100' : 'bg-[#F8F9FA] text-slate-900'} flex flex-col selection:bg-zinc-850 selection:text-white ${fontClass}`}>
+    <PullToRefresh onRefresh={handleManualSync}>
+      <div className={`min-h-screen relative overflow-x-hidden ${isDarkMode ? 'bg-[#080707] text-slate-100' : 'bg-[#F8F9FA] text-slate-900'} flex flex-col selection:bg-zinc-850 selection:text-white ${fontClass}`}>
       
       {/* Immersive Atmospheric Background Glows (Patriotic Tricolor Saffron, White, Green, and Ashok Chakra Navy) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -1000,7 +1117,7 @@ export default function App() {
       </div>
       
       {/* Header bar styled in crisp premium aesthetic */}
-      <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-4">
+      <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3.5 sm:py-4 safe-pt">
         {/* Premium Indian Tricolor accent line */}
         <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#FF671F] via-[#FFFFFF] to-[#046A38] opacity-100" />
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -1015,12 +1132,16 @@ export default function App() {
             }}
             className="flex items-center gap-2.5 cursor-pointer select-none group"
           >
-            <div className="w-9 h-9 rounded-xl bg-zinc-950 border border-zinc-800/80 flex items-center justify-center text-white font-sans font-bold shadow group-hover:bg-zinc-900 transition overflow-hidden">
-              {customization.appLogoUrl ? (
-                <img src={customization.appLogoUrl} alt="Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <AshokChakra size={28} animateRotation={true} glow={true} />
-              )}
+            <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-white font-sans font-bold shadow group-hover:bg-zinc-900 transition overflow-hidden p-0.5">
+              <img 
+                src={getProxiedImageUrl(customization.appLogoUrl || boyGirlCuriousBharat)} 
+                alt="Curious Bharat Logo" 
+                className="w-full h-full object-cover rounded-lg" 
+                referrerPolicy="no-referrer" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = boyGirlCuriousBharat;
+                }}
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -1038,8 +1159,23 @@ export default function App() {
           </div>
 
           {/* Quick study widgets */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* PWA Install Button */}
+            {isInstallable && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  installApp();
+                }}
+                title="Install Curious Bharat App"
+                className="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-500 text-black font-extrabold rounded-xl text-[11px] flex items-center gap-1.5 shadow-md active:scale-95 transition cursor-pointer"
+              >
+                <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
+
             {/* Feedback & Suggestion Button */}
             <button
               onClick={() => {
@@ -1159,8 +1295,11 @@ export default function App() {
                             : 'hover:bg-zinc-900/60 hover:text-white'
                         }`}
                       >
-                        <Brain className="w-4 h-4 text-yellow-400" />
-                        <span>Bharat AI</span>
+                        <Bot className="w-4 h-4 text-teal-400" />
+                        <span className="flex items-center gap-1.5">
+                          Bharat AI
+                          <span className="text-[8px] bg-teal-950 border border-teal-800 text-teal-300 px-1 py-0.2 rounded font-mono font-bold">ROBOT</span>
+                        </span>
                       </button>
 
                       <button
@@ -1179,6 +1318,20 @@ export default function App() {
                         <User className="w-4 h-4 text-zinc-400" />
                         <span>{appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile'}</span>
                       </button>
+                      {isInstallable && (
+                        <button
+                          onClick={() => {
+                            playSound('click');
+                            installApp();
+                            setShowMenuDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/30 hover:bg-amber-500/30 transition cursor-pointer text-left mt-1"
+                        >
+                          <Smartphone className="w-4 h-4 text-amber-400" />
+                          <span>{appLanguage === 'hi' ? 'ऐप इंस्टॉल करें' : 'Install App'}</span>
+                        </button>
+                      )}
+
                       <button
                         onClick={() => {
                           playSound('click');
@@ -1205,7 +1358,7 @@ export default function App() {
       </header>
 
       {/* Main Container Area - flat, dynamic, and fully focused for maximum readability */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 relative">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-24 sm:pb-28 relative">
         <div 
           style={{
             transform: 'none',
@@ -1279,7 +1432,7 @@ export default function App() {
               )}
 
               {activeTab === 'ai' && (
-                <div className={`w-full h-[760px] flex flex-col overflow-hidden animate-fadeIn border-t ${
+                <div className={`w-full h-[calc(100vh-140px)] min-h-[500px] sm:min-h-[600px] max-h-[850px] flex flex-col overflow-hidden animate-fadeIn border-t rounded-3xl shadow-2xl ${
                   isDarkMode 
                     ? 'bg-black border-zinc-900 text-white' 
                     : 'bg-slate-50 border-slate-200 text-slate-900'
@@ -1920,10 +2073,106 @@ export default function App() {
         </button>
       </footer>
 
+      {/* Floating Bharat AI Robot Assistant Button */}
+      {currentView !== 'admin' && activeTab !== 'ai' && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1, y: [0, -4, 0] }}
+          transition={{
+            y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+            scale: { duration: 0.3 }
+          }}
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40"
+        >
+          <button
+            onClick={() => {
+              playSound('click');
+              navigateToView('dashboard', 'ai');
+            }}
+            className="group relative flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-zinc-950/90 backdrop-blur-md border border-yellow-400/40 hover:border-yellow-400 text-white shadow-2xl transition hover:scale-105 active:scale-95 cursor-pointer"
+            title="Open Bharat AI Assistant"
+          >
+            {/* Glowing Backdrop pulse */}
+            <div className="absolute inset-0 rounded-2xl bg-yellow-400/10 blur-sm group-hover:bg-yellow-400/20 transition" />
+            
+            {/* 3D Robot Head / Body */}
+            <div className="w-9 h-9 sm:w-10 sm:h-10 relative shrink-0">
+              <ThreeDElement type="futuristic_ai_robot" className="w-full h-full" autoRotate={true} />
+            </div>
+
+            <div className="hidden xs:flex flex-col text-left">
+              <span className="text-[10px] font-black tracking-wider text-yellow-400 uppercase leading-none flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
+                Bharat AI
+              </span>
+              <span className="text-[9px] text-zinc-400 font-medium leading-none pt-0.5">
+                {appLanguage === 'hi' ? '24x7 संदेह समाधान' : 'Ask Doubts'}
+              </span>
+            </div>
+          </button>
+        </motion.div>
+      )}
+
+      {/* Global Floating Bharat AI Assistant Modal Overlay */}
+      <AnimatePresence>
+        {isAIOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-zinc-950 border border-zinc-850 w-full max-w-4xl h-[88vh] max-h-[800px] rounded-3xl overflow-hidden shadow-2xl flex flex-col relative"
+            >
+              {/* Modal Header bar */}
+              <div className="p-3.5 sm:p-4 border-b border-zinc-850 bg-zinc-900/40 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8.5 h-8.5 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center">
+                    <ThreeDElement type="futuristic_ai_robot" className="w-6 h-6" autoRotate={true} />
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-1.5">
+                      <span>Bharat AI Mentor & Doubt Resolver</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold">LIVE 24x7</span>
+                    </h3>
+                    <p className="text-[10px] text-zinc-400 font-medium">Bilingual • Vernacular • Instant Board & NCERT Analysis</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setIsAIOpen(false);
+                  }}
+                  className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* AIAssistant Component inside Modal */}
+              <div className="flex-1 overflow-hidden p-2 sm:p-3">
+                <AIAssistant
+                  currentChapterTitle={selectedChapter?.title}
+                  isOpen={true}
+                  onClose={() => setIsAIOpen(false)}
+                  preloadedPrompt={preloadAIPrompt}
+                  onClearPreload={handleClearPreload}
+                  onIncrementDoubtsAsked={handleIncrementDoubts}
+                  appLanguage={appLanguage}
+                  inline={true}
+                  isDarkMode={isDarkMode}
+                  progress={progress}
+                  onUpdateProgress={saveProgressState}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom Mobile-first Navigation Bar */}
       {currentView !== 'admin' && (
         <BottomNavigation 
-          activeTab={activeTab}
+          activeTab={activeTab === 'ai' ? 'home' : activeTab}
           onChangeTab={(tab) => {
             setActiveTab(tab);
             setCurrentView('dashboard');
@@ -1940,6 +2189,7 @@ export default function App() {
         />
       )}
 
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
