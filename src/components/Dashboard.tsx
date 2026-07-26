@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Flame, 
@@ -42,6 +42,7 @@ import { getTenQuestions } from '../utils/quizGenerator';
 import FlashcardsView from './FlashcardsView';
 import HorizontalScrollContainer from './HorizontalScrollContainer';
 import { getProxiedImageUrl } from '../utils/imageUrl';
+import { startRealVoiceTyping } from '../utils/voiceTyping';
 
 interface DashboardProps {
   courses: Course[];
@@ -188,47 +189,38 @@ export default function Dashboard({
     }
   };
 
+  const searchRecognitionRef = useRef<any>(null);
+
   const startSearchVoiceTyping = () => {
     playSound('click');
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setIsSearchListening(true);
-      setTimeout(() => {
-        setSearchTerm("Chemical Reactions and Equations");
-        setIsSearchListening(false);
-      }, 2000);
+
+    if (isSearchListening && searchRecognitionRef.current) {
+      try {
+        searchRecognitionRef.current.stop();
+      } catch (e) {}
+      setIsSearchListening(false);
       return;
     }
 
-    try {
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = appLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+    const initialTerm = searchTerm;
 
-      rec.onstart = () => {
+    searchRecognitionRef.current = startRealVoiceTyping({
+      language: appLanguage === 'hi' ? 'hi-IN' : 'en-IN',
+      onStart: () => {
         setIsSearchListening(true);
-      };
-
-      rec.onresult = (e: any) => {
-        const text = e.results[0][0].transcript;
-        setSearchTerm(text);
-      };
-
-      rec.onerror = (err: any) => {
-        console.warn('Search speech recognition error:', err);
+      },
+      onResult: (spokenText) => {
+        const newTerm = initialTerm ? (initialTerm + " " + spokenText) : spokenText;
+        setSearchTerm(newTerm);
+      },
+      onError: (err) => {
         setIsSearchListening(false);
-      };
-
-      rec.onend = () => {
+      },
+      onEnd: () => {
         setIsSearchListening(false);
-      };
-
-      rec.start();
-    } catch (e) {
-      console.error(e);
-      setIsSearchListening(false);
-    }
+        searchRecognitionRef.current = null;
+      }
+    });
   };
 
   // Simulation states

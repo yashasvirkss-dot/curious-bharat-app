@@ -14,7 +14,13 @@ import {
   BookOpen,
   Info,
   Lightbulb,
-  Workflow
+  Workflow,
+  Download,
+  Maximize2,
+  FileText,
+  Image as ImageIcon,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { Chapter, Flashcard, UserProgress } from '../types';
 import { playSound } from '../utils/audio';
@@ -40,6 +46,10 @@ export default function FlashcardsView({
   const [nodes, setNodes] = useState<Flashcard[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   
+  // View mode: 'document' (PDF/Image uploaded through portal) or 'nodes' (interactive node web)
+  const [viewMode, setViewMode] = useState<'document' | 'nodes'>('document');
+  const [zoomLevel, setZoomLevel] = useState(100);
+
   // Custom Node Addition State
   const [isAddingNode, setIsAddingNode] = useState(false);
   const [newFront, setNewFront] = useState('');
@@ -178,10 +188,10 @@ export default function FlashcardsView({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-24 text-zinc-300 font-sans">
-      
+    <div className={embedded ? "w-full space-y-6 text-zinc-200 font-sans" : "fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-y-auto p-4 sm:p-8 text-zinc-200 font-sans"}>
+      <div className="max-w-5xl mx-auto w-full space-y-6 pb-12">
       {/* Mind Map Header */}
-      <div className="flex items-center justify-between bg-zinc-950 p-4.5 rounded-2xl border border-zinc-900 shadow-xl">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-zinc-900/90 p-4 sm:p-5 rounded-2xl border border-zinc-800 shadow-xl gap-3">
         <div className="flex items-center gap-3">
           {!embedded && onBack && (
             <button
@@ -189,35 +199,166 @@ export default function FlashcardsView({
                 playSound('click');
                 onBack();
               }}
-              className="p-2.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl cursor-pointer transition"
+              className="p-3 bg-zinc-950 hover:bg-zinc-850 border border-zinc-700/80 text-zinc-200 hover:text-white rounded-xl cursor-pointer transition shrink-0 shadow-sm"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <div className="text-left">
-            <span className="text-[10px] uppercase tracking-widest font-black text-blue-400 flex items-center gap-1">
-              <Workflow className="w-3 h-3 text-blue-400 animate-pulse" />
-              Interactive Mind Map Hub
+            <span className="text-[10px] uppercase tracking-widest font-black text-blue-200 bg-blue-950/90 px-2 py-0.5 rounded border border-blue-500/40 flex items-center gap-1 w-max">
+              <Workflow className="w-3 h-3 text-blue-300 animate-pulse" />
+              Concept Mind Map & Flashcards
             </span>
-            <h3 className="text-sm font-bold text-white line-clamp-1">{chapter.title}</h3>
+            <h3 className="text-base font-black text-white line-clamp-1 mt-1">{chapter.title}</h3>
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            playSound('click');
-            setIsAddingNode(true);
-          }}
-          className="px-3 py-1.5 bg-blue-900 hover:bg-blue-800 text-blue-100 text-xs font-bold rounded-xl flex items-center gap-1.5 transition border border-blue-800"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Concept Branch</span>
-        </button>
+        {/* View Mode Switcher: Uploaded Document (PDF/Image) vs Interactive Nodes */}
+        <div className="flex items-center gap-2">
+          <div className="bg-zinc-900 p-1 rounded-xl border border-zinc-800 flex items-center gap-1">
+            <button
+              onClick={() => setViewMode('document')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'document' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Uploaded PDF/Image</span>
+            </button>
+            <button
+              onClick={() => setViewMode('nodes')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'nodes' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Workflow className="w-3.5 h-3.5" />
+              <span>Node Web</span>
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              playSound('click');
+              setIsAddingNode(true);
+            }}
+            className="px-3 py-1.5 bg-blue-900 hover:bg-blue-800 text-blue-100 text-xs font-bold rounded-xl flex items-center gap-1.5 transition border border-blue-800 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Add Node</span>
+          </button>
+        </div>
       </div>
 
-      {/* SVG Mind Map Canvas Row */}
-      <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-5 shadow-2xl relative overflow-hidden min-h-[460px] flex flex-col justify-between">
-        {/* Subtle grid pattern background */}
+      {/* DOCUMENT VIEW: Displays PDF or Image uploaded through Educator Portal */}
+      {viewMode === 'document' ? (
+        <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-5 shadow-2xl space-y-4 text-center relative overflow-hidden">
+          
+          {/* Toolbar for zoom & download */}
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-300">
+              <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-mono uppercase">
+                {chapter.mindMapUrl ? (chapter.mindMapType === 'pdf' ? 'PDF Mind Map' : 'Image Mind Map') : 'Portal Upload Document'}
+              </span>
+              <span className="text-zinc-500 hidden sm:inline">• High-Res Conceptual Diagram</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setZoomLevel(prev => Math.max(50, prev - 25))}
+                className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg border border-zinc-800 transition cursor-pointer"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <span className="text-xs font-mono text-zinc-400 w-12 text-center">{zoomLevel}%</span>
+              <button
+                onClick={() => setZoomLevel(prev => Math.min(200, prev + 25))}
+                className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg border border-zinc-800 transition cursor-pointer"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+
+              {chapter.mindMapUrl && (
+                <a
+                  href={chapter.mindMapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download</span>
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Document Content Box */}
+          <div className="min-h-[420px] bg-zinc-900/40 rounded-2xl border border-zinc-900 p-3 flex flex-col items-center justify-center overflow-auto relative">
+            {chapter.mindMapUrl ? (
+              chapter.mindMapType === 'pdf' || chapter.mindMapUrl.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={chapter.mindMapUrl}
+                  className="w-full h-[520px] rounded-xl border border-zinc-800 shadow-xl"
+                  title="Mind Map PDF Viewer"
+                />
+              ) : (
+                <div className="overflow-auto max-h-[550px] w-full flex justify-center">
+                  <img
+                    src={chapter.mindMapUrl}
+                    alt={`Mind Map for ${chapter.title}`}
+                    style={{ width: `${zoomLevel}%` }}
+                    className="max-w-none rounded-xl border border-zinc-800 shadow-2xl transition-all duration-200"
+                  />
+                </div>
+              )
+            ) : (
+              /* High quality visual fallback image / placeholder when no file is uploaded yet */
+              <div className="max-w-md mx-auto space-y-4 py-8 text-center">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                  <Workflow className="w-8 h-8 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-extrabold text-white">Educator Mind Map Document</h4>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    This section displays custom Mind Map PDFs or Images uploaded directly through the <strong>Educator Control Desk</strong> for "{chapter.title}".
+                  </p>
+                </div>
+
+                <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 text-left text-xs space-y-2">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block font-mono">⚡ Educator Portal Upload Instructions:</span>
+                  <p className="text-zinc-400 leading-normal">
+                    Educators can navigate to <strong>Educator Control Desk ➔ Course Manager ➔ Section 3</strong> to upload or attach any PDF file or image diagram for this chapter's Concept Mind Map.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setViewMode('nodes')}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-950/40 cursor-pointer inline-flex items-center gap-2"
+                >
+                  <Workflow className="w-4 h-4" />
+                  <span>Switch to Interactive Node Web</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-zinc-500 border-t border-zinc-900/60 pt-2">
+            <span>💡 Uploaded through Educator Control Desk</span>
+            <button
+              onClick={() => onOpenAI('doubt', chapter.title, `Explain the key mind map concepts and formula connections for chapter "${chapter.title}".`)}
+              className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Ask Bharat AI to Explain Mind Map</span>
+            </button>
+          </div>
+
+        </div>
+      ) : (
+        /* SVG Mind Map Canvas Row */
+        <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-5 shadow-2xl relative overflow-hidden min-h-[460px] flex flex-col justify-between">
+          {/* Subtle grid pattern background */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-35" />
         
         {/* SVG connection lines overlay */}
@@ -312,6 +453,7 @@ export default function FlashcardsView({
           <span>Click on any node to expand, listen, rate memory confidence, or study with Bharat AI!</span>
         </div>
       </div>
+      )}
 
       {/* SELECTED NODE EXPLORATION HUB PANEL */}
       <AnimatePresence mode="wait">
@@ -528,6 +670,7 @@ export default function FlashcardsView({
         </div>
       )}
 
+      </div>
     </div>
   );
 }

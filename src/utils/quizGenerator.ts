@@ -320,13 +320,14 @@ export function getTenQuestions(
   initialQuiz: QuizQuestion[] = [],
   topicId: string = '',
   topicTitle: string = '',
-  subject: string = ''
+  subject: string = '',
+  requestedCount: number = 15
 ): QuizQuestion[] {
   // Let's copy initial quiz questions
   const quizList = [...initialQuiz];
 
-  // We encourage generating by default 12 to 15 questions! Let's target exactly 15 questions
-  const TARGET_COUNT = 15;
+  // We encourage generating by default 15 questions minimum or requested count!
+  const TARGET_COUNT = Math.max(15, Number(requestedCount) || 15);
 
   // Let's first populate missing examReference and weightage properties for initial questions to match CBSE pattern
   quizList.forEach((q, idx) => {

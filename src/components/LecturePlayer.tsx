@@ -7,6 +7,7 @@ import {
   Settings, 
   Volume2, 
   Maximize, 
+  Minimize,
   Compass, 
   BookOpen, 
   User, 
@@ -20,7 +21,14 @@ import {
   Bookmark,
   ChevronRight,
   Sun,
-  Laptop
+  Laptop,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+  Bell,
+  MessageSquare,
+  Sparkles,
+  Maximize2
 } from 'lucide-react';
 import { Chapter } from '../types';
 import CommunityComments from './CommunityComments';
@@ -30,9 +38,10 @@ interface LecturePlayerProps {
   studentName: string;
   isTeacher: boolean;
   onBack: () => void;
+  onOpenAI?: (mode: string, context: string, customPrompt?: string) => void;
 }
 
-export default function LecturePlayer({ chapter, studentName, isTeacher, onBack }: LecturePlayerProps) {
+export default function LecturePlayer({ chapter, studentName, isTeacher, onBack, onOpenAI }: LecturePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [quality, setQuality] = useState('1080p');
@@ -42,11 +51,22 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
   const [duration, setDuration] = useState(1450); // mock duration fallback
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<'about' | 'community' | 'notes' | 'assignments'>('about');
+  const [activeSubTab, setActiveSubTab] = useState<'about' | 'community' | 'notes' | 'assignments'>('community');
   const [personalNotes, setPersonalNotes] = useState<string[]>([]);
   const [noteInput, setNoteInput] = useState('');
   const [bookmarkedTimestamps, setBookmarkedTimestamps] = useState<Array<{ id: string; seconds: number; note: string }>>([]);
   const [reportedIssues, setReportedIssues] = useState(false);
+
+  // YouTube interaction states
+  const [likesCount, setLikesCount] = useState(12480);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
+
+  // Layout states: Fullscreen and Aspect Ratio
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [aspectRatioMode, setAspectRatioMode] = useState<'9:16' | '16:9'>('9:16');
 
   // Video download simulation states
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
@@ -76,6 +96,36 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
         setDownloadProgress(current);
       }
     }, 300);
+  };
+
+  const handleLike = () => {
+    if (isLiked) {
+      setIsLiked(false);
+      setLikesCount(prev => prev - 1);
+    } else {
+      setIsLiked(true);
+      setLikesCount(prev => prev + 1);
+      if (isDisliked) setIsDisliked(false);
+    }
+  };
+
+  const handleDislike = () => {
+    if (isDisliked) {
+      setIsDisliked(false);
+    } else {
+      setIsDisliked(true);
+      if (isLiked) {
+        setIsLiked(false);
+        setLikesCount(prev => prev - 1);
+      }
+    }
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    setShowShareToast(true);
+    setTimeout(() => setShowShareToast(false), 2500);
   };
 
   // YouTube Player Ref & Loading State
@@ -268,22 +318,23 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-        <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-orange-400 font-mono">
-            {chapter.subject} • Class {chapter.classLevel}
-          </span>
-          <h2 className="text-lg font-extrabold text-white">{chapter.title} Lecture</h2>
+    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-y-auto p-4 sm:p-8 text-zinc-200 font-sans">
+      <div className="max-w-6xl mx-auto w-full space-y-6 pb-12">
+        {/* Header bar */}
+        <div className="flex items-center justify-between bg-zinc-900/90 p-4 sm:p-5 rounded-2xl border border-zinc-800 shadow-xl shrink-0">
+          <div>
+            <span className="text-[10px] uppercase font-mono font-extrabold tracking-widest text-orange-300 bg-orange-950/90 px-2.5 py-0.5 rounded border border-orange-500/40">
+              {chapter.subject} • Class {chapter.classLevel}
+            </span>
+            <h2 className="text-base sm:text-lg font-black text-white mt-1">{chapter.title} Lecture</h2>
+          </div>
+          <button
+            onClick={onBack}
+            className="px-4 py-2 bg-zinc-950 border border-zinc-700/80 hover:bg-zinc-850 text-xs font-extrabold rounded-xl cursor-pointer text-zinc-100 hover:text-white transition shadow-sm flex items-center gap-2"
+          >
+            <span>Back</span>
+          </button>
         </div>
-        <button
-          onClick={onBack}
-          className="px-3 py-1.5 bg-zinc-950 border border-zinc-900 hover:border-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-zinc-400 hover:text-white transition"
-        >
-          Back to Course
-        </button>
-      </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -291,14 +342,45 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
         {/* Left Col - Video and custom controls */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Custom Player Window */}
-          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-zinc-900 shadow-2xl group">
+          {/* Custom Player Window - Supports 9:16 portrait top view & Fullscreen overlay */}
+          <div className={`relative overflow-hidden bg-black border border-zinc-900 shadow-2xl group transition-all duration-300 ${
+            isFullscreen 
+              ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none flex items-center justify-center bg-black' 
+              : aspectRatioMode === '9:16'
+                ? 'aspect-[9/16] max-h-[520px] w-full max-w-sm mx-auto rounded-3xl'
+                : 'aspect-video rounded-2xl w-full'
+          }`}>
             
             {/* Brightness overlay layer */}
             <div 
               className="absolute inset-0 bg-black pointer-events-none z-10 transition-opacity duration-300"
               style={{ opacity: `${(100 - brightness) / 100}` }}
             />
+
+            {/* Top view badge & aspect/fullscreen controls */}
+            <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-none">
+              <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-[10px] font-mono font-bold flex items-center gap-1.5 pointer-events-auto">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                {aspectRatioMode === '9:16' ? '9:16 Top View' : '16:9 HD Player'}
+              </span>
+
+              <div className="flex items-center gap-1.5 pointer-events-auto bg-black/60 backdrop-blur-md p-1 rounded-xl border border-white/10">
+                <button
+                  onClick={() => setAspectRatioMode(prev => prev === '9:16' ? '16:9' : '9:16')}
+                  className="px-2 py-1 text-[9px] font-mono font-bold text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 rounded-lg transition"
+                  title="Toggle 9:16 or 16:9 aspect ratio"
+                >
+                  {aspectRatioMode}
+                </button>
+                <button
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-1 text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 rounded-lg transition"
+                  title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen View'}
+                >
+                  {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
 
             {/* Embed container / cover */}
             {!isPlaying && !playerRef.current ? (
@@ -312,7 +394,7 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
                 <p className="text-xs text-zinc-500 font-mono tracking-wider uppercase">Click to start lecture</p>
                 <h3 className="text-sm font-bold text-zinc-300 mt-1 max-w-sm">{chapter.title}</h3>
                 <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full mt-3 font-mono">
-                  NCERT Complete Chapter Session
+                  YouTube Embedded NCERT Lecture
                 </span>
               </div>
             ) : (
@@ -475,6 +557,145 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
 
             </div>
 
+          </div>
+
+          {/* YOUTUBE-FORM ACTION BAR & CHANNEL INFO (Shown directly below top video) */}
+          <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 space-y-3.5 shadow-xl">
+            {/* Title & Metadata */}
+            <div className="space-y-1 text-left">
+              <h2 className="text-base sm:text-lg font-black text-white leading-tight">{chapter.title}</h2>
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-medium">
+                <span>{chapter.subject} • Class {chapter.classLevel}</span>
+                <span>•</span>
+                <span>24K views</span>
+                <span>•</span>
+                <span>2 days ago</span>
+              </div>
+            </div>
+
+            {/* Instructor Channel Row & Action Pills */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 border-t border-zinc-900">
+              
+              {/* Channel Profile */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 p-0.5 shrink-0 shadow-lg">
+                  <div className="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center text-amber-400 font-extrabold text-xs">
+                    P
+                  </div>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1">
+                    <span>Priyanshu (Science Lead)</span>
+                    <CheckCircle className="w-3.5 h-3.5 text-blue-400 fill-blue-400/20" />
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 font-medium">240K Curious Students</p>
+                </div>
+
+                <button
+                  onClick={() => setIsSubscribed(!isSubscribed)}
+                  className={`ml-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    isSubscribed 
+                      ? 'bg-zinc-900 text-zinc-300 border border-zinc-800' 
+                      : 'bg-white text-black hover:bg-zinc-200'
+                  }`}
+                >
+                  <Bell className={`w-3.5 h-3.5 ${isSubscribed ? 'fill-zinc-300' : ''}`} />
+                  <span>{isSubscribed ? 'Subscribed' : 'Subscribe'}</span>
+                </button>
+              </div>
+
+              {/* Action Pills Bar */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                {/* Like / Dislike pill group */}
+                <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shrink-0">
+                  <button
+                    onClick={handleLike}
+                    className={`px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 hover:bg-zinc-800 transition cursor-pointer ${
+                      isLiked ? 'text-blue-400 bg-blue-500/10' : 'text-zinc-300'
+                    }`}
+                  >
+                    <ThumbsUp className={`w-3.5 h-3.5 ${isLiked ? 'fill-blue-400' : ''}`} />
+                    <span>{likesCount.toLocaleString()}</span>
+                  </button>
+                  <div className="w-[1px] h-4 bg-zinc-800" />
+                  <button
+                    onClick={handleDislike}
+                    className={`px-3 py-1.5 text-xs font-bold hover:bg-zinc-800 transition cursor-pointer ${
+                      isDisliked ? 'text-red-400 bg-red-500/10' : 'text-zinc-300'
+                    }`}
+                  >
+                    <ThumbsDown className={`w-3.5 h-3.5 ${isDisliked ? 'fill-red-400' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Share pill */}
+                <button
+                  onClick={handleShare}
+                  className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-bold rounded-full transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
+                </button>
+
+                {/* Notes Download pill */}
+                {chapter.pdfUrl && (
+                  <a
+                    href={chapter.pdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-bold rounded-full transition flex items-center gap-1.5 shrink-0"
+                  >
+                    <Download className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Notes</span>
+                  </a>
+                )}
+
+                {/* AI Doubt trigger pill */}
+                {onOpenAI && (
+                  <button
+                    onClick={() => onOpenAI('doubt', chapter.title, `I am watching the lecture on "${chapter.title}". Explain key derivations and doubts.`)}
+                    className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-full transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Ask AI</span>
+                  </button>
+                )}
+              </div>
+
+            </div>
+
+            {showShareToast && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs py-1.5 px-3 rounded-xl font-mono text-center animate-pulse">
+                🔗 Lecture share link copied to clipboard!
+              </div>
+            )}
+          </div>
+
+          {/* YOUTUBE COMMENTS PREVIEW CARD (MATCHING SCREENSHOT 5) */}
+          <div 
+            onClick={() => setActiveSubTab('community')}
+            className="bg-zinc-950 hover:bg-zinc-900/90 border border-zinc-900 hover:border-zinc-800 rounded-2xl p-4 cursor-pointer transition shadow-lg space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                <span>Comments</span>
+                <span className="text-[10px] text-zinc-500 font-mono">1.9K</span>
+              </h4>
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-orange-400 transition" />
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-orange-400 transition" />
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-orange-400 transition" />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 pt-1">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 shrink-0 text-white flex items-center justify-center text-[10px] font-bold">
+                A
+              </div>
+              <p className="text-[11px] text-zinc-300 line-clamp-2 leading-snug">
+                "The best part is when these core concepts are explained with real NCERT diagrams and interactive 3D simulations. Sir's explanation of optics is crystal clear!"
+              </p>
+            </div>
           </div>
 
           {/* Quick Media Controls & Offline Download Section */}
@@ -823,9 +1044,8 @@ export default function LecturePlayer({ chapter, studentName, isTeacher, onBack 
           </div>
 
         </div>
-
       </div>
-
+    </div>
     </div>
   );
 }

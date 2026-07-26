@@ -1,13 +1,11 @@
 // @ts-ignore
-import defaultLogoImage from '../assets/images/boy_girl_curious_bharat_1784813567963.jpg';
-
-export const CURIOUS_BHARAT_DEFAULT_LOGO = defaultLogoImage;
+import defaultBatchThumbnail from '../assets/images/curious_bharat_banner_1784624268246.jpg';
 
 export function getProxiedImageUrl(url: string | null | undefined): string {
-  if (!url) return defaultLogoImage;
+  if (!url) return defaultBatchThumbnail;
   
   // If it's already using our local build images or a transparent data URL, return it directly
-  if (url.startsWith('data:') || url.startsWith('/') || url.startsWith('blob:') || url.includes('curious_bharat_')) {
+  if (url.startsWith('data:') || url.startsWith('/') || url.startsWith('blob:') || url.includes('curious_bharat_banner_')) {
     return url;
   }
   
@@ -23,4 +21,3 @@ export function getProxiedImageUrl(url: string | null | undefined): string {
   
   return url;
 }
-

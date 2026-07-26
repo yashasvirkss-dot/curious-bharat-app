@@ -41,6 +41,8 @@ export interface Topic {
   pdfUrl?: string;     // Google Drive link
   dppUrl?: string;     // Daily Practice Problems link
   dppFiles?: DPPFile[]; // Multiple day-wise named PDFs
+  mindMapUrl?: string; // Mind Map PDF or Image link
+  mindMapType?: 'image' | 'pdf';
   hidden?: boolean;    // Toggle visibility for student
 }
 
@@ -61,6 +63,8 @@ export interface Chapter {
   pdfUrl?: string;     // Google Drive link
   dppUrl?: string;     // Daily Practice Problems link
   dppFiles?: DPPFile[]; // Multiple day-wise named PDFs
+  mindMapUrl?: string; // Mind Map PDF or Image link
+  mindMapType?: 'image' | 'pdf';
   hidden?: boolean;    // Toggle visibility for student
 }
 
@@ -153,6 +157,55 @@ export interface OwnerProfile {
   allowDownloads: boolean;
   avatarUrl?: string;
   instituteName: string;
+}
+
+export interface ApkRelease {
+  id: string;
+  version: string;
+  buildNumber: number;
+  url: string;
+  sizeInMB: number;
+  notes: string;
+  releaseDate: string;
+  releaseType: 'optional' | 'force';
+  minAndroidVersion: string;
+  packageName: string;
+  sha256Checksum: string;
+  status: 'active' | 'archived' | 'rolled_back' | 'draft';
+  downloadCount?: number;
+  seamlessInstallCount?: number;
+  promptInstallCount?: number;
+}
+
+export interface ApkAnalytics {
+  totalDownloads: number;
+  seamlessInstalls: number;
+  promptInstalls: number;
+  failedDownloads: number;
+  activeVersionAdoptionRate: number;
+  recentLogs: Array<{
+    id: string;
+    timestamp: string;
+    version: string;
+    event: string;
+    deviceInfo?: string;
+  }>;
+}
+
+export interface ApkVersionConfig {
+  version?: string;
+  currentVersion: string;
+  buildNumber: number;
+  url: string;
+  sizeInMB: number;
+  notes: string;
+  releaseDate: string;
+  releaseType: 'optional' | 'force';
+  minAndroidVersion: string;
+  packageName: string;
+  sha256Checksum: string;
+  history: ApkRelease[];
+  analytics: ApkAnalytics;
 }
 
 

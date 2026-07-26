@@ -536,56 +536,57 @@ export default function ChapterView({
   };
 
   return (
-    <div className="space-y-6 pb-20 text-zinc-300 font-sans">
-      {/* Chapter Top Navigation Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-950 p-4 rounded-2xl border border-zinc-850/80">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-2.5 bg-zinc-900 hover:bg-zinc-800 active:scale-95 transition border border-zinc-800 rounded-xl text-zinc-400 hover:text-white cursor-pointer"
-            id="btn-back-to-dashboard"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[10px] bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-zinc-300 font-mono font-bold">
-                Class {chapter.classLevel}
-              </span>
-              <span className="text-[10px] bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-zinc-400 font-mono">
-                {chapter.subject}
-              </span>
+    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-y-auto p-4 sm:p-8 text-zinc-200 font-sans">
+      <div className="max-w-6xl mx-auto w-full space-y-6 pb-12">
+        {/* Chapter Top Navigation Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/80 p-4 sm:p-5 rounded-2xl border border-zinc-800 shadow-xl shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="p-3 bg-zinc-950 hover:bg-zinc-850 active:scale-95 transition border border-zinc-700/80 rounded-xl text-zinc-200 hover:text-white cursor-pointer shadow-sm"
+              id="btn-back-to-dashboard"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] bg-zinc-950 border border-zinc-700 px-2.5 py-0.5 rounded text-zinc-100 font-mono font-extrabold shadow-sm">
+                  Class {chapter.classLevel}
+                </span>
+                <span className="text-[10px] bg-emerald-950/90 border border-emerald-600/60 px-2.5 py-0.5 rounded text-emerald-200 font-mono font-extrabold shadow-sm">
+                  {chapter.subject}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-sans font-black text-white tracking-tight line-clamp-1">
+                <EditableText
+                  value={chapter.title}
+                  onSave={(newVal) => onUpdateChapter({ ...chapter, title: newVal })}
+                  isEditMode={isEditMode}
+                  as="span"
+                />
+              </h2>
             </div>
-            <h2 className="text-base sm:text-lg font-sans font-bold text-white tracking-tight line-clamp-1">
-              <EditableText
-                value={chapter.title}
-                onSave={(newVal) => onUpdateChapter({ ...chapter, title: newVal })}
-                isEditMode={isEditMode}
-                as="span"
-              />
-            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onComplete(chapter.id)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-2 cursor-pointer ${
+                isCompleted
+                  ? 'bg-emerald-950 border-emerald-600/80 text-emerald-200'
+                  : 'bg-white hover:bg-zinc-100 text-black border-white shadow'
+              }`}
+            >
+              {isCompleted ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-300" /> Chapter Mastered
+                </>
+              ) : (
+                'Mark Chapter Completed'
+              )}
+            </button>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onComplete(chapter.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer ${
-              isCompleted
-                ? 'bg-zinc-900 border-zinc-800 text-zinc-300'
-                : 'bg-white hover:bg-zinc-200 text-black border-white shadow'
-            }`}
-          >
-            {isCompleted ? (
-              <>
-                <Check className="w-3.5 h-3.5" /> Marked Completed
-              </>
-            ) : (
-              'Mark as Completed'
-            )}
-          </button>
-        </div>
-      </div>
 
       {/* Main Grid: Reading Pane & Lecture materials */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -956,6 +957,7 @@ export default function ChapterView({
         )}
       </AnimatePresence>
 
+      </div>
     </div>
   );
 }

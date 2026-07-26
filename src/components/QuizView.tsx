@@ -64,28 +64,29 @@ export default function QuizView({ chapter, onBack, onCompleteQuiz, onOpenAI }: 
   const scorePct = Math.round((score / questions.length) * 100);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-20 text-zinc-300 font-sans">
-      {/* Quiz Header Navigation */}
-      <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-2xl border border-zinc-850">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-2.5 bg-zinc-900 hover:bg-zinc-800 active:scale-95 transition border border-zinc-800 rounded-xl text-zinc-400 hover:text-white cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <span className="text-[10px] uppercase tracking-wider font-extrabold text-zinc-500">Practice Assessment</span>
-            <h3 className="text-sm font-bold text-white line-clamp-1">{chapter.title}</h3>
+    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-y-auto p-4 sm:p-8 text-zinc-200 font-sans">
+      <div className="max-w-4xl mx-auto w-full space-y-6 pb-12">
+        {/* Quiz Header Navigation */}
+        <div className="flex items-center justify-between bg-zinc-900/90 p-4 sm:p-5 rounded-2xl border border-zinc-800 shadow-xl shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="p-3 bg-zinc-950 hover:bg-zinc-850 active:scale-95 transition border border-zinc-700/80 rounded-xl text-zinc-200 hover:text-white cursor-pointer shadow-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/40">Practice Assessment</span>
+              <h3 className="text-base font-black text-white line-clamp-1 mt-1">{chapter.title}</h3>
+            </div>
           </div>
-        </div>
 
-        {!quizFinished && (
-          <div className="text-xs bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl text-zinc-400 font-mono">
-            Q: <span className="text-white font-bold">{currentIdx + 1}</span> / {questions.length}
-          </div>
-        )}
-      </div>
+          {!quizFinished && (
+            <div className="text-xs bg-zinc-950 border border-zinc-700 px-3.5 py-1.5 rounded-xl text-zinc-200 font-mono font-extrabold shadow-sm">
+              Q: <span className="text-amber-300 font-black">{currentIdx + 1}</span> / {questions.length}
+            </div>
+          )}
+        </div>
 
       <AnimatePresence mode="wait">
         {!quizFinished ? (
@@ -286,6 +287,7 @@ export default function QuizView({ chapter, onBack, onCompleteQuiz, onOpenAI }: 
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

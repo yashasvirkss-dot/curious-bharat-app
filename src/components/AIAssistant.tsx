@@ -21,6 +21,7 @@ import { translations } from '../lib/translations';
 import { playSound } from '../utils/audio';
 import ThreeDElement from './ThreeDElement';
 import HorizontalScrollContainer from './HorizontalScrollContainer';
+import { startRealVoiceTyping } from '../utils/voiceTyping';
 
 interface AIAssistantProps {
   currentChapterTitle?: string;
@@ -106,50 +107,39 @@ export default function AIAssistant({
     }
   };
 
+  const activeRecognitionRef = useRef<any>(null);
+
   const startVoiceTyping = () => {
     playSound('click');
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setIsListening(true);
-      setTimeout(() => {
-        setInputText(appLanguage === 'hi' 
-          ? "क्या आप मुझे न्यूटन के गति के नियम समझा सकते हैं?" 
-          : "Can you explain Newton's laws of motion in simple terms?"
-        );
-        setIsListening(false);
-      }, 2000);
+
+    // If currently listening, stop recognition
+    if (isListening && activeRecognitionRef.current) {
+      try {
+        activeRecognitionRef.current.stop();
+      } catch (e) {}
+      setIsListening(false);
       return;
     }
 
-    try {
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = appLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+    const initialText = inputText;
 
-      rec.onstart = () => {
+    activeRecognitionRef.current = startRealVoiceTyping({
+      language: appLanguage === 'hi' ? 'hi-IN' : 'en-IN',
+      onStart: () => {
         setIsListening(true);
-      };
-
-      rec.onresult = (e: any) => {
-        const text = e.results[0][0].transcript;
-        setInputText(text);
-      };
-
-      rec.onerror = (err: any) => {
-        console.warn('Voice typing error:', err);
+      },
+      onResult: (spokenText) => {
+        const newText = initialText ? (initialText + " " + spokenText) : spokenText;
+        setInputText(newText);
+      },
+      onError: (err) => {
         setIsListening(false);
-      };
-
-      rec.onend = () => {
+      },
+      onEnd: () => {
         setIsListening(false);
-      };
-
-      rec.start();
-    } catch (err) {
-      console.error(err);
-      setIsListening(false);
-    }
+        activeRecognitionRef.current = null;
+      }
+    });
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -224,8 +214,21 @@ export default function AIAssistant({
         }
       } else {
         let errorMessage = appLanguage === 'hi' 
-          ? "इंटरनेट कनेक्शन उपलब्ध नहीं है।"
-          : "Internet connection not provided.";
+          ? "एआई सहायक अस्थायी रूप से ऑफ़लाइन है। कृपया अपनी एपीआई कुंजी की जांच करें।"
+          : 'The AI Assistant experienced a conceptual hiccup. Please verify if your API key is correctly configured.';
+        if (contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            // ignore
+          }
+        } else {
+          const text = await response.text();
+          if (text && text.length < 200 && !text.includes('<!doctype') && !text.includes('<!DOCTYPE')) {
+            errorMessage = text;
+          }
+        }
         throw new Error(errorMessage);
       }
       
@@ -258,12 +261,12 @@ export default function AIAssistant({
       const assistantMsg: ChatMessage = {
         id: Math.random().toString(),
         sender: 'assistant',
-        text: `⚠️ [${appLanguage === 'hi' ? 'इंटरनेट कनेक्शन उपलब्ध नहीं है' : 'Internet connection not provided'}] ${fallbackText}`,
+        text: fallbackText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages(prev => [...prev, assistantMsg]);
-      setApiError(t.ai_offline_mode);
+      setApiError(null);
     } finally {
       setIsTyping(false);
     }
@@ -338,7 +341,7 @@ export default function AIAssistant({
                 <button
                   type="button"
                   onClick={() => {
-                    handleDownloadNote(code.trim(), `${language}_cheat_sheet`);
+                    handleDownloadNote(code.trim(), `${language}_study_note`);
                     playSound('click');
                   }}
                   className="hover:text-emerald-300 transition cursor-pointer text-[9px] bg-zinc-950/85 hover:bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800/80 hover:border-zinc-700 text-zinc-400 active:scale-95 flex items-center gap-1"
@@ -381,7 +384,7 @@ export default function AIAssistant({
               inlineParts.push(line.substring(lastIndex, match.index));
             }
             inlineParts.push(
-              <strong key={match.index} className={`font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+              <strong key={match.index} className={`font-extrabold px-1 py-0.5 rounded ${isDarkMode ? 'bg-zinc-900 text-amber-300 border border-zinc-800' : 'bg-amber-100 text-amber-950 border border-amber-300'}`}>
                 {match[1]}
               </strong>
             );
@@ -402,7 +405,7 @@ export default function AIAssistant({
             btParts.forEach((btPart, btIdx) => {
               if (btIdx % 2 === 1) {
                 inlineBacktickParts.push(
-                  <code key={btIdx} className="bg-zinc-900 border border-zinc-800/80 px-1.5 py-0.5 rounded font-mono text-[10px] text-emerald-400 font-bold mx-0.5">
+                  <code key={btIdx} className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold mx-0.5 ${isDarkMode ? 'bg-zinc-950 text-emerald-300 border border-zinc-800' : 'bg-teal-100 text-teal-950 border border-teal-300'}`}>
                     {btPart}
                   </code>
                 );
@@ -419,7 +422,7 @@ export default function AIAssistant({
             const listItemContent = inlineParts.length > 0 ? inlineParts : (
               cleanLine.includes('`') ? cleanLine.split('`').map((btPart, btIdx) => (
                 btIdx % 2 === 1 ? (
-                  <code key={btIdx} className="bg-zinc-900 border border-zinc-800/80 px-1.5 py-0.5 rounded font-mono text-[10px] text-emerald-400 font-bold mx-0.5">
+                  <code key={btIdx} className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold mx-0.5 ${isDarkMode ? 'bg-zinc-950 text-emerald-300 border border-zinc-800' : 'bg-teal-100 text-teal-950 border border-teal-300'}`}>
                     {btPart}
                   </code>
                 ) : btPart
@@ -427,15 +430,15 @@ export default function AIAssistant({
             );
 
             return (
-              <div key={`${index}-${lineIdx}`} className={`flex items-start gap-2 pl-2 text-[12px] leading-relaxed py-0.5 ${isDarkMode ? 'text-zinc-300' : 'text-slate-800 font-medium'}`}>
-                <span className={`${isDarkMode ? 'text-zinc-500' : 'text-slate-400'} mt-1 shrink-0`}>•</span>
+              <div key={`${index}-${lineIdx}`} className={`flex items-start gap-2 pl-2 text-[12px] leading-relaxed py-0.5 ${isDarkMode ? 'text-zinc-200' : 'text-slate-900 font-medium'}`}>
+                <span className={`${isDarkMode ? 'text-amber-400' : 'text-orange-600'} mt-1 shrink-0 font-bold`}>•</span>
                 <span>{listItemContent}</span>
               </div>
             );
           }
 
           return (
-            <p key={`${index}-${lineIdx}`} className={`text-[12px] leading-relaxed min-h-[1rem] ${isDarkMode ? 'text-zinc-300' : 'text-slate-850 font-medium'}`}>
+            <p key={`${index}-${lineIdx}`} className={`text-[12px] leading-relaxed min-h-[1rem] ${isDarkMode ? 'text-zinc-200' : 'text-slate-900 font-medium'}`}>
               {inlineParts.length > 0 ? inlineParts : (inlineBacktickParts.length > 0 ? inlineBacktickParts : line)}
             </p>
           );
@@ -457,7 +460,7 @@ export default function AIAssistant({
 
     if (isInitialState) {
       return (
-        <div className={`flex-1 w-full h-full flex flex-col justify-between ${isDarkMode ? 'bg-zinc-950/95 backdrop-blur-md text-zinc-300' : 'bg-slate-50/95 backdrop-blur-md text-slate-800'} ${inline ? 'border border-zinc-900 rounded-3xl overflow-hidden' : 'border-x border-zinc-900/80 max-w-4xl mx-auto'} relative`}>
+        <div className={`flex-1 w-full h-full flex flex-col justify-between ${isDarkMode ? 'bg-zinc-950/95 backdrop-blur-md text-zinc-300' : 'bg-slate-50/95 backdrop-blur-md text-slate-800'} ${inline ? 'border border-zinc-900 rounded-3xl overflow-hidden' : 'w-full h-full max-w-full mx-0'} relative`}>
           
           {/* Header */}
           <div className="p-4 flex items-center justify-between shrink-0 border-b border-white/5">
@@ -579,7 +582,7 @@ export default function AIAssistant({
 
     // Standard dialougue feed when there are messages
     return (
-      <div className={`flex-1 w-full h-full flex flex-col justify-between ${isDarkMode ? 'bg-zinc-950/95 backdrop-blur-md text-zinc-300' : 'bg-slate-50/95 backdrop-blur-md text-slate-800'} ${inline ? 'border border-zinc-900 rounded-3xl overflow-hidden' : 'border-x border-zinc-900/80 max-w-4xl mx-auto'} relative`}>
+      <div className={`flex-1 w-full h-full flex flex-col justify-between ${isDarkMode ? 'bg-zinc-950/95 backdrop-blur-md text-zinc-300' : 'bg-slate-50/95 backdrop-blur-md text-slate-800'} ${inline ? 'border border-zinc-900 rounded-3xl overflow-hidden' : 'w-full h-full max-w-full mx-0'} relative`}>
         {/* Header - exactly identical format as first look */}
         <div className="p-4 flex items-center justify-between shrink-0 border-b border-white/5">
           <div className="flex items-center gap-2">
@@ -789,8 +792,8 @@ export default function AIAssistant({
 
                 <p className="text-xs text-zinc-400 mb-6 leading-relaxed font-sans">
                   {appLanguage === 'hi' 
-                    ? 'अध्ययन सामग्री, रिवीजन नोट्स, सूत्र चीट-शीट्स और वर्कशीट पीडीएफ को सीधे अपने डिवाइस पर डाउनलोड और सेव करने के लिए कृपया Curious Bharat को भंडारण (Storage) अनुमति प्रदान करें।'
-                    : 'To download and store CBSE study materials, revision notes, formula cheat-sheets, and practice PDF worksheets directly on your local device, please grant storage permission.'}
+                    ? 'अध्ययन सामग्री, रिवीजन नोट्स, सूत्र संदर्भ-पत्र और वर्कशीट पीडीएफ को सीधे अपने डिवाइस पर डाउनलोड और सेव करने के लिए कृपया Curious Bharat को भंडारण (Storage) अनुमति प्रदान करें।'
+                    : 'To download and store CBSE study materials, revision notes, formula reference guides, and practice PDF worksheets directly on your local device, please grant storage permission.'}
                 </p>
 
                 <div className="flex gap-3">

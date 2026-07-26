@@ -33,6 +33,8 @@ import boyPracticingQuestions from '../assets/images/boy_practicing_questions_17
 import ashokChakra3d from '../assets/images/ashok_chakra_3d_1784813619883.jpg';
 // @ts-ignore
 import priceTag3dNew from '../assets/images/price_tag_3d_1784813631541.jpg';
+// @ts-ignore
+import scienceGirlFlask from '../assets/images/science_girl_flask_1784954695818.jpg';
 
 export type ThreeDElementType = 
   | 'priceTag' 
@@ -68,7 +70,8 @@ export type ThreeDElementType =
   | 'trophy_3d_gold'
   | 'price_tag_3d'
   | 'boy_girl_curious_bharat'
-  | 'ashok_chakra_3d';
+  | 'ashok_chakra_3d'
+  | 'science_girl_flask';
 
 interface ThreeDElementProps {
   type: ThreeDElementType;
@@ -119,7 +122,8 @@ const SPRITE_MAP: Record<ThreeDElementType, { x: string; y: string; zoom: string
   trophy_3d_gold: { x: '0%', y: '0%', zoom: '100%', label: 'Championship Trophy' },
   price_tag_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Special Discount Tag' },
   boy_girl_curious_bharat: { x: '0%', y: '0%', zoom: '100%', label: 'Curious Bharat Boy & Girl' },
-  ashok_chakra_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Ashok Chakra Seal' }
+  ashok_chakra_3d: { x: '0%', y: '0%', zoom: '100%', label: 'Ashok Chakra Seal' },
+  science_girl_flask: { x: '0%', y: '0%', zoom: '100%', label: 'Little Science Girl with Flask' }
 };
 
 const CUSTOM_IMAGES_MAP: Record<string, string> = {
@@ -135,7 +139,8 @@ const CUSTOM_IMAGES_MAP: Record<string, string> = {
   trophy_3d_gold: trophy3dGold,
   price_tag_3d: priceTag3dNew || priceTag3D,
   boy_girl_curious_bharat: boyGirlCuriousBharat,
-  ashok_chakra_3d: ashokChakra3d
+  ashok_chakra_3d: ashokChakra3d,
+  science_girl_flask: scienceGirlFlask
 };
 
 // Global transparent asset cache to prevent recalculating textures on every state render

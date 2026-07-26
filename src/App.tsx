@@ -35,7 +35,9 @@ import {
   Mic,
   Download,
   Smartphone,
-  WifiOff
+  WifiOff,
+  Palette,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePWA } from './hooks/usePWA';
@@ -55,6 +57,7 @@ import OnboardingWizard from './components/OnboardingWizard';
 import ThreeDElement from './components/ThreeDElement';
 import AshokChakra from './components/AshokChakra';
 import PullToRefresh from './components/PullToRefresh';
+import AppUpdateNotifier from './components/AppUpdateNotifier';
 import { playSound } from './utils/audio';
 import { dbService } from './lib/firebase';
 import { getProxiedImageUrl } from './utils/imageUrl';
@@ -100,7 +103,27 @@ if (typeof window !== 'undefined') {
 
 export default function App() {
   const { isInstallable, installApp, isOffline, isPWA } = usePWA();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin' | 'admin-login' | 'ai' | 'feedback' | 'checkout'>('dashboard');
+  const [courses, setCourses] = useState<Course[]>(() => {
+    const saved = localStorage.getItem('curious_courses');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return defaultCourses;
+  });
+  const [customization, setCustomization] = useState<AppCustomization>(() => {
+    const saved = localStorage.getItem('curious_customization');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed) return parsed;
+      } catch (e) {}
+    }
+    return defaultCustomization;
+  });
+  const [currentView, setCurrentView] = useState<'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin' | 'ai' | 'feedback' | 'checkout'>('dashboard');
   const [activeTab, setActiveTab] = useState<'home' | 'batches' | 'practice' | 'ai' | 'profile'>('home');
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [progress, setProgress] = useState<UserProgress>(() => {
@@ -133,7 +156,16 @@ export default function App() {
     }
     return INITIAL_PROGRESS;
   });
-  const [ownerProfile, setOwnerProfile] = useState<OwnerProfile>(INITIAL_OWNER_PROFILE);
+  const [ownerProfile, setOwnerProfile] = useState<OwnerProfile>(() => {
+    const saved = localStorage.getItem('curious_owner_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed) return parsed;
+      } catch (e) {}
+    }
+    return INITIAL_OWNER_PROFILE;
+  });
   const [isAIOpen, setIsAIOpen] = useState<boolean>(false);
   const [preloadAIPrompt, setPreloadAIPrompt] = useState<{ mode: string; text: string } | undefined>(undefined);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -182,6 +214,8 @@ export default function App() {
 
   // Global Checkout Modal State
   const [globalCheckoutCourse, setGlobalCheckoutCourse] = useState<Course | null>(null);
+  const [robotIconType, setRobotIconType] = useState<'futuristic_ai_robot' | 'science_girl_flask' | 'tricolor_atom'>('futuristic_ai_robot');
+  const [showRobotPicker, setShowRobotPicker] = useState(false);
   const [checkoutStudentName, setCheckoutStudentName] = useState('');
   const [checkoutStudentEmail, setCheckoutStudentEmail] = useState('');
   const [checkoutStudentPhone, setCheckoutStudentPhone] = useState('');
@@ -259,7 +293,7 @@ export default function App() {
 
   // Navigation helper for full-screen page routing with browser history support
   const navigateToView = (
-    newView: 'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin' | 'admin-login' | 'ai' | 'feedback' | 'checkout',
+    newView: 'dashboard' | 'chapter-study' | 'chapter-quiz' | 'chapter-flashcards' | 'admin' | 'ai' | 'feedback' | 'checkout',
     newTab?: 'home' | 'batches' | 'practice' | 'ai' | 'profile',
     chapterObj?: Chapter | null
   ) => {
@@ -279,13 +313,6 @@ export default function App() {
       chapterId: chapterObj ? chapterObj.id : (selectedChapter ? selectedChapter.id : null)
     }, '');
   };
-
-  // Student Analysis Records
-  const [studentAnalysisRecords, setStudentAnalysisRecords] = useState<StudentAnalysisRecord[]>([]);
-
-  // Courses and Theme Customization State
-  const [courses, setCourses] = useState<Course[]>(defaultCourses);
-  const [customization, setCustomization] = useState<AppCustomization>(defaultCustomization);
 
   useEffect(() => {
     // Seed history state on initial app mount
@@ -345,6 +372,17 @@ export default function App() {
     }
   };
 
+  // Theme Palette Color Combos State
+  const [activePalette, setActivePalette] = useState<'patriotic' | 'cyberpunk' | 'emerald' | 'crimson' | 'pacific'>(() => {
+    return (localStorage.getItem('pref_palette') as any) || 'patriotic';
+  });
+  const [showPaletteModal, setShowPaletteModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    document.body.setAttribute('data-palette', activePalette);
+    localStorage.setItem('pref_palette', activePalette);
+  }, [activePalette]);
+
   // Load language preference
   useEffect(() => {
     const savedLang = localStorage.getItem('pref_app_language');
@@ -368,22 +406,27 @@ export default function App() {
   const [apkDownloadPercent, setApkDownloadPercent] = useState<number>(0);
 
   useEffect(() => {
-    const checkApkVersion = () => {
-      fetch('/api/apk-version')
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.version) {
-            if (data.version !== currentClientApkVersion) {
-              setApkUpdateInfo(data);
-              setShowApkUpdateModal(true);
-            }
-          }
-        })
-        .catch(err => console.error('Error checking APK version:', err));
+    const checkApkVersion = async () => {
+      try {
+        const res = await fetch('/api/apk-version');
+        if (!res.ok) return;
+        const data = await res.json();
+        const ver = data?.version || data?.currentVersion;
+        if (ver && ver !== currentClientApkVersion) {
+          setApkUpdateInfo({
+            version: ver,
+            url: data.url || '/api/apk-download',
+            notes: data.notes || 'Performance enhancements, security updates, and offline study fixes.'
+          });
+          setShowApkUpdateModal(true);
+        }
+      } catch (err) {
+        // Silently catch network errors during dev server boot or background polls
+      }
     };
 
     checkApkVersion();
-    const interval = setInterval(checkApkVersion, 10000);
+    const interval = setInterval(checkApkVersion, 20000);
     return () => clearInterval(interval);
   }, [currentClientApkVersion]);
 
@@ -411,6 +454,18 @@ export default function App() {
       });
     }, 200);
   };
+
+  // Student Analysis Records
+  const [studentAnalysisRecords, setStudentAnalysisRecords] = useState<StudentAnalysisRecord[]>(() => {
+    const saved = localStorage.getItem('curious_student_analysis');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [];
+  });
 
   // Student Feedback modal state
   const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
@@ -1176,6 +1231,7 @@ export default function App() {
               </button>
             )}
 
+
             {/* Feedback & Suggestion Button */}
             <button
               onClick={() => {
@@ -1787,37 +1843,40 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Global Payment / Checkout Modal */}
+      {/* Global Payment / Checkout View - Full End to End Screen */}
       <AnimatePresence>
         {globalCheckoutCourse && (
-          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-hidden">
             <motion.div
               initial={{ opacity: 0, scale: 0.98, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 15 }}
-              className="bg-zinc-950 border border-zinc-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="bg-zinc-950 w-full h-full flex flex-col relative overflow-hidden"
             >
               {/* Header */}
-              <div className="p-5 border-b border-zinc-900 flex justify-between items-center bg-zinc-900/40">
+              <div className="p-4 sm:p-5 border-b border-zinc-900 flex justify-between items-center bg-zinc-900/60 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400">
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white">Unlock Course Batch</h3>
-                    <p className="text-[10px] text-zinc-500">Secure Direct QR & UPI Verification Transfer</p>
+                    <h3 className="text-base font-black text-white flex items-center gap-2">
+                      <span>Unlock Course Batch</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[10px] font-extrabold">VERIFIED DIRECT ENROLLMENT</span>
+                    </h3>
+                    <p className="text-xs text-zinc-300 font-medium">Secure Direct QR & UPI Verification Transfer</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setGlobalCheckoutCourse(null)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-850 flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white transition cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Form & Transfer Container (Scrollable) */}
-              <div className="p-6 overflow-y-auto space-y-5 text-zinc-300">
+              {/* Form & Transfer Container (Scrollable Full Screen) */}
+              <div className="flex-1 p-4 sm:p-8 overflow-y-auto space-y-6 text-zinc-200 max-w-4xl mx-auto w-full">
                 {/* Brand-new Interactive 3D Price Tag Banner */}
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/30 to-zinc-900/40 border border-amber-900/20 flex items-center justify-between relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl" />
@@ -2073,98 +2132,65 @@ export default function App() {
         </button>
       </footer>
 
-      {/* Floating Bharat AI Robot Assistant Button */}
-      {currentView !== 'admin' && activeTab !== 'ai' && (
+      {/* Draggable Bharat AI Robot Assistant Button (Defaulted to bottom-right) */}
+      {currentView !== 'admin' && (
         <motion.div
+          drag
+          dragMomentum={false}
+          whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
           initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1, y: [0, -4, 0] }}
-          transition={{
-            y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
-            scale: { duration: 0.3 }
-          }}
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40"
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="fixed bottom-20 right-3 sm:bottom-24 sm:right-6 z-50 flex items-center gap-1.5 touch-none"
         >
-          <button
-            onClick={() => {
-              playSound('click');
-              navigateToView('dashboard', 'ai');
-            }}
-            className="group relative flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-zinc-950/90 backdrop-blur-md border border-yellow-400/40 hover:border-yellow-400 text-white shadow-2xl transition hover:scale-105 active:scale-95 cursor-pointer"
-            title="Open Bharat AI Assistant"
-          >
-            {/* Glowing Backdrop pulse */}
-            <div className="absolute inset-0 rounded-2xl bg-yellow-400/10 blur-sm group-hover:bg-yellow-400/20 transition" />
-            
-            {/* 3D Robot Head / Body */}
-            <div className="w-9 h-9 sm:w-10 sm:h-10 relative shrink-0">
-              <ThreeDElement type="futuristic_ai_robot" className="w-full h-full" autoRotate={true} />
-            </div>
+          <div className="relative group">
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsAIOpen(true);
+              }}
+              className="relative flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-zinc-950/95 backdrop-blur-md border border-yellow-400/50 hover:border-yellow-400 text-white shadow-2xl transition cursor-grab active:cursor-grabbing"
+              title="Drag anywhere or click to open Bharat AI Assistant"
+            >
+              {/* Glowing Backdrop */}
+              <div className="absolute inset-0 rounded-2xl bg-yellow-400/10 blur-sm group-hover:bg-yellow-400/20 transition" />
+              
+              {/* Selected 3D Robot Icon */}
+              <div className="w-10 h-10 sm:w-11 sm:h-11 relative shrink-0">
+                <ThreeDElement type="futuristic_ai_robot" className="w-full h-full" autoRotate={true} />
+              </div>
 
-            <div className="hidden xs:flex flex-col text-left">
-              <span className="text-[10px] font-black tracking-wider text-yellow-400 uppercase leading-none flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
-                Bharat AI
-              </span>
-              <span className="text-[9px] text-zinc-400 font-medium leading-none pt-0.5">
-                {appLanguage === 'hi' ? '24x7 संदेह समाधान' : 'Ask Doubts'}
-              </span>
-            </div>
-          </button>
+              <div className="hidden xs:flex flex-col text-left pr-1">
+                <span className="text-[10px] font-black tracking-wider text-yellow-400 uppercase leading-none flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
+                  Bharat AI
+                </span>
+                <span className="text-[9px] text-zinc-400 font-medium leading-none pt-0.5">
+                  {appLanguage === 'hi' ? '24x7 संदेह समाधान' : 'Ask Doubts'}
+                </span>
+              </div>
+            </button>
+          </div>
         </motion.div>
       )}
 
-      {/* Global Floating Bharat AI Assistant Modal Overlay */}
+      {/* Full Screen Bharat AI Assistant View */}
       <AnimatePresence>
         {isAIOpen && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-zinc-950 border border-zinc-850 w-full max-w-4xl h-[88vh] max-h-[800px] rounded-3xl overflow-hidden shadow-2xl flex flex-col relative"
-            >
-              {/* Modal Header bar */}
-              <div className="p-3.5 sm:p-4 border-b border-zinc-850 bg-zinc-900/40 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8.5 h-8.5 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center">
-                    <ThreeDElement type="futuristic_ai_robot" className="w-6 h-6" autoRotate={true} />
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-1.5">
-                      <span>Bharat AI Mentor & Doubt Resolver</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold">LIVE 24x7</span>
-                    </h3>
-                    <p className="text-[10px] text-zinc-400 font-medium">Bilingual • Vernacular • Instant Board & NCERT Analysis</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    playSound('click');
-                    setIsAIOpen(false);
-                  }}
-                  className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* AIAssistant Component inside Modal */}
-              <div className="flex-1 overflow-hidden p-2 sm:p-3">
-                <AIAssistant
-                  currentChapterTitle={selectedChapter?.title}
-                  isOpen={true}
-                  onClose={() => setIsAIOpen(false)}
-                  preloadedPrompt={preloadAIPrompt}
-                  onClearPreload={handleClearPreload}
-                  onIncrementDoubtsAsked={handleIncrementDoubts}
-                  appLanguage={appLanguage}
-                  inline={true}
-                  isDarkMode={isDarkMode}
-                  progress={progress}
-                  onUpdateProgress={saveProgressState}
-                />
-              </div>
-            </motion.div>
+          <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-hidden">
+            <AIAssistant
+              currentChapterTitle={selectedChapter?.title}
+              isOpen={true}
+              onClose={() => setIsAIOpen(false)}
+              preloadedPrompt={preloadAIPrompt}
+              onClearPreload={handleClearPreload}
+              onIncrementDoubtsAsked={handleIncrementDoubts}
+              appLanguage={appLanguage}
+              inline={false}
+              isDarkMode={isDarkMode}
+              progress={progress}
+              onUpdateProgress={saveProgressState}
+            />
           </div>
         )}
       </AnimatePresence>
@@ -2182,12 +2208,16 @@ export default function App() {
         />
       )}
 
+
       {!progress.onboarded && (
         <OnboardingWizard 
           onComplete={handleOnboardingComplete} 
           isDarkMode={isDarkMode} 
         />
       )}
+
+      {/* Real-time APK & OTA Background Updater */}
+      <AppUpdateNotifier />
 
       </div>
     </PullToRefresh>

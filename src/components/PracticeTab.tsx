@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Sparkles, 
   Brain, 
@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { playSound } from '../utils/audio';
 import HorizontalScrollContainer from './HorizontalScrollContainer';
 import ThreeDElement from './ThreeDElement';
+import { startRealVoiceTyping } from '../utils/voiceTyping';
 
 interface PracticeTabProps {
   progress: any;
@@ -60,7 +61,7 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
   const [subject, setSubject] = useState<string>('Physics');
   const [chapter, setChapter] = useState<string>('Light & Refraction');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [questionCount, setQuestionCount] = useState<number>(3);
+  const [questionCount, setQuestionCount] = useState<number>(15);
   const [questionType, setQuestionType] = useState<'mcq' | 'descriptive' | 'numerical' | 'all' | 'pyq'>('descriptive');
 
   // Active Test State
@@ -125,57 +126,59 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
       // Dynamic high-fidelity local fallback questions database
       const fallbackDatabase: Record<string, any[]> = {
         'light': [
-          {
-            id: "fb-l1",
-            question: "State the laws of reflection of light. Draw a neat diagram to illustrate.",
-            type: "descriptive",
-            modelAnswer: "Angle of incidence equals angle of reflection; Incident ray, reflected ray, normal lie in same plane."
-          },
-          {
-            id: "fb-l2",
-            question: "A convex lens has a focal length of 20 cm. At what distance should an object be placed to get an image at 40 cm on the other side?",
-            type: "numerical",
-            modelAnswer: "u = -40 cm. Using lens formula 1/v - 1/u = 1/f."
-          },
-          {
-            id: "fb-l3",
-            question: "Which of the following mirrors is preferred as a rear-view mirror in vehicles and why?",
-            type: "mcq",
-            options: ["Concave Mirror", "Convex Mirror", "Plane Mirror", "Plano-concave Mirror"],
-            correctAnswerIndex: 1,
-            modelAnswer: "Convex mirror gives an erect, diminished image and has a wider field of view."
-          }
+          { id: "fb-l1", question: "State the laws of reflection of light. Draw a neat diagram to illustrate.", type: "descriptive", modelAnswer: "Angle of incidence equals angle of reflection; Incident ray, reflected ray, normal lie in same plane." },
+          { id: "fb-l2", question: "A convex lens has a focal length of 20 cm. At what distance should an object be placed to get an image at 40 cm on the other side?", type: "numerical", modelAnswer: "u = -40 cm. Using lens formula 1/v - 1/u = 1/f." },
+          { id: "fb-l3", question: "Which of the following mirrors is preferred as a rear-view mirror in vehicles and why?", type: "mcq", options: ["Concave Mirror", "Convex Mirror", "Plane Mirror", "Plano-concave Mirror"], correctAnswerIndex: 1, modelAnswer: "Convex mirror gives erect, diminished image and wider field of view." },
+          { id: "fb-l4", question: "Explain why stars twinkle while planets do not.", type: "descriptive", modelAnswer: "Atmospheric refraction of point source star light versus extended source planet light." },
+          { id: "fb-l5", question: "Calculate power of a concave lens with focal length 50 cm.", type: "numerical", modelAnswer: "P = 1/f = 1/(-0.5 m) = -2 Diopters." },
+          { id: "fb-l6", question: "SI unit of power of a lens is:", type: "mcq", options: ["Meter", "Diopter", "Centimeter", "Watt"], correctAnswerIndex: 1, modelAnswer: "Diopter (D)." },
+          { id: "fb-l7", question: "What is refractive index? State Snell's Law.", type: "descriptive", modelAnswer: "n = c/v; sin(i)/sin(r) = constant." },
+          { id: "fb-l8", question: "Find speed of light in glass if refractive index is 1.5.", type: "numerical", modelAnswer: "v = 3x10^8 / 1.5 = 2x10^8 m/s." },
+          { id: "fb-l9", question: "Which lens is used to correct hypermetropia?", type: "mcq", options: ["Concave lens", "Convex lens", "Bifocal lens", "Cylindrical lens"], correctAnswerIndex: 1, modelAnswer: "Convex lens." },
+          { id: "fb-l10", question: "Define dispersion of light and name the constituent colors.", type: "descriptive", modelAnswer: "Splitting of white light into VIBGYOR colors through a prism." },
+          { id: "fb-l11", question: "An object 5 cm tall is placed at 25 cm in front of a concave mirror of focal length 10 cm. Find image location.", type: "numerical", modelAnswer: "1/v + 1/u = 1/f => v = -16.67 cm." },
+          { id: "fb-l12", question: "Red light bends least in a glass prism because it has:", type: "mcq", options: ["Shortest wavelength", "Longest wavelength", "Highest frequency", "Zero speed"], correctAnswerIndex: 1, modelAnswer: "Longest wavelength." },
+          { id: "fb-l13", question: "Differentiate between real and virtual images with examples.", type: "descriptive", modelAnswer: "Real images can be captured on screen; virtual images cannot." },
+          { id: "fb-l14", question: "Calculate focal length of a spherical mirror of radius of curvature 30 cm.", type: "numerical", modelAnswer: "f = R/2 = 30/2 = 15 cm." },
+          { id: "fb-l15", question: "Focal length of a plane mirror is:", type: "mcq", options: ["Zero", "Infinity", "10 cm", "20 cm"], correctAnswerIndex: 1, modelAnswer: "Infinity." }
         ],
         'electricity': [
-          {
-            id: "fb-e1",
-            question: "Define Ohm's law. What are its limitations?",
-            type: "descriptive",
-            modelAnswer: "V = IR at constant temperature. Does not apply to non-ohmic conductors like diodes."
-          },
-          {
-            id: "fb-e2",
-            question: "Calculate the total power consumed by two 100W bulbs connected in series across a 220V main.",
-            type: "numerical",
-            modelAnswer: "50W total power."
-          },
-          {
-            id: "fb-e3",
-            question: "The resistance of a wire is R. If its length is stretched to double, what is the new resistance?",
-            type: "mcq",
-            options: ["R/2", "2R", "4R", "R/4"],
-            correctAnswerIndex: 2,
-            modelAnswer: "Stretching doubles length and halves area, so R becomes 4 times."
-          }
+          { id: "fb-e1", question: "Define Ohm's law. What are its limitations?", type: "descriptive", modelAnswer: "V = IR at constant temperature. Does not apply to non-ohmic conductors like semiconductors." },
+          { id: "fb-e2", question: "Calculate total power consumed by two 100W bulbs connected in series across 220V main.", type: "numerical", modelAnswer: "50W total power." },
+          { id: "fb-e3", question: "Resistance of a wire is R. If stretched to double length, new resistance is:", type: "mcq", options: ["R/2", "2R", "4R", "R/4"], correctAnswerIndex: 2, modelAnswer: "Stretching doubles length and halves area, so R becomes 4R." },
+          { id: "fb-e4", question: "State Joule's Law of Heating and give two safety applications.", type: "descriptive", modelAnswer: "H = I^2 R t. Applications: Electric fuse and heating elements." },
+          { id: "fb-e5", question: "A current of 0.5 A flows for 10 minutes. Calculate electric charge.", type: "numerical", modelAnswer: "Q = I * t = 0.5 * 600 = 300 Coulombs." },
+          { id: "fb-e6", question: "Unit of electrical resistivity is:", type: "mcq", options: ["Ohm", "Ohm-meter", "Volt", "Ampere"], correctAnswerIndex: 1, modelAnswer: "Ohm-meter (Ω·m)." },
+          { id: "fb-e7", question: "Why is tungsten used almost exclusively for filament of electric lamps?", type: "descriptive", modelAnswer: "High melting point (3380°C) and high resistivity." },
+          { id: "fb-e8", question: "Calculate equivalent resistance of 6 ohm and 12 ohm in parallel.", type: "numerical", modelAnswer: "1/Req = 1/6 + 1/12 = 3/12 => Req = 4 ohms." },
+          { id: "fb-e9", question: "Device used to measure electric current in a circuit is:", type: "mcq", options: ["Voltmeter", "Ammeter", "Galvanometer", "Rheostat"], correctAnswerIndex: 1, modelAnswer: "Ammeter (connected in series)." },
+          { id: "fb-e10", question: "Explain why series arrangement is not used for domestic circuits.", type: "descriptive", modelAnswer: "If one component fails, circuit breaks; voltage gets divided." },
+          { id: "fb-e11", question: "Calculate energy consumed by a 2000W heater operated for 2 hours.", type: "numerical", modelAnswer: "E = P * t = 2 kW * 2 h = 4 kWh." },
+          { id: "fb-e12", question: "Commercial unit of electrical energy is:", type: "mcq", options: ["Joule", "Kilowatt-hour", "Watt-second", "Volt-Ampere"], correctAnswerIndex: 1, modelAnswer: "1 kWh = 3.6 x 10^6 Joules." },
+          { id: "fb-e13", question: "Define 1 Ampere of current.", type: "descriptive", modelAnswer: "Flow of 1 Coulomb of charge per second." },
+          { id: "fb-e14", question: "Calculate potential difference required to pass 2A current through a 15 ohm resistor.", type: "numerical", modelAnswer: "V = IR = 2 * 15 = 30 Volts." },
+          { id: "fb-e15", question: "Fuse wire should have:", type: "mcq", options: ["High melting point", "Low melting point and high resistance", "High conductivity only", "Zero resistance"], correctAnswerIndex: 1, modelAnswer: "Low melting point to melt easily during overload." }
         ]
       };
 
       // Match key from chapter name
       const chapterKey = (chapter || '').toLowerCase().includes('light') ? 'light' : 'electricity';
-      const selectedFallback = fallbackDatabase[chapterKey] || fallbackDatabase['electricity'];
+      let selectedFallback = fallbackDatabase[chapterKey] || fallbackDatabase['electricity'];
+      
+      // Ensure at least questionCount questions exist by expanding fallback if needed
+      while (selectedFallback.length < questionCount) {
+        selectedFallback = [
+          ...selectedFallback,
+          ...selectedFallback.map((item, idx) => ({
+            ...item,
+            id: `${item.id}-dup-${idx}`,
+            question: `${item.question} (Variation #${idx + 1})`
+          }))
+        ];
+      }
       
       // Trim to question count
-      setQuestions(selectedFallback.slice(0, questionCount));
+      setQuestions(selectedFallback.slice(0, Math.max(15, questionCount)));
       setCurrentQuestionIdx(0);
       setStudentAnswers({});
       setSelectedMCQOption(null);
@@ -184,105 +187,78 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
     }
   };
 
-  // Web Speech API wrapper or simulation for premium voice typing
+  // Active speech recognition instance reference
+  const activeRecognitionRef = useRef<any>(null);
+
+  // Web Speech API real-time voice typing
   const startVoiceTyping = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      // Simulate highly designed animated voice feedback for sandbox/safari fallback
-      setIsListening(true);
-      setSpeechError(null);
-      setTimeout(() => {
-        const q = questions[currentQuestionIdx];
-        const textSample = q.type === 'numerical' 
-          ? "The resistance is calculated by dividing voltage by current. Hence, R equals V over I, which gives 10 ohms in parallel." 
-          : "According to standard NCERT rules, atomic size decreases across a period because nuclear charge increases, pulling the electron shells closer.";
-        
-        setStudentAnswers(prev => ({
-          ...prev,
-          [q.id]: (prev[q.id] || '') + " " + textSample
-        }));
-        setIsListening(false);
-      }, 3000);
+    // If already listening, stop recording
+    if (isListening && activeRecognitionRef.current) {
+      try {
+        activeRecognitionRef.current.stop();
+      } catch (err) {}
+      setIsListening(false);
       return;
     }
 
-    try {
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = 'en-IN'; // Indian English pronunciation tuning
+    const currentQId = questions[currentQuestionIdx]?.id;
+    if (!currentQId) return;
 
-      rec.onstart = () => {
+    const initialText = studentAnswers[currentQId] || '';
+
+    activeRecognitionRef.current = startRealVoiceTyping({
+      language: appLanguage === 'hi' ? 'hi-IN' : 'en-IN',
+      onStart: () => {
         setIsListening(true);
         setSpeechError(null);
-      };
-
-      rec.onresult = (e: any) => {
-        const resultText = e.results[0][0].transcript;
-        const qId = questions[currentQuestionIdx].id;
+      },
+      onResult: (spokenText) => {
+        const newText = initialText ? (initialText + " " + spokenText) : spokenText;
         setStudentAnswers(prev => ({
           ...prev,
-          [qId]: (prev[qId] || '') + " " + resultText
+          [currentQId]: newText
         }));
-      };
-
-      rec.onerror = () => {
-        setSpeechError("Speech not captured. Please type your answer directly.");
+      },
+      onError: (err) => {
+        setSpeechError(err);
+      },
+      onEnd: () => {
         setIsListening(false);
-      };
-
-      rec.onend = () => {
-        setIsListening(false);
-      };
-
-      rec.start();
-    } catch (err) {
-      setIsListening(false);
-    }
+        activeRecognitionRef.current = null;
+      }
+    });
   };
 
   const startVoiceTypingForPrompt = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setIsPromptListening(true);
-      setSpeechError(null);
-      setTimeout(() => {
-        const textSample = "Generate 4 tricky descriptive questions on Electricity and resistance for Class 10th Science.";
-        setCustomPrompt(prev => (prev ? prev + " " + textSample : textSample));
-        setIsPromptListening(false);
-      }, 2500);
+    // If already listening, stop
+    if (isPromptListening && activeRecognitionRef.current) {
+      try {
+        activeRecognitionRef.current.stop();
+      } catch (err) {}
+      setIsPromptListening(false);
       return;
     }
 
-    try {
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = 'en-IN';
+    const initialPromptText = customPrompt;
 
-      rec.onstart = () => {
+    activeRecognitionRef.current = startRealVoiceTyping({
+      language: appLanguage === 'hi' ? 'hi-IN' : 'en-IN',
+      onStart: () => {
         setIsPromptListening(true);
         setSpeechError(null);
-      };
-
-      rec.onresult = (e: any) => {
-        const resultText = e.results[0][0].transcript;
-        setCustomPrompt(prev => (prev ? prev + " " + resultText : resultText));
-      };
-
-      rec.onerror = () => {
-        setSpeechError("Voice not captured. Please type your requirements.");
+      },
+      onResult: (spokenText) => {
+        const newText = initialPromptText ? (initialPromptText + " " + spokenText) : spokenText;
+        setCustomPrompt(newText);
+      },
+      onError: (err) => {
+        setSpeechError(err);
+      },
+      onEnd: () => {
         setIsPromptListening(false);
-      };
-
-      rec.onend = () => {
-        setIsPromptListening(false);
-      };
-
-      rec.start();
-    } catch (err) {
-      setIsPromptListening(false);
-    }
+        activeRecognitionRef.current = null;
+      }
+    });
   };
 
   const handleNextQuestion = () => {
@@ -391,71 +367,67 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
       {activePracticeMode === 'menu' && (
         <div className="space-y-6">
           
-          {/* Practice Hero - STUNNING RECONSTRUCTED LOOK with Tricolor Flag Gradient & Ashok Chakra Glow */}
-          <div className="bg-gradient-to-br from-amber-600/15 via-zinc-950 to-emerald-600/15 border-y border-zinc-800/85 rounded-3xl p-6.5 relative overflow-hidden shadow-2xl">
-            <div className="absolute -top-12 -left-12 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" />
-            
-
+          {/* Practice Hero - STUNNING DARK VIEW WITH LIGHT TEXT */}
+          <div className="bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-900 border border-slate-800 rounded-3xl p-6.5 relative overflow-hidden shadow-2xl">
+            <div className="absolute -top-12 -left-12 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl animate-pulse" />
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
               <div className="space-y-1.5 text-left flex-1">
-                <span className="text-[10px] font-mono tracking-widest uppercase font-black text-amber-500 bg-amber-950/40 border border-amber-800/30 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[10px] font-mono tracking-widest uppercase font-black text-sky-400 bg-sky-950/80 border border-sky-800/60 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
                   {appLanguage === 'hi' ? 'परम मूल्यांकन प्रयोगशाला' : 'ULTIMATE ASSESSMENT LAB'}
                 </span>
-                <h2 className="text-2xl font-black text-white tracking-tight text-white-force">
+                <h2 className="text-2xl font-black text-white tracking-tight">
                   {appLanguage === 'hi' ? 'एआई कस्टमाइज्ड परीक्षा हब' : 'AI Custom Exam Hub'}
                 </h2>
-                <p className="text-xs text-zinc-300 max-w-xl leading-relaxed text-white-force">
+                <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
                   {appLanguage === 'hi' 
                     ? 'अपनी इच्छानुसार बोलकर या टाइप करके अपना स्वयं का पेपर डिज़ाइन करें, या सीबीएसई ब्लू प्रिंट के अनुसार मानक मापदंडों का चयन करें।'
                     : 'Design your own practice sets simply by speaking or typing your demands, or select standard CBSE blueprint parameters.'}
                 </p>
               </div>
 
-              {/* Responsive 3D Student Solving Paper Mascot - Extra Prominent Large Size */}
-              <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 shrink-0 bg-gradient-to-b from-zinc-900/90 to-zinc-950/90 border border-zinc-800/90 rounded-3xl p-4 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-teal-500/10 rounded-3xl blur-md" />
+              {/* Responsive 3D Student Solving Paper Mascot - Premium Dark View Card */}
+              <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 shrink-0 bg-slate-950/90 border border-slate-800 rounded-3xl p-4 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/10 via-transparent to-blue-500/10 rounded-3xl blur-md" />
                 <ThreeDElement type="boy_practicing_questions" className="w-full h-full relative z-10" autoRotate={true} interactive={true} />
               </div>
             </div>
           </div>
 
-          {/* TAB CONTROLS - HIGHLY STYLISH PILL SWITCHER */}
-          <div className="flex justify-center w-full max-w-md mx-auto">
-            <div className="bg-zinc-950 border border-zinc-900/90 p-1.5 rounded-2xl w-full shadow-md">
-              <HorizontalScrollContainer innerClassName="justify-center">
-                <button
-                  onClick={() => {
-                    playSound('click');
-                    setPracticeSubTab('prompt');
-                  }}
-                  className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 ${
-                    practiceSubTab === 'prompt'
-                      ? 'bg-white text-black shadow-lg font-black'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
-                  }`}
-                >
-                  <Mic className="w-3.5 h-3.5" />
-                  <span>{appLanguage === 'hi' ? 'वाणी/प्रॉम्प्ट द्वारा परीक्षा' : 'Voice/Text Prompt Exam'}</span>
-                </button>
+          {/* TAB CONTROLS - END-TO-END FULL WIDTH BAR CONTAINER */}
+          <div className="w-full">
+            <div className="bg-zinc-900/90 p-1.5 rounded-2xl w-full border border-zinc-800 shadow-xl backdrop-blur-md flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setPracticeSubTab('prompt');
+                }}
+                className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  practiceSubTab === 'prompt'
+                    ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30 font-extrabold border border-sky-400'
+                    : 'bg-zinc-950/80 text-slate-300 hover:text-white hover:bg-zinc-800 border border-zinc-800'
+                }`}
+              >
+                <Mic className={`w-4 h-4 font-extrabold ${practiceSubTab === 'prompt' ? 'text-white' : 'text-sky-400'}`} />
+                <span>{appLanguage === 'hi' ? 'वाणी/प्रॉम्प्ट द्वारा परीक्षा' : 'Voice/Text Prompt Exam'}</span>
+              </button>
 
-                <button
-                  onClick={() => {
-                    playSound('click');
-                    setPracticeSubTab('parameter');
-                  }}
-                  className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 ${
-                    practiceSubTab === 'parameter'
-                      ? 'bg-white text-black shadow-lg font-black'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
-                  }`}
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  <span>{appLanguage === 'hi' ? 'पाठ्यक्रम मापदंड परीक्षा' : 'NCERT Parameter Exam'}</span>
-                </button>
-              </HorizontalScrollContainer>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setPracticeSubTab('parameter');
+                }}
+                className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  practiceSubTab === 'parameter'
+                    ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30 font-extrabold border border-sky-400'
+                    : 'bg-zinc-950/80 text-slate-300 hover:text-white hover:bg-zinc-800 border border-zinc-800'
+                }`}
+              >
+                <BookOpen className={`w-4 h-4 font-extrabold ${practiceSubTab === 'parameter' ? 'text-white' : 'text-sky-400'}`} />
+                <span>{appLanguage === 'hi' ? 'पाठ्यक्रम मापदंड परीक्षा' : 'NCERT Parameter Exam'}</span>
+              </button>
             </div>
           </div>
 
@@ -558,52 +530,52 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
                   
                   {/* Class Selection */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Class / Grade (Typeable)</label>
+                    <label className="text-slate-300 block uppercase font-mono text-[9px] font-bold">Class / Grade (Typeable)</label>
                     <input 
                       type="text"
                       value={classLevel}
                       onChange={(e) => setClassLevel(e.target.value)}
                       placeholder="e.g. Class 10th"
-                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                      className="w-full bg-black border border-zinc-800 rounded-xl py-2 px-3 text-white placeholder-slate-500 outline-none focus:border-sky-500 font-mono text-xs"
                     />
                   </div>
 
                   {/* Subject */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Subject Stream (Typeable)</label>
+                    <label className="text-slate-300 block uppercase font-mono text-[9px] font-bold">Subject Stream (Typeable)</label>
                     <input 
                       type="text"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       placeholder="e.g. Physics"
-                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                      className="w-full bg-black border border-zinc-800 rounded-xl py-2 px-3 text-white placeholder-slate-500 outline-none focus:border-sky-500 font-mono text-xs"
                     />
                   </div>
 
                   {/* Chapter Option */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Topic / Chapter Focus (Typeable)</label>
+                    <label className="text-slate-300 block uppercase font-mono text-[9px] font-bold">Topic / Chapter Focus (Typeable)</label>
                     <input 
                       type="text"
                       value={chapter}
                       onChange={(e) => setChapter(e.target.value)}
                       placeholder="e.g. Light & Refraction"
-                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                      className="w-full bg-black border border-zinc-800 rounded-xl py-2 px-3 text-white placeholder-slate-500 outline-none focus:border-sky-500 font-mono text-xs"
                     />
                   </div>
 
                   {/* Difficulty */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Challenge Metric</label>
+                    <label className="text-slate-300 block uppercase font-mono text-[9px] font-bold">Challenge Metric</label>
                     <div className="flex gap-2">
                       {['easy', 'medium', 'hard'].map((d) => (
                         <button
                           key={d}
                           onClick={() => setDifficulty(d as any)}
-                          className={`flex-1 py-2 border rounded-xl font-bold font-mono uppercase text-[10px] transition cursor-pointer ${
+                          className={`flex-1 py-2 border rounded-xl font-extrabold font-mono uppercase text-[10px] transition cursor-pointer ${
                             difficulty === d 
-                              ? 'bg-white text-black border-white'
-                              : 'bg-black text-zinc-500 border-zinc-900 hover:border-zinc-800'
+                              ? 'bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-600/30'
+                              : 'bg-black text-slate-300 border-zinc-800 hover:border-zinc-700 hover:text-white'
                           }`}
                         >
                           {d}
@@ -614,24 +586,24 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
 
                   {/* Question count */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Number of Questions (Enter Any Count)</label>
+                    <label className="text-slate-300 block uppercase font-mono text-[9px] font-bold">Number of Questions (Enter Any Count)</label>
                     <input 
                       type="number"
                       min={1}
                       value={questionCount}
                       onChange={(e) => setQuestionCount(Math.max(1, Number(e.target.value)))}
                       placeholder="e.g. 5"
-                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                      className="w-full bg-black border border-zinc-800 rounded-xl py-2 px-3 text-white placeholder-slate-500 outline-none focus:border-sky-500 font-mono text-xs"
                     />
                   </div>
 
                   {/* Question Type */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 block uppercase font-mono text-[9px]">Question Class</label>
+                    <label className="text-slate-300 block uppercase font-mono text-[9px] font-bold">Question Class</label>
                     <select 
                       value={questionType}
                       onChange={(e) => setQuestionType(e.target.value as any)}
-                      className="w-full bg-black border border-zinc-900 rounded-xl py-2 px-3 text-white outline-none focus:border-zinc-700 font-mono text-xs"
+                      className="w-full bg-black border border-zinc-800 rounded-xl py-2 px-3 text-white outline-none focus:border-sky-500 font-mono text-xs"
                     >
                       <option value="mcq">MCQs & Assertion-Reason Only</option>
                       <option value="descriptive">Descriptive Short/Long Answers</option>
@@ -744,17 +716,30 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
 
       {/* Active Assessment Mode */}
       {activePracticeMode === 'active-test' && (
-        <div className="space-y-6">
+        <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-y-auto p-4 sm:p-8 animate-fadeIn text-zinc-200">
+          <div className="max-w-4xl mx-auto w-full space-y-6 pb-12">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
+              <button
+                onClick={() => setActivePracticeMode('menu')}
+                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                ← Exit Test
+              </button>
+              <span className="px-3 py-1 bg-sky-950/90 border border-sky-500/50 text-sky-300 rounded-full text-[10px] font-extrabold font-mono tracking-widest uppercase">
+                {subject} • {classLevel}
+              </span>
+            </div>
+
           {isGenerating ? (
-            <div className="text-center py-16 space-y-4">
-              <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-zinc-500 font-mono">Bharat AI is drafting custom exam sheets. Please hold...</p>
+            <div className="text-center py-20 space-y-4">
+              <div className="w-12 h-12 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs text-zinc-300 font-mono font-bold">Bharat AI is compiling custom exam sheets for {chapter}...</p>
             </div>
           ) : questions.length === 0 ? (
-            <div className="text-center py-16 space-y-4 bg-zinc-950 border border-zinc-900 rounded-2xl">
-              <XCircle className="w-10 h-10 text-red-500 mx-auto" />
+            <div className="text-center py-16 space-y-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <XCircle className="w-10 h-10 text-red-400 mx-auto" />
               <h3 className="font-bold text-white">Generation Limit Exceeded</h3>
-              <p className="text-xs text-zinc-500">Could not compile questions. Let's retry in offline sandbox mode.</p>
+              <p className="text-xs text-zinc-400">Could not compile questions. Let's retry in offline sandbox mode.</p>
               <button 
                 onClick={() => setActivePracticeMode('generator')}
                 className="px-4 py-2 bg-white text-black font-bold text-xs rounded-xl"
@@ -763,12 +748,12 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
               </button>
             </div>
           ) : (
-            <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-6 space-y-5">
+            <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
               
               {/* Question indicator header */}
-              <div className="flex justify-between items-center text-[11px] font-mono text-zinc-500 border-b border-zinc-900 pb-3">
-                <span>QUESTION {currentQuestionIdx + 1} OF {questions.length}</span>
-                <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-1 rounded">
+              <div className="flex justify-between items-center text-xs font-mono border-b border-zinc-800 pb-4">
+                <span className="font-bold text-sky-400">QUESTION {currentQuestionIdx + 1} OF {questions.length}</span>
+                <span className="bg-zinc-950 border border-zinc-700/80 text-zinc-200 px-3 py-1 rounded-lg font-bold">
                   {questions[currentQuestionIdx]?.type.toUpperCase()}
                 </span>
               </div>
@@ -925,21 +910,35 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
 
             </div>
           )}
+          </div>
         </div>
       )}
 
       {/* AI Evaluation Report Mode */}
       {activePracticeMode === 'evaluation' && (
-        <div className="space-y-6">
+        <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-full h-full overflow-y-auto p-4 sm:p-8 animate-fadeIn text-zinc-200">
+          <div className="max-w-4xl mx-auto w-full space-y-6 pb-12">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
+              <button
+                onClick={() => setActivePracticeMode('menu')}
+                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                ← Return to Practice Hub
+              </button>
+              <span className="px-3 py-1 bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 rounded-full text-[10px] font-extrabold font-mono tracking-widest uppercase">
+                REPORT CARD • BHARAT AI
+              </span>
+            </div>
+
           {isEvaluating ? (
-            <div className="text-center py-16 space-y-4">
-              <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-zinc-500 font-mono">AI Evaluator is matching keywords and verifying correctness standards...</p>
+            <div className="text-center py-20 space-y-4">
+              <div className="w-12 h-12 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs text-zinc-300 font-mono font-bold">AI Evaluator is matching keywords and verifying correctness standards...</p>
             </div>
           ) : !evaluation ? (
-            <div className="text-center py-16 space-y-4">
-              <XCircle className="w-10 h-10 text-red-500 mx-auto" />
-              <p className="text-xs text-zinc-500">Could not compile evaluation sheet. Please retry.</p>
+            <div className="text-center py-16 space-y-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <XCircle className="w-10 h-10 text-red-400 mx-auto" />
+              <p className="text-xs text-zinc-400">Could not compile evaluation sheet. Please retry.</p>
               <button 
                 onClick={() => setActivePracticeMode('menu')}
                 className="px-4 py-2 bg-white text-black font-bold text-xs rounded-xl"
@@ -948,42 +947,42 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
               </button>
             </div>
           ) : (
-            <div className="space-y-5 bg-zinc-950 border border-zinc-900 rounded-2xl p-6">
+            <div className="space-y-6 bg-zinc-900/80 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
               
               {/* Metric header score banner */}
-              <div className="text-center space-y-2 border-b border-zinc-900 pb-5">
-                <div className="inline-block p-2 bg-white/5 border border-zinc-800 rounded-2xl mb-2">
-                  <Award className="w-10 h-10 text-yellow-500" />
+              <div className="text-center space-y-2 border-b border-zinc-800 pb-6">
+                <div className="inline-block p-3 bg-zinc-950 border border-zinc-700/80 rounded-2xl mb-2 shadow-inner">
+                  <Award className="w-10 h-10 text-yellow-400" />
                 </div>
-                <h3 className="text-lg font-extrabold text-white">Assessment Report Card</h3>
-                <p className="text-xs text-zinc-500 font-mono">Evaluated by Bharat AI Engine</p>
+                <h3 className="text-xl font-black text-white">Assessment Report Card</h3>
+                <p className="text-xs text-zinc-400 font-mono">Evaluated by Bharat AI Engine</p>
                 
                 {/* Score visualization circle */}
-                <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                <div className="relative w-24 h-24 mx-auto flex items-center justify-center mt-3">
                   {/* SVG Circle indicator */}
                   <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                    <circle cx="48" cy="48" r="40" className="stroke-zinc-900" strokeWidth="6" fill="transparent" />
-                    <circle cx="48" cy="48" r="40" className="stroke-white transition-all duration-1000" strokeWidth="6" strokeDasharray="251" strokeDashoffset={`${251 - (251 * evaluation.score) / 100}`} fill="transparent" />
+                    <circle cx="48" cy="48" r="40" className="stroke-zinc-950" strokeWidth="8" fill="transparent" />
+                    <circle cx="48" cy="48" r="40" className="stroke-emerald-400 transition-all duration-1000" strokeWidth="8" strokeDasharray="251" strokeDashoffset={`${251 - (251 * evaluation.score) / 100}`} fill="transparent" />
                   </svg>
                   <div className="text-center">
-                    <span className="text-xl font-extrabold font-mono text-white">{evaluation.score}</span>
-                    <span className="text-[10px] block text-zinc-500 font-mono">Score</span>
+                    <span className="text-2xl font-black font-mono text-white">{evaluation.score}</span>
+                    <span className="text-[10px] block text-zinc-400 font-mono font-bold">Score</span>
                   </div>
                 </div>
               </div>
 
               {/* Statistical trends details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
-                <div className="space-y-1">
-                  <span className="text-zinc-500 block uppercase font-mono text-[9px]">Concept understanding</span>
-                  <p className="text-zinc-300 leading-relaxed font-semibold bg-black/40 border border-zinc-900 p-3 rounded-xl">
+                <div className="space-y-1 text-left">
+                  <span className="text-zinc-400 block uppercase font-mono text-[10px] font-bold">Concept understanding</span>
+                  <p className="text-zinc-200 leading-relaxed font-semibold bg-zinc-950 border border-zinc-800 p-4 rounded-2xl">
                     {evaluation.conceptUnderstanding}
                   </p>
                 </div>
 
-                <div className="space-y-1">
-                  <span className="text-zinc-500 block uppercase font-mono text-[9px]">Target feedback summaries</span>
-                  <p className="text-zinc-300 leading-relaxed bg-black/40 border border-zinc-900 p-3 rounded-xl">
+                <div className="space-y-1 text-left">
+                  <span className="text-zinc-400 block uppercase font-mono text-[10px] font-bold">Target feedback summaries</span>
+                  <p className="text-zinc-200 leading-relaxed bg-zinc-950 border border-zinc-800 p-4 rounded-2xl">
                     {evaluation.feedback}
                   </p>
                 </div>
@@ -991,11 +990,11 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
 
               {/* Missing keywords criteria highlights */}
               {evaluation.missingKeywords && evaluation.missingKeywords.length > 0 && (
-                <div className="space-y-2 text-xs border-t border-zinc-900 pt-4">
-                  <span className="text-zinc-500 block uppercase font-mono text-[9px]">Recommended NCERT Key terms missing</span>
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="space-y-2 text-xs border-t border-zinc-800 pt-4 text-left">
+                  <span className="text-zinc-400 block uppercase font-mono text-[10px] font-bold">Recommended NCERT Key terms missing</span>
+                  <div className="flex flex-wrap gap-2">
                     {evaluation.missingKeywords.map((kw, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-red-950/20 border border-red-900/40 text-red-400 font-mono text-[10px] rounded-lg">
+                      <span key={i} className="px-3 py-1 bg-rose-950/90 border border-rose-500/50 text-rose-200 font-mono text-xs font-bold rounded-lg">
                         {kw}
                       </span>
                     ))}
@@ -1004,27 +1003,28 @@ export default function PracticeTab({ progress, onUpdateProgress, studentName, a
               )}
 
               {/* Strengths & suggestions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs border-t border-zinc-900 pt-4">
-                <div className="space-y-1 bg-zinc-950 border border-zinc-900 p-3 rounded-xl text-left">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-green-400 font-mono">Strengths</span>
-                  <p className="text-zinc-400 mt-1 leading-relaxed">{evaluation.strengths}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs border-t border-zinc-800 pt-4">
+                <div className="space-y-1 bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-left">
+                  <span className="text-xs uppercase font-black tracking-wider text-emerald-400 font-mono">Strengths</span>
+                  <p className="text-zinc-300 mt-1 leading-relaxed">{evaluation.strengths}</p>
                 </div>
-                <div className="space-y-1 bg-zinc-950 border border-zinc-900 p-3 rounded-xl text-left">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-yellow-400 font-mono">Road to 100% Score</span>
-                  <p className="text-zinc-400 mt-1 leading-relaxed">{evaluation.suggestions}</p>
+                <div className="space-y-1 bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-left">
+                  <span className="text-xs uppercase font-black tracking-wider text-amber-400 font-mono">Road to 100% Score</span>
+                  <p className="text-zinc-300 mt-1 leading-relaxed">{evaluation.suggestions}</p>
                 </div>
               </div>
 
               {/* Close Button */}
               <button
                 onClick={() => setActivePracticeMode('menu')}
-                className="w-full py-2.5 bg-white text-black font-extrabold text-xs rounded-xl cursor-pointer hover:bg-zinc-200 transition"
+                className="w-full py-3.5 bg-white text-black font-extrabold text-xs rounded-2xl cursor-pointer hover:bg-zinc-200 transition shadow-lg"
               >
                 Complete Review
               </button>
 
             </div>
           )}
+          </div>
         </div>
       )}
 

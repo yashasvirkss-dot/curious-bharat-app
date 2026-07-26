@@ -4,250 +4,358 @@
   body {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #060B15 !important;
+    background-image: linear-gradient(180deg, #060B15 0%, #081020 50%, #0A1428 100%) !important;
+    background-attachment: fixed !important;
+    color: #FFFFFF !important;
   }
 }
 
 /* ==========================================================
-   PREMIUM HIGH-READABILITY LIGHT THEME (CRISP EDITORIAL)
+   SIGNATURE DARK NAVY & ELECTRIC ROYAL BLUE THEME
    ========================================================== */
-body.light {
-  background-color: #F8F9FA !important;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(255, 103, 31, 0.04) 0px, transparent 60%),
-    radial-gradient(at 100% 100%, rgba(4, 106, 56, 0.04) 0px, transparent 60%),
-    radial-gradient(at 50% 50%, rgba(6, 3, 141, 0.02) 0px, transparent 50%) !important;
+body, body.light, body.dark {
+  background-color: #060B15 !important;
+  background-image: linear-gradient(180deg, #060B15 0%, #081020 50%, #0A1428 100%) !important;
   background-attachment: fixed !important;
-  color: #111111 !important;
+  color: #FFFFFF !important;
 }
 
-body.light .bg-black,
-body.light .bg-zinc-950,
-body.light .bg-zinc-900,
-body.light .bg-zinc-900\/60,
-body.light .bg-zinc-900\/80,
-body.light .bg-zinc-900\/85,
-body.light .bg-zinc-900\/95,
-body.light .bg-zinc-950\/80,
-body.light .bg-zinc-950\/50,
-body.light .bg-zinc-900\/40,
-body.light .bg-zinc-950\/40,
-body.light header,
-body.light aside,
-body.light .sidebar,
-body.light .drawer,
-body.light .modal-content,
-body.light .perspective-box,
-body.light .stats-card,
-body.light .bg-zinc-900\/90,
-body.light .bg-zinc-950\/70,
-body.light .bg-zinc-900\/30 {
-  background-color: #FFFFFF !important;
-  color: #111111 !important;
-  border-color: #E5E5E5 !important;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+/* Primary Card & Container Surfaces */
+.bg-black,
+.bg-zinc-950,
+.bg-zinc-900,
+.bg-zinc-900\/60,
+.bg-zinc-900\/80,
+.bg-zinc-900\/85,
+.bg-zinc-900\/95,
+.bg-zinc-950\/80,
+.bg-zinc-950\/50,
+.bg-zinc-900\/40,
+.bg-zinc-950\/40,
+header,
+aside,
+.sidebar,
+.drawer,
+.modal-content,
+.perspective-box,
+.stats-card,
+.bg-zinc-900\/90,
+.bg-zinc-950\/70,
+.bg-zinc-900\/30 {
+  background-color: #0F182A !important;
+  color: #FFFFFF !important;
+  border-color: #1E2D4A !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Subtle surfaces - premium clean light gray */
-body.light .bg-zinc-50,
-body.light .bg-slate-50,
-body.light .bg-slate-100,
-body.light .bg-zinc-800,
-body.light .bg-zinc-850,
-body.light .bg-zinc-900/10 {
-  background-color: #F5F5F7 !important;
-  color: #111111 !important;
+/* Secondary & Subtle Inner Surfaces */
+.bg-zinc-50,
+.bg-slate-50,
+.bg-slate-100,
+.bg-zinc-800,
+.bg-zinc-850,
+.bg-zinc-900\/10 {
+  background-color: #162238 !important;
+  color: #F8FAFC !important;
 }
 
-/* Special Profile Hub Overrides in Light Mode */
-body.light #profile-hub-root {
-  background-color: #F9F9FB !important;
-  border-color: #E5E5E5 !important;
+/* Profile Hub Surfaces */
+#profile-hub-root {
+  background-color: #060B15 !important;
+  border-color: #1E2D4A !important;
 }
 
-body.light #profile-hub-root .bg-zinc-950,
-body.light #profile-hub-root .bg-zinc-900,
-body.light #profile-hub-root .bg-zinc-900\/30,
-body.light #profile-hub-root .bg-zinc-900\/60 {
-  background-color: #FFFFFF !important;
-  border-color: #E5E5E5 !important;
-  color: #111111 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+#profile-hub-root .bg-zinc-950,
+#profile-hub-root .bg-zinc-900,
+#profile-hub-root .bg-zinc-900\/30,
+#profile-hub-root .bg-zinc-900\/60 {
+  background-color: #0F182A !important;
+  border-color: #1E2D4A !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
-body.light #profile-hub-root .text-white,
-body.light #profile-hub-root .text-zinc-100,
-body.light #profile-hub-root .text-zinc-200,
-body.light #profile-hub-root .text-zinc-300,
-body.light #profile-hub-root .text-zinc-400 {
-  color: #111111 !important;
+#profile-hub-root .text-white,
+#profile-hub-root .text-zinc-100,
+#profile-hub-root .text-zinc-200,
+#profile-hub-root .text-zinc-300,
+#profile-hub-root .text-zinc-400 {
+  color: #FFFFFF !important;
 }
 
-body.light #profile-hub-root .text-zinc-500,
-body.light #profile-hub-root .text-slate-400,
-body.light #profile-hub-root .text-slate-500 {
-  color: #64748B !important;
-}
-
-body.light #profile-hub-root input,
-body.light #profile-hub-root select {
-  background-color: #FFFFFF !important;
-  border-color: #DCDCDC !important;
-  color: #111111 !important;
+#profile-hub-root input,
+#profile-hub-root select {
+  background-color: #0B1322 !important;
+  border-color: #1E2D4A !important;
+  color: #FFFFFF !important;
 }
 
 /* Card Borders */
-body.light .border-zinc-900,
-body.light .border-zinc-850,
-body.light .border-zinc-800,
-body.light .border-zinc-800\/80,
-body.light .border-zinc-900\/60,
-body.light .border-zinc-900\/80,
-body.light .border-zinc-900\/85,
-body.light .border-zinc-700,
-body.light .border-zinc-850\/80,
-body.light .border-white\/10,
-body.light .border-zinc-900\/80 {
-  border-color: #E5E5E5 !important;
+.border-zinc-900,
+.border-zinc-850,
+.border-zinc-800,
+.border-zinc-800\/80,
+.border-zinc-900\/60,
+.border-zinc-900\/80,
+.border-zinc-900\/85,
+.border-zinc-700,
+.border-zinc-850\/80,
+.border-white\/10,
+.border-slate-200,
+.border-sky-200 {
+  border-color: #1E2D4A !important;
 }
 
 /* Dividers */
-body.light hr,
-body.light .divide-y > *,
-body.light .border-t,
-body.light .border-b {
-  border-color: #EAEAEA !important;
+hr,
+.divide-y > *,
+.border-t,
+.border-b {
+  border-color: #1A2844 !important;
 }
 
-/* High Legibility text overrides - selective to safeguard readability */
-body.light .text-white:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]):not(.xp-badge *):not(.active-pill *),
-body.light .text-zinc-100:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]):not(.xp-badge *),
-body.light .text-zinc-200:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]),
-body.light .text-zinc-300:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]),
-body.light .text-slate-100:not(button):not(button *):not(.bg-white *):not(.badge *):not(.active-tab *):not(.btn *):not([class*="bg-teal-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-orange-"]):not([class*="bg-cyan-"]),
-body.light .text-slate-900,
-body.light .text-slate-800,
-body.light .text-slate-700,
-body.light .text-slate-600 {
-  color: #111111 !important;
-}
-
-/* Active Highlight Safeguards */
-body.light button.bg-white,
-body.light .bg-white.text-white,
-body.light .active-pill,
-body.light .active-tab {
+/* High Legibility text overrides */
+.text-slate-900,
+.text-slate-800,
+.text-slate-700,
+.text-zinc-900,
+.text-black {
   color: #FFFFFF !important;
 }
 
-body.light button.bg-white *,
-body.light .bg-white.text-white *,
-body.light .active-pill *,
-body.light .active-tab * {
-  color: #FFFFFF !important;
+/* Secondary & Subtitle Text (Soft Slate Gray) */
+.text-zinc-400,
+.text-zinc-500,
+.text-slate-500,
+.text-slate-600 {
+  color: #94A3B8 !important;
 }
 
-/* Secondary & Subtitle Text (charcoal-gray) */
-body.light .text-zinc-400,
-body.light .text-zinc-500,
-body.light .text-slate-400,
-body.light .text-slate-500 {
-  color: #555555 !important;
-}
-
-/* Disabled/Muted text */
-body.light .text-zinc-600,
-body.light .text-slate-300,
-body.light .text-zinc-500\/40 {
-  color: #888888 !important;
+/* Muted / Disabled text */
+.text-zinc-600,
+.text-slate-300,
+.text-zinc-500\/40 {
+  color: #64748B !important;
 }
 
 /* Hover States */
-body.light .hover\:bg-zinc-900:hover,
-body.light .hover\:bg-zinc-800:hover,
-body.light .hover\:bg-zinc-850:hover,
-body.light .hover\:bg-slate-50:hover {
-  background-color: #F5F5F7 !important;
-  color: #111111 !important;
-}
-
-/* Input Fields */
-body.light input,
-body.light select,
-body.light textarea {
-  background-color: #FFFFFF !important;
-  color: #111111 !important;
-  border-color: #DCDCDC !important;
-}
-
-body.light input::placeholder,
-body.light select::placeholder,
-body.light textarea::placeholder {
-  color: #888888 !important;
-}
-
-/* Primary Light Buttons (Patriotic Saffron Theme) */
-body.light button.bg-white,
-body.light .bg-amber-400,
-body.light .bg-yellow-400,
-body.light .bg-indigo-600,
-body.light .bg-blue-600,
-body.light .bg-orange-600 {
-  background-color: #FF671F !important;
-  color: #FFFFFF !important;
-  border-color: #FF671F !important;
-}
-
-body.light button.bg-white:hover,
-body.light .bg-amber-400:hover,
-body.light .bg-yellow-400:hover,
-body.light .bg-indigo-600:hover,
-body.light .bg-blue-600:hover,
-body.light .bg-orange-600:hover {
-  background-color: #E55310 !important;
-  box-shadow: 0 4px 15px rgba(255, 103, 31, 0.25) !important;
-}
-
-body.light button.bg-white .text-black,
-body.light button.bg-white .text-slate-900 {
+.hover\:bg-zinc-900:hover,
+.hover\:bg-zinc-800:hover,
+.hover\:bg-zinc-850:hover,
+.hover\:bg-slate-50:hover {
+  background-color: #1A2844 !important;
   color: #FFFFFF !important;
 }
 
-/* Secondary Buttons (Green outlines & Saffron) */
-body.light button.bg-zinc-900,
-body.light button.bg-zinc-950,
-body.light button.bg-slate-100,
-body.light .bg-zinc-800,
-body.light .bg-slate-100\/90 {
+/* Input Fields & Selects */
+input,
+select,
+textarea {
+  background-color: #0B1322 !important;
+  color: #FFFFFF !important;
+  border-color: #1E2D4A !important;
+}
+
+input::placeholder,
+select::placeholder,
+textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* ==========================================================
+   DYNAMIC COLOR PALETTES FOR COMPLETE PLATFORM REPAINTING
+   ========================================================== */
+
+/* 1. DARK NAVY & ELECTRIC ROYAL BLUE PALETTE (DEFAULT) */
+body,
+body.dark,
+body.light {
+  --primary-accent: #2563EB;
+  --primary-hover: #1D4ED8;
+  --secondary-accent: #3B82F6;
+  --card-bg: #0F182A;
+  --body-bg: #060B15;
+}
+
+/* 2. MIDNIGHT CYBERPUNK (NEON CYAN & VIOLET) */
+body[data-palette="cyberpunk"].dark {
+  --primary-accent: #06B6D4;
+  --primary-hover: #0891B2;
+  --secondary-accent: #8B5CF6;
+  --card-bg: #0F172A;
+  --body-bg: #030712;
+  background-color: #030712 !important;
+  background-image: radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.15) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 65%) !important;
+}
+
+body[data-palette="cyberpunk"].light {
+  --primary-accent: #0284C7;
+  --primary-hover: #0369A1;
+  --secondary-accent: #7C3AED;
+  --card-bg: #FFFFFF;
+  --body-bg: #F1F5F9;
+  background-color: #F1F5F9 !important;
+  background-image: radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.08) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(124, 58, 237, 0.08) 0px, transparent 65%) !important;
+}
+
+/* 3. EMERALD GURUKUL (FOREST SAGE & PURE GOLD) */
+body[data-palette="emerald"].dark {
+  --primary-accent: #10B981;
+  --primary-hover: #059669;
+  --secondary-accent: #EAB308;
+  --card-bg: #06231F;
+  --body-bg: #021210;
+  background-color: #021210 !important;
+  background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(234, 179, 8, 0.15) 0px, transparent 65%) !important;
+}
+
+body[data-palette="emerald"].light {
+  --primary-accent: #059669;
+  --primary-hover: #047857;
+  --secondary-accent: #D97706;
+  --card-bg: #FFFFFF;
+  --body-bg: #F0FDF4;
+  background-color: #F0FDF4 !important;
+  background-image: radial-gradient(at 0% 0%, rgba(5, 150, 105, 0.08) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(217, 119, 6, 0.08) 0px, transparent 65%) !important;
+}
+
+/* 4. CINEMATIC CRIMSON (NETFLIX RED & FLAME ORANGE) */
+body[data-palette="crimson"].dark {
+  --primary-accent: #E50914;
+  --primary-hover: #B20710;
+  --secondary-accent: #FF5252;
+  --card-bg: #141414;
+  --body-bg: #050505;
+  background-color: #050505 !important;
+  background-image: radial-gradient(at 0% 0%, rgba(229, 9, 20, 0.18) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(255, 82, 82, 0.12) 0px, transparent 65%) !important;
+}
+
+body[data-palette="crimson"].light {
+  --primary-accent: #DC2626;
+  --primary-hover: #B91C1C;
+  --secondary-accent: #E11D48;
+  --card-bg: #FFFFFF;
+  --body-bg: #FAFAFA;
+  background-color: #FAFAFA !important;
+  background-image: radial-gradient(at 0% 0%, rgba(220, 38, 38, 0.08) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(225, 29, 72, 0.08) 0px, transparent 65%) !important;
+}
+
+/* 5. ROYAL PACIFIC (OCEAN BLUE & ELECTRIC TEAL) */
+body[data-palette="pacific"].dark {
+  --primary-accent: #3A86FF;
+  --primary-hover: #2563EB;
+  --secondary-accent: #00F5D4;
+  --card-bg: #1C2541;
+  --body-bg: #0B132B;
+  background-color: #0B132B !important;
+  background-image: radial-gradient(at 0% 0%, rgba(58, 134, 255, 0.18) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(0, 245, 212, 0.12) 0px, transparent 65%) !important;
+}
+
+body[data-palette="pacific"].light {
+  --primary-accent: #2563EB;
+  --primary-hover: #1D4ED8;
+  --secondary-accent: #0D9488;
+  --card-bg: #FFFFFF;
+  --body-bg: #F0F9FF;
+  background-color: #F0F9FF !important;
+  background-image: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.08) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.08) 0px, transparent 65%) !important;
+}
+
+/* APPLY VARIABLE OVERRIDES TO BUTTONS AND HIGHLIGHTS */
+button.bg-white,
+.bg-amber-400,
+.bg-yellow-400,
+.bg-indigo-600,
+.bg-blue-600,
+.bg-orange-600 {
+  background-color: var(--primary-accent, #FF671F) !important;
+  color: #FFFFFF !important;
+  border-color: var(--primary-accent, #FF671F) !important;
+}
+
+button.bg-white:hover,
+.bg-amber-400:hover,
+.bg-yellow-400:hover,
+.bg-indigo-600:hover,
+.bg-blue-600:hover,
+.bg-orange-600:hover {
+  background-color: var(--primary-hover, #E55310) !important;
+}
+
+.text-amber-400,
+.text-yellow-400,
+.text-amber-500,
+.text-orange-400,
+.text-indigo-400,
+.text-blue-400,
+.text-teal-400,
+.text-emerald-400 {
+  color: var(--primary-accent, #FF671F) !important;
+}
+
+/* ==========================================================
+   PRIMARY LIGHT SKY BLUE GRADIENT THEME OVERRIDES
+   ========================================================== */
+body, body.light, body.dark {
+  background-color: #E2F2FE !important;
+  background-image: linear-gradient(180deg, #CEEBFF 0%, #E6F4FE 30%, #F4FAFF 65%, #FFFFFF 100%) !important;
+  background-attachment: fixed !important;
+  color: #0F172A !important;
+}
+
+/* Primary Action Buttons (Sky Blue / Royal Blue Accent) */
+button.bg-white,
+.bg-amber-400,
+.bg-yellow-400,
+.bg-indigo-600,
+.bg-blue-600,
+.bg-orange-600 {
+  background-color: #0088FF !important;
+  color: #FFFFFF !important;
+  border-color: #0088FF !important;
+}
+
+button.bg-white:hover,
+.bg-amber-400:hover,
+.bg-yellow-400:hover,
+.bg-indigo-600:hover,
+.bg-blue-600:hover,
+.bg-orange-600:hover {
+  background-color: #0070E0 !important;
+  box-shadow: 0 4px 16px rgba(0, 136, 255, 0.25) !important;
+}
+
+/* Secondary outline buttons */
+button.bg-zinc-900,
+button.bg-zinc-950,
+button.bg-slate-100,
+.bg-zinc-800,
+.bg-slate-100\/90 {
   background-color: #FFFFFF !important;
-  color: #046A38 !important;
-  border: 1px solid #046A38 !important;
+  color: #0284C7 !important;
+  border: 1px solid #BAE6FD !important;
 }
 
-body.light button.bg-zinc-900:hover,
-body.light button.bg-zinc-950:hover,
-body.light button.bg-slate-100:hover,
-body.light .bg-zinc-800:hover {
-  background-color: #F0FFF4 !important;
-  color: #03522C !important;
+button.bg-zinc-900:hover,
+button.bg-zinc-950:hover,
+button.bg-slate-100:hover,
+.bg-zinc-800:hover {
+  background-color: #F0F9FF !important;
+  color: #0369A1 !important;
 }
 
-/* Highlight Accents (Patriotic Saffron/Green/Navy Blue) */
-body.light .text-blue-500,
-body.light .text-indigo-500,
-body.light .text-indigo-400,
-body.light .text-teal-500,
-body.light .text-emerald-400,
-body.light .active-highlight {
-  color: #FF671F !important;
-}
-
-body.light .text-amber-500,
-body.light .text-orange-450,
-body.light .text-yellow-400,
-body.light .text-orange-400,
-body.light .text-teal-400,
-body.light .text-emerald-400 {
-  color: #046A38 !important;
+/* Text and highlight accents */
+.text-amber-400,
+.text-yellow-400,
+.text-amber-500,
+.text-orange-400,
+.text-indigo-400,
+.text-blue-400,
+.text-teal-400,
+.text-emerald-400,
+.text-orange-450 {
+  color: #0284C7 !important;
 }
 
 
@@ -379,16 +487,16 @@ body.dark textarea::placeholder {
   color: #727277 !important;
 }
 
-/* Primary Tricolor Saffron Buttons (#FF671F) */
+/* Primary Blue Action Buttons */
 body.dark button.bg-white,
 body.dark .bg-amber-400,
 body.dark .bg-yellow-400,
 body.dark .bg-indigo-600,
 body.dark .bg-blue-600,
 body.dark .bg-orange-600 {
-  background-color: #FF671F !important;
+  background-color: #0088FF !important;
   color: #FFFFFF !important;
-  border-color: #FF671F !important;
+  border-color: #0088FF !important;
 }
 
 body.dark button.bg-white:hover,
@@ -397,8 +505,8 @@ body.dark .bg-yellow-400:hover,
 body.dark .bg-indigo-600:hover,
 body.dark .bg-blue-600:hover,
 body.dark .bg-orange-600:hover {
-  background-color: #E55310 !important;
-  box-shadow: 0 4px 20px rgba(255, 103, 31, 0.45) !important;
+  background-color: #0070E0 !important;
+  box-shadow: 0 4px 20px rgba(0, 136, 255, 0.35) !important;
 }
 
 body.dark button.bg-white .text-black,
@@ -412,17 +520,17 @@ body.dark button.bg-zinc-950,
 body.dark button.bg-slate-100,
 body.dark .bg-zinc-800,
 body.dark .bg-slate-100\/90 {
-  background-color: #121212 !important;
-  color: #046A38 !important;
-  border: 1px solid #046A38 !important;
+  background-color: #FFFFFF !important;
+  color: #0284C7 !important;
+  border: 1px solid #BAE6FD !important;
 }
 
 body.dark button.bg-zinc-900:hover,
 body.dark button.bg-zinc-950:hover,
 body.dark button.bg-slate-100:hover,
 body.dark .bg-zinc-800:hover {
-  background-color: #032011 !important;
-  color: #00E676 !important;
+  background-color: #F0F9FF !important;
+  color: #0369A1 !important;
 }
 
 /* Highlights & Icons */
@@ -431,17 +539,13 @@ body.dark .text-indigo-500,
 body.dark .text-teal-500,
 body.dark .text-indigo-400,
 body.dark .text-emerald-400,
-body.dark .active-highlight {
-  color: #FF671F !important;
-}
-
+body.dark .active-highlight,
 body.dark .text-amber-500,
 body.dark .text-orange-450,
 body.dark .text-yellow-400,
 body.dark .text-orange-400,
-body.dark .text-teal-400,
-body.dark .text-emerald-400 {
-  color: #046A38 !important;
+body.dark .text-teal-400 {
+  color: #0284C7 !important;
 }
 
 
