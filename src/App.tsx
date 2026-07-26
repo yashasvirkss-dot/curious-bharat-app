@@ -61,6 +61,7 @@ import AppUpdateNotifier from './components/AppUpdateNotifier';
 import { playSound } from './utils/audio';
 import { dbService } from './lib/firebase';
 import { getProxiedImageUrl } from './utils/imageUrl';
+import { isFeatureEnabled } from './utils/featureFlags';
 // @ts-ignore
 import boyGirlCuriousBharat from './assets/images/boy_girl_curious_bharat_1784813567963.jpg';
 
@@ -1304,76 +1305,84 @@ export default function App() {
                         <span>{appLanguage === 'hi' ? 'होम' : 'Home'}</span>
                       </button>
 
-                      <button
-                        onClick={() => {
-                          playSound('click');
-                          setActiveTab('batches');
-                          setCurrentView('dashboard');
-                          setShowMenuDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
-                          activeTab === 'batches'
-                            ? 'bg-zinc-900 text-white font-extrabold'
-                            : 'hover:bg-zinc-900/60 hover:text-white'
-                        }`}
-                      >
-                        <BookOpen className="w-4 h-4 text-zinc-400" />
-                        <span>{appLanguage === 'hi' ? 'बैच' : 'Batches'}</span>
-                      </button>
+                      {isFeatureEnabled('batches_tab_enabled') && (
+                        <button
+                          onClick={() => {
+                            playSound('click');
+                            setActiveTab('batches');
+                            setCurrentView('dashboard');
+                            setShowMenuDropdown(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
+                            activeTab === 'batches'
+                              ? 'bg-zinc-900 text-white font-extrabold'
+                              : 'hover:bg-zinc-900/60 hover:text-white'
+                          }`}
+                        >
+                          <BookOpen className="w-4 h-4 text-zinc-400" />
+                          <span>{appLanguage === 'hi' ? 'बैच' : 'Batches'}</span>
+                        </button>
+                      )}
 
-                      <button
-                        onClick={() => {
-                          playSound('click');
-                          setActiveTab('practice');
-                          setCurrentView('dashboard');
-                          setShowMenuDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
-                          activeTab === 'practice'
-                            ? 'bg-zinc-900 text-white font-extrabold'
-                            : 'hover:bg-zinc-900/60 hover:text-white'
-                        }`}
-                      >
-                        <Bookmark className="w-4 h-4 text-zinc-400" />
-                        <span>{appLanguage === 'hi' ? 'अभ्यास' : 'Practice'}</span>
-                      </button>
+                      {isFeatureEnabled('practice_tab_enabled') && (
+                        <button
+                          onClick={() => {
+                            playSound('click');
+                            setActiveTab('practice');
+                            setCurrentView('dashboard');
+                            setShowMenuDropdown(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
+                            activeTab === 'practice'
+                              ? 'bg-zinc-900 text-white font-extrabold'
+                              : 'hover:bg-zinc-900/60 hover:text-white'
+                          }`}
+                        >
+                          <Bookmark className="w-4 h-4 text-zinc-400" />
+                          <span>{appLanguage === 'hi' ? 'अभ्यास' : 'Practice'}</span>
+                        </button>
+                      )}
 
-                      <button
-                        onClick={() => {
-                          playSound('click');
-                          setActiveTab('ai');
-                          setCurrentView('dashboard');
-                          setShowMenuDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
-                          activeTab === 'ai'
-                            ? 'bg-zinc-900 text-white font-extrabold'
-                            : 'hover:bg-zinc-900/60 hover:text-white'
-                        }`}
-                      >
-                        <Bot className="w-4 h-4 text-teal-400" />
-                        <span className="flex items-center gap-1.5">
-                          Bharat AI
-                          <span className="text-[8px] bg-teal-950 border border-teal-800 text-teal-300 px-1 py-0.2 rounded font-mono font-bold">ROBOT</span>
-                        </span>
-                      </button>
+                      {isFeatureEnabled('ai_assistant_enabled') && (
+                        <button
+                          onClick={() => {
+                            playSound('click');
+                            setActiveTab('ai');
+                            setCurrentView('dashboard');
+                            setShowMenuDropdown(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
+                            activeTab === 'ai'
+                              ? 'bg-zinc-900 text-white font-extrabold'
+                              : 'hover:bg-zinc-900/60 hover:text-white'
+                          }`}
+                        >
+                          <Bot className="w-4 h-4 text-teal-400" />
+                          <span className="flex items-center gap-1.5">
+                            Bharat AI
+                            <span className="text-[8px] bg-teal-950 border border-teal-800 text-teal-300 px-1 py-0.2 rounded font-mono font-bold">ROBOT</span>
+                          </span>
+                        </button>
+                      )}
 
-                      <button
-                        onClick={() => {
-                          playSound('click');
-                          setActiveTab('profile');
-                          setCurrentView('dashboard');
-                          setShowMenuDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
-                          activeTab === 'profile'
-                            ? 'bg-zinc-900 text-white font-extrabold'
-                            : 'hover:bg-zinc-900/60 hover:text-white'
-                        }`}
-                      >
-                        <User className="w-4 h-4 text-zinc-400" />
-                        <span>{appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile'}</span>
-                      </button>
+                      {isFeatureEnabled('profile_hub_enabled') && (
+                        <button
+                          onClick={() => {
+                            playSound('click');
+                            setActiveTab('profile');
+                            setCurrentView('dashboard');
+                            setShowMenuDropdown(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left ${
+                            activeTab === 'profile'
+                              ? 'bg-zinc-900 text-white font-extrabold'
+                              : 'hover:bg-zinc-900/60 hover:text-white'
+                          }`}
+                        >
+                          <User className="w-4 h-4 text-zinc-400" />
+                          <span>{appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile'}</span>
+                        </button>
+                      )}
                       {isInstallable && (
                         <button
                           onClick={() => {
@@ -1388,21 +1397,23 @@ export default function App() {
                         </button>
                       )}
 
-                      <button
-                        onClick={() => {
-                          playSound('click');
-                          setShowMenuDropdown(false);
-                          if (isLoggedInAdmin) {
-                            setCurrentView(currentView === 'admin' ? 'dashboard' : 'admin');
-                          } else {
-                            setShowAdminLoginModal(true);
-                          }
-                        }}
-                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left hover:bg-zinc-900/60 hover:text-white border-t border-zinc-900/80 mt-1 pt-2"
-                      >
-                        <Lock className="w-4 h-4 text-zinc-500" />
-                        <span>{isLoggedInAdmin ? (appLanguage === 'hi' ? 'शिक्षक पैनल' : 'Educator Panel') : (appLanguage === 'hi' ? 'शिक्षक लॉगिन' : 'Educator Login')}</span>
-                      </button>
+                      {isFeatureEnabled('admin_portal_enabled') && (
+                        <button
+                          onClick={() => {
+                            playSound('click');
+                            setShowMenuDropdown(false);
+                            if (isLoggedInAdmin) {
+                              setCurrentView(currentView === 'admin' ? 'dashboard' : 'admin');
+                            } else {
+                              setShowAdminLoginModal(true);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition cursor-pointer text-left hover:bg-zinc-900/60 hover:text-white border-t border-zinc-900/80 mt-1 pt-2"
+                        >
+                          <Lock className="w-4 h-4 text-zinc-500" />
+                          <span>{isLoggedInAdmin ? (appLanguage === 'hi' ? 'शिक्षक पैनल' : 'Educator Panel') : (appLanguage === 'hi' ? 'शिक्षक लॉगिन' : 'Educator Login')}</span>
+                        </button>
+                      )}
                     </motion.div>
                   </>
                 )}
@@ -1461,7 +1472,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'batches' && (
+              {activeTab === 'batches' && isFeatureEnabled('batches_tab_enabled') && (
                 <BatchesTab
                   courses={courses}
                   progress={progress}
@@ -1478,7 +1489,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'practice' && (
+              {activeTab === 'practice' && isFeatureEnabled('practice_tab_enabled') && (
                 <PracticeTab
                   progress={progress}
                   onUpdateProgress={saveProgressState}
@@ -1487,7 +1498,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'ai' && (
+              {activeTab === 'ai' && isFeatureEnabled('ai_assistant_enabled') && (
                 <div className={`w-full h-[calc(100vh-140px)] min-h-[500px] sm:min-h-[600px] max-h-[850px] flex flex-col overflow-hidden animate-fadeIn border-t rounded-3xl shadow-2xl ${
                   isDarkMode 
                     ? 'bg-black border-zinc-900 text-white' 
@@ -1509,7 +1520,7 @@ export default function App() {
                 </div>
               )}
 
-              {activeTab === 'profile' && (
+              {activeTab === 'profile' && isFeatureEnabled('profile_hub_enabled') && (
                 <ProfileHub
                   progress={progress}
                   onUpdateProgress={saveProgressState}
@@ -1603,7 +1614,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {currentView === 'admin' && (
+          {currentView === 'admin' && isFeatureEnabled('admin_portal_enabled') && (
             <motion.div
               key="admin"
               initial={{ opacity: 0 }}

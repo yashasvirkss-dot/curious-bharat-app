@@ -40,6 +40,7 @@ import AshokChakra from './AshokChakra';
 // @ts-ignore
 import defaultBatchThumbnail from '../assets/images/curious_bharat_banner_1784624268246.jpg';
 import { getProxiedImageUrl } from '../utils/imageUrl';
+import { isFeatureEnabled } from '../utils/featureFlags';
 
 interface AdminPortalProps {
   courses: Course[];
@@ -1210,15 +1211,17 @@ export default function AdminPortal({
             >
               📊 Students
             </button>
-            <button
-              type="button"
-              onClick={() => { playSound('click'); setActiveSubTab('apk-releases'); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition shrink-0 ${
-                activeSubTab === 'apk-releases' ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-400'
-              }`}
-            >
-              🤖 APK Release
-            </button>
+            {isFeatureEnabled('apk_version_control_enabled') && (
+              <button
+                type="button"
+                onClick={() => { playSound('click'); setActiveSubTab('apk-releases'); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition shrink-0 ${
+                  activeSubTab === 'apk-releases' ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-400'
+                }`}
+              >
+                🤖 APK Release
+              </button>
+            )}
             <button
               type="button"
               onClick={() => { playSound('click'); setActiveSubTab('owner-profile'); }}
@@ -1285,16 +1288,18 @@ export default function AdminPortal({
             >
               <Search className={`w-4 h-4 ${activeSubTab === 'student-analysis' ? 'text-white' : 'text-zinc-400'}`} /> Student Analysis & Purchases
             </button>
-            <button
-              onClick={() => setActiveSubTab('apk-releases')}
-              className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition ${
-                activeSubTab === 'apk-releases' 
-                  ? 'bg-sky-600 text-white border border-sky-400 shadow-md shadow-sky-600/30 font-black' 
-                  : 'hover:bg-zinc-850 text-slate-300 hover:text-white'
-              }`}
-            >
-              <Smartphone className={`w-4 h-4 ${activeSubTab === 'apk-releases' ? 'text-white' : 'text-zinc-400'}`} /> APK Version Control
-            </button>
+            {isFeatureEnabled('apk_version_control_enabled') && (
+              <button
+                onClick={() => setActiveSubTab('apk-releases')}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition ${
+                  activeSubTab === 'apk-releases' 
+                    ? 'bg-sky-600 text-white border border-sky-400 shadow-md shadow-sky-600/30 font-black' 
+                    : 'hover:bg-zinc-850 text-slate-300 hover:text-white'
+                }`}
+              >
+                <Smartphone className={`w-4 h-4 ${activeSubTab === 'apk-releases' ? 'text-white' : 'text-zinc-400'}`} /> APK Version Control
+              </button>
+            )}
             <button
               onClick={() => setActiveSubTab('owner-profile')}
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition ${

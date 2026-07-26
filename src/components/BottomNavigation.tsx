@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Home, Bookmark, BookOpen, User, ShieldAlert, ChevronUp } from 'lucide-react';
 import { playSound } from '../utils/audio';
+import { isFeatureEnabled } from '../utils/featureFlags';
 
 interface BottomNavigationProps {
   activeTab: 'home' | 'batches' | 'practice' | 'profile';
@@ -20,19 +21,23 @@ export default function BottomNavigation({
     id: 'home' | 'batches' | 'practice' | 'profile';
     label: string;
     icon: React.ComponentType<any>;
+    featureKey?: string;
   }
 
-  const tabs: TabItem[] = [
+  const allTabs: TabItem[] = [
     { id: 'home', label: appLanguage === 'hi' ? 'होम' : 'Home', icon: Home },
-    { id: 'batches', label: appLanguage === 'hi' ? 'बैच' : 'Batches', icon: BookOpen },
-    { id: 'practice', label: appLanguage === 'hi' ? 'अभ्यास' : 'Practice', icon: Bookmark },
-    { id: 'profile', label: appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile', icon: User }
+    { id: 'batches', label: appLanguage === 'hi' ? 'बैच' : 'Batches', icon: BookOpen, featureKey: 'batches_tab_enabled' },
+    { id: 'practice', label: appLanguage === 'hi' ? 'अभ्यास' : 'Practice', icon: Bookmark, featureKey: 'practice_tab_enabled' },
+    { id: 'profile', label: appLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile', icon: User, featureKey: 'profile_hub_enabled' }
   ];
+
+  const tabs = allTabs.filter(tab => !tab.featureKey || isFeatureEnabled(tab.featureKey));
 
   const handleTabClick = (tabId: 'home' | 'batches' | 'practice' | 'profile') => {
     playSound('Toggle Tick');
     onChangeTab(tabId);
   };
+
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-zinc-850 z-40 shadow-2xl transition-all duration-300 safe-pb">

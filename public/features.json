@@ -1,0 +1,16 @@
+{
+  "analytics_tab_enabled": true,
+  "new_dashboard_enabled": true,
+  "batch_reports_enabled": true,
+  "announcements_enabled": true,
+  "ai_assistant_enabled": true,
+  "practice_tab_enabled": true,
+  "batches_tab_enabled": true,
+  "science_games_enabled": true,
+  "flashcards_enabled": true,
+  "child_scientist_canvas_enabled": true,
+  "ashok_chakra_enabled": true,
+  "admin_portal_enabled": true,
+  "profile_hub_enabled": true,
+  "apk_version_control_enabled": true
+}

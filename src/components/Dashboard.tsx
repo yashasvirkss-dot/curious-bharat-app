@@ -43,6 +43,7 @@ import FlashcardsView from './FlashcardsView';
 import HorizontalScrollContainer from './HorizontalScrollContainer';
 import { getProxiedImageUrl } from '../utils/imageUrl';
 import { startRealVoiceTyping } from '../utils/voiceTyping';
+import { isFeatureEnabled } from '../utils/featureFlags';
 
 interface DashboardProps {
   courses: Course[];
@@ -772,7 +773,7 @@ export default function Dashboard({
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-8 space-y-4 text-left">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950 border border-zinc-850 text-xs text-zinc-300 font-medium shadow-md">
-                  <AshokChakra size={16} animateRotation={true} glow={false} />
+                  {isFeatureEnabled('ashok_chakra_enabled') && <AshokChakra size={16} animateRotation={true} glow={false} />}
                   <span className="text-zinc-200">{appLanguage === 'hi' ? 'जिज्ञासा को सशक्त बनाना' : 'Empowering Curiosities'}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-extrabold tracking-tight text-white leading-tight">
