@@ -58,10 +58,13 @@ import ThreeDElement from './components/ThreeDElement';
 import AshokChakra from './components/AshokChakra';
 import PullToRefresh from './components/PullToRefresh';
 import AppUpdateNotifier from './components/AppUpdateNotifier';
+import { isFeatureEnabled, loadFeatureFlags } from './utils/featureFlags';
+import { getLocalData, saveLocalData } from './utils/localPersistence';
+import { logAnalyticsEvent } from './utils/analyticsEngine';
+import FirebaseSyncBanner from './components/FirebaseSyncBanner';
 import { playSound } from './utils/audio';
 import { dbService } from './lib/firebase';
 import { getProxiedImageUrl } from './utils/imageUrl';
-import { isFeatureEnabled } from './utils/featureFlags';
 // @ts-ignore
 import boyGirlCuriousBharat from './assets/images/boy_girl_curious_bharat_1784813567963.jpg';
 
@@ -546,263 +549,88 @@ export default function App() {
   // Load state on mount and setup real-time polling to sync all devices instantly
   useEffect(() => {
     const bootstrapData = async () => {
-      let serverVersions = { courses: 0, customization: 0, studentAnalysis: 0, ownerProfile: 0 };
-      try {
-        const syncRes = await fetch('/api/sync-version');
-        if (syncRes.ok) {
-          serverVersions = await syncRes.json();
-          lastSyncRef.current = serverVersions;
-        }
-      } catch (err) {
-        console.warn('Failed to get sync versions on mount:', err);
+      // 1. Load feature flags on startup
+      loadFeatureFlags();
+
+      // 2. Load all student data locally on app startup (instant 0ms)
+      const savedCourses = getLocalData('courses', null);
+      if (savedCourses && Array.isArray(savedCourses) && savedCourses.length > 0) {
+        setCourses(savedCourses);
+      } else {
+        setCourses(defaultCourses);
+        saveLocalData('courses', defaultCourses);
       }
 
-      // Load courses from server
-      try {
-        const res = await fetch('/api/courses');
-        if (res.ok) {
-          const data = await res.json();
-          if (data) {
-            setCourses(data);
-          } else {
-            // Bootstrap server file system with defaults
-            await fetch('/api/courses', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ courses: defaultCourses })
-            });
-            setCourses(defaultCourses);
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch courses, loading local fallback:', err);
-        const savedCourses = localStorage.getItem('curious_courses');
-        if (savedCourses) setCourses(JSON.parse(savedCourses));
+      const savedCustom = getLocalData('customization', null);
+      if (savedCustom) {
+        setCustomization(savedCustom);
+      } else {
+        setCustomization(defaultCustomization);
+        saveLocalData('customization', defaultCustomization);
       }
 
-      // Load customization from server
-      try {
-        const res = await fetch('/api/customization');
-        if (res.ok) {
-          const data = await res.json();
-          if (data) {
-            setCustomization(data);
-          } else {
-            await fetch('/api/customization', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ customization: defaultCustomization })
-            });
-            setCustomization(defaultCustomization);
+      const savedAnalysis = getLocalData('student_analysis', null);
+      if (savedAnalysis && Array.isArray(savedAnalysis) && savedAnalysis.length > 0) {
+        setStudentAnalysisRecords(savedAnalysis);
+      } else {
+        const defaultRecords: StudentAnalysisRecord[] = [
+          {
+            id: 'rec-1',
+            studentName: 'Amit Sharma',
+            contactDetails: 'amit.sharma99@gmail.com',
+            courseId: 'course-optics-master',
+            courseTitle: 'Optics: Masterclass Batch',
+            price: '₹499',
+            paymentDetails: 'UPI-7182930411',
+            purchasedAt: new Date(Date.now() - 3600000 * 24).toLocaleString(),
+            status: 'approved',
+            diagnosticScore: 92,
+            syllabusChaptersRead: 15,
+            quizSubmissionsSolved: 135
+          },
+          {
+            id: 'rec-2',
+            studentName: 'Priya Patel',
+            contactDetails: 'priya.patel.edu@yahoo.com',
+            courseId: 'course-optics-master',
+            courseTitle: 'Optics: Masterclass Batch',
+            price: '₹499',
+            paymentDetails: 'UPI-3928172948',
+            purchasedAt: new Date(Date.now() - 3600000 * 12).toLocaleString(),
+            status: 'approved',
+            diagnosticScore: 78,
+            syllabusChaptersRead: 9,
+            quizSubmissionsSolved: 82
+          },
+          {
+            id: 'rec-free-1',
+            studentName: 'Rohan Verma (Free Scholar)',
+            contactDetails: 'rohan.v.study@gmail.com',
+            courseId: 'free-app-ncert',
+            courseTitle: 'Free App NCERT Science Portal',
+            price: '₹0 (Free User)',
+            paymentDetails: 'FREE-APP-ACTIVE',
+            purchasedAt: new Date(Date.now() - 3600000 * 48).toLocaleString(),
+            status: 'approved',
+            diagnosticScore: 88,
+            syllabusChaptersRead: 12,
+            quizSubmissionsSolved: 94
           }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch customization, loading local fallback:', err);
-        const savedCustom = localStorage.getItem('curious_customization');
-        if (savedCustom) setCustomization(JSON.parse(savedCustom));
+        ];
+        setStudentAnalysisRecords(defaultRecords);
+        saveLocalData('student_analysis', defaultRecords);
       }
 
-      // Load student analysis
-      try {
-        const res = await fetch('/api/student-analysis');
-        if (res.ok) {
-          let data = await res.json();
-          if (!data || data.length === 0) {
-            const defaultRecords: StudentAnalysisRecord[] = [
-              {
-                id: 'rec-1',
-                studentName: 'Amit Sharma',
-                contactDetails: 'amit.sharma99@gmail.com',
-                courseId: 'course-optics-master',
-                courseTitle: 'Optics: Masterclass Batch',
-                price: '₹499',
-                paymentDetails: 'UPI-7182930411',
-                purchasedAt: new Date(Date.now() - 3600000 * 24).toLocaleString(),
-                status: 'approved',
-                diagnosticScore: 92,
-                syllabusChaptersRead: 15,
-                quizSubmissionsSolved: 135
-              },
-              {
-                id: 'rec-2',
-                studentName: 'Priya Patel',
-                contactDetails: 'priya.patel.edu@yahoo.com',
-                courseId: 'course-optics-master',
-                courseTitle: 'Optics: Masterclass Batch',
-                price: '₹499',
-                paymentDetails: 'UPI-3928172948',
-                purchasedAt: new Date(Date.now() - 3600000 * 12).toLocaleString(),
-                status: 'approved',
-                diagnosticScore: 78,
-                syllabusChaptersRead: 9,
-                quizSubmissionsSolved: 82
-              },
-              {
-                id: 'rec-3',
-                studentName: 'Karan Malhotra',
-                contactDetails: '+91 98765 43210',
-                courseId: 'course-optics-master',
-                courseTitle: 'Optics: Masterclass Batch',
-                price: '₹499',
-                paymentDetails: 'UPI-1192837465',
-                purchasedAt: new Date(Date.now() - 3600000 * 4).toLocaleString(),
-                status: 'pending',
-                diagnosticScore: 45,
-                syllabusChaptersRead: 4,
-                quizSubmissionsSolved: 28
-              },
-              {
-                id: 'rec-free-1',
-                studentName: 'Rohan Verma (Free Scholar)',
-                contactDetails: 'rohan.v.study@gmail.com',
-                courseId: 'free-app-ncert',
-                courseTitle: 'Free App NCERT Science Portal',
-                price: '₹0 (Free User)',
-                paymentDetails: 'FREE-APP-ACTIVE',
-                purchasedAt: new Date(Date.now() - 3600000 * 48).toLocaleString(),
-                status: 'approved',
-                diagnosticScore: 88,
-                syllabusChaptersRead: 12,
-                quizSubmissionsSolved: 94
-              },
-              {
-                id: 'rec-free-2',
-                studentName: 'Ananya Sen (Free Scholar)',
-                contactDetails: '+91 91234 56789',
-                courseId: 'free-app-ncert',
-                courseTitle: 'Free App NCERT Science Portal',
-                price: '₹0 (Free User)',
-                paymentDetails: 'FREE-APP-ACTIVE',
-                purchasedAt: new Date(Date.now() - 3600000 * 36).toLocaleString(),
-                status: 'approved',
-                diagnosticScore: 95,
-                syllabusChaptersRead: 16,
-                quizSubmissionsSolved: 120
-              },
-              {
-                id: 'rec-free-3',
-                studentName: 'Curious Scholar (Current Active User)',
-                contactDetails: 'Active Device Session',
-                courseId: 'free-app-ncert',
-                courseTitle: 'Free App NCERT Science Portal',
-                price: '₹0 (Free User)',
-                paymentDetails: 'LIVE-APP-SESSION',
-                purchasedAt: new Date().toLocaleString(),
-                status: 'approved',
-                diagnosticScore: 84,
-                syllabusChaptersRead: 10,
-                quizSubmissionsSolved: 76
-              }
-            ];
-            await fetch('/api/student-analysis', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ studentAnalysisRecords: defaultRecords })
-            });
-            data = defaultRecords;
-          }
-          setStudentAnalysisRecords(data);
-        }
-      } catch (err) {
-        console.warn('Failed to fetch student analysis, loading local fallback:', err);
-        const savedAnalysis = localStorage.getItem('curious_student_analysis');
-        if (savedAnalysis) setStudentAnalysisRecords(JSON.parse(savedAnalysis));
-      }
-
-      // Load owner profile
-      try {
-        const res = await fetch('/api/owner-profile');
-        if (res.ok) {
-          const data = await res.json();
-          if (data) {
-            setOwnerProfile(data);
-          } else {
-            await fetch('/api/owner-profile', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ownerProfile: INITIAL_OWNER_PROFILE })
-            });
-            setOwnerProfile(INITIAL_OWNER_PROFILE);
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch owner profile, loading local fallback:', err);
-        const savedOwner = localStorage.getItem('curious_owner_profile');
-        if (savedOwner) setOwnerProfile(JSON.parse(savedOwner));
+      const savedOwner = getLocalData('owner_profile', null);
+      if (savedOwner) {
+        setOwnerProfile(savedOwner);
+      } else {
+        setOwnerProfile(INITIAL_OWNER_PROFILE);
+        saveLocalData('owner_profile', INITIAL_OWNER_PROFILE);
       }
     };
 
     bootstrapData();
-
-    // Subscribe to Firebase / Realtime Database Firestore listeners
-    const unsubCourses = dbService.subscribeCourses((latestCourses) => {
-      if (latestCourses && latestCourses.length > 0) {
-        setCourses(latestCourses);
-      }
-    });
-
-    const unsubCustom = dbService.subscribeCustomization((latestCustom) => {
-      if (latestCustom) {
-        setCustomization(latestCustom);
-      }
-    });
-
-    // Snappy background poll interval to synchronize modifications across student and educator screens immediately
-    const intervalId = setInterval(async () => {
-      try {
-        const syncRes = await fetch('/api/sync-version');
-        if (!syncRes.ok) return;
-        const serverVersions = await syncRes.json();
-
-        // Sync courses
-        if (serverVersions.courses > lastSyncRef.current.courses) {
-          const res = await fetch('/api/courses');
-          if (res.ok) {
-            const data = await res.json();
-            if (data) setCourses(data);
-          }
-          lastSyncRef.current.courses = serverVersions.courses;
-        }
-
-        // Sync customization
-        if (serverVersions.customization > lastSyncRef.current.customization) {
-          const res = await fetch('/api/customization');
-          if (res.ok) {
-            const data = await res.json();
-            if (data) setCustomization(data);
-          }
-          lastSyncRef.current.customization = serverVersions.customization;
-        }
-
-        // Sync student analysis records
-        if (serverVersions.studentAnalysis > lastSyncRef.current.studentAnalysis) {
-          const res = await fetch('/api/student-analysis');
-          if (res.ok) {
-            const data = await res.json();
-            if (data) setStudentAnalysisRecords(data);
-          }
-          lastSyncRef.current.studentAnalysis = serverVersions.studentAnalysis;
-        }
-
-        // Sync owner profile
-        if (serverVersions.ownerProfile > lastSyncRef.current.ownerProfile) {
-          const res = await fetch('/api/owner-profile');
-          if (res.ok) {
-            const data = await res.json();
-            if (data) setOwnerProfile(data);
-          }
-          lastSyncRef.current.ownerProfile = serverVersions.ownerProfile;
-        }
-      } catch (err) {
-        // Silent background sync failsafe
-      }
-    }, 2000);
-
-    return () => {
-      clearInterval(intervalId);
-      unsubCourses();
-      unsubCustom();
-    };
   }, []);
 
   const handleManualSync = async () => {
@@ -1217,6 +1045,9 @@ export default function App() {
           {/* Quick study widgets */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Local Data Sync Banner with explicit user permission */}
+            <FirebaseSyncBanner compact={true} />
+
             {/* PWA Install Button */}
             {isInstallable && (
               <button

@@ -41,6 +41,8 @@ import AshokChakra from './AshokChakra';
 import defaultBatchThumbnail from '../assets/images/curious_bharat_banner_1784624268246.jpg';
 import { getProxiedImageUrl } from '../utils/imageUrl';
 import { isFeatureEnabled } from '../utils/featureFlags';
+import { getRealAnalyticsSummary, logAnalyticsEvent } from '../utils/analyticsEngine';
+import FirebaseSyncBanner from './FirebaseSyncBanner';
 
 interface AdminPortalProps {
   courses: Course[];
@@ -761,6 +763,17 @@ export default function AdminPortal({
     }
 
     onUpdateCourses(updatedList);
+    logAnalyticsEvent({
+      userId: 'educator-admin',
+      userName: ownerProfile?.name || 'Educator Admin',
+      role: 'educator',
+      actionType: 'batch_update',
+      details: {
+        courseTitle: formCourse.title,
+        subject: formCourse.subject,
+        updatedChaptersCount: formCourse.chapters?.length || 0
+      }
+    });
     playSound('success');
     showSuccess("Batch Deployed Successfully! Live synchronization active.");
   };
@@ -3832,32 +3845,37 @@ export default function AdminPortal({
               </div>
             </div>
 
-            {/* Quick Analytics & Telemetry Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Total Downloads</span>
-                <strong className="text-lg font-bold text-white font-mono">{apkFullData?.analytics?.totalDownloads || 10390}</strong>
-                <span className="text-[9px] text-teal-400 block font-sans">Across all releases</span>
-              </div>
+            {/* Quick Analytics & Telemetry Grid (Zero Hardcoded Data) */}
+            {(() => {
+              const realSummary = getRealAnalyticsSummary();
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Logged Submissions</span>
+                    <strong className="text-lg font-bold text-white font-mono">{realSummary.totalSubmissions}</strong>
+                    <span className="text-[9px] text-teal-400 block font-sans">Recorded quiz completions</span>
+                  </div>
 
-              <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Seamless Auto-Installs</span>
-                <strong className="text-lg font-bold text-emerald-400 font-mono">{apkFullData?.analytics?.seamlessInstalls || 6070}</strong>
-                <span className="text-[9px] text-emerald-500 block font-sans">Packages ≤15 MB</span>
-              </div>
+                  <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Average Score</span>
+                    <strong className="text-lg font-bold text-emerald-400 font-mono">{realSummary.averageScorePercent}%</strong>
+                    <span className="text-[9px] text-emerald-500 block font-sans">Real calculated score</span>
+                  </div>
 
-              <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Prompted Installs</span>
-                <strong className="text-lg font-bold text-amber-400 font-mono">{apkFullData?.analytics?.promptInstalls || 4250}</strong>
-                <span className="text-[9px] text-amber-500 block font-sans">Packages &gt;15 MB / Force</span>
-              </div>
+                  <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Batch Updates</span>
+                    <strong className="text-lg font-bold text-amber-400 font-mono">{realSummary.educatorBatchUpdates}</strong>
+                    <span className="text-[9px] text-amber-500 block font-sans">Educator recorded actions</span>
+                  </div>
 
-              <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Active Version Adoption</span>
-                <strong className="text-lg font-bold text-teal-300 font-mono">{apkFullData?.analytics?.activeVersionAdoptionRate || 92.5}%</strong>
-                <span className="text-[9px] text-zinc-400 block font-sans">On {apkVersion}</span>
-              </div>
-            </div>
+                  <div className="bg-zinc-950 border border-zinc-900 p-4 rounded-2xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase font-mono block">Active Users Logged</span>
+                    <strong className="text-lg font-bold text-teal-300 font-mono">{realSummary.uniqueActiveUsersCount}</strong>
+                    <span className="text-[9px] text-zinc-400 block font-sans">Unique event UIDs</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               

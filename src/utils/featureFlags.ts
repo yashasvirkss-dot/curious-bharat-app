@@ -17,7 +17,24 @@ export const DEFAULT_FEATURE_FLAGS: Record<string, boolean> = {
   apk_version_control_enabled: true,
 };
 
-let featureFlagsStore: Record<string, boolean> = { ...DEFAULT_FEATURE_FLAGS };
+const FEATURE_FLAGS_CACHE_KEY = 'curious_feature_flags';
+
+function loadCachedFlags(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(FEATURE_FLAGS_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return { ...DEFAULT_FEATURE_FLAGS, ...parsed };
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to parse cached feature flags:', err);
+  }
+  return { ...DEFAULT_FEATURE_FLAGS };
+}
+
+let featureFlagsStore: Record<string, boolean> = loadCachedFlags();
 const listeners = new Set<() => void>();
 
 export function isFeatureEnabled(key: string): boolean {
@@ -35,23 +52,25 @@ export function subscribeFeatureFlags(listener: () => void): () => void {
 }
 
 export async function loadFeatureFlags(): Promise<Record<string, boolean>> {
-  const primaryUrl = 'https://raw.githubusercontent.com/yashasvirkss-dot/curious-bharat-app/main/features.json';
-  const localFallbackUrl = '/features.json';
+  const primaryUrl = '/features.json';
+  const remoteBackupUrl = 'https://raw.githubusercontent.com/yashasvirkss-dot/curious-bharat-app/main/features.json';
 
   try {
     const res = await fetch(primaryUrl, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       featureFlagsStore = { ...DEFAULT_FEATURE_FLAGS, ...data };
+      localStorage.setItem(FEATURE_FLAGS_CACHE_KEY, JSON.stringify(featureFlagsStore));
     } else {
-      const fallbackRes = await fetch(localFallbackUrl, { cache: 'no-store' });
+      const fallbackRes = await fetch(remoteBackupUrl, { cache: 'no-store' });
       if (fallbackRes.ok) {
         const fallbackData = await fallbackRes.json();
         featureFlagsStore = { ...DEFAULT_FEATURE_FLAGS, ...fallbackData };
+        localStorage.setItem(FEATURE_FLAGS_CACHE_KEY, JSON.stringify(featureFlagsStore));
       }
     }
   } catch (err) {
-    // Fail silently to safe defaults
+    // Fail silently to local cached or safe defaults
   } finally {
     listeners.forEach((fn) => fn());
   }

@@ -467,5 +467,23 @@ export const dbService = {
       }
     }
     localStorage.setItem('curious_customization', JSON.stringify(customization));
+  },
+
+  async syncAnalyticsEventsToFirebase(events: any[]): Promise<void> {
+    if (isFirebaseConfigured && firestoreDb) {
+      try {
+        for (const evt of events) {
+          if (evt.id) {
+            await setDoc(doc(firestoreDb, 'analytics_events', evt.id), {
+              ...evt,
+              syncedToFirebase: true,
+              syncedAt: new Date().toISOString()
+            }, { merge: true });
+          }
+        }
+      } catch (err) {
+        console.warn("syncAnalyticsEventsToFirebase error:", err);
+      }
+    }
   }
 };
