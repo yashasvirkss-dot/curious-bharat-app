@@ -58,23 +58,15 @@ export function getFormattedLastSynced(): string {
   }
 }
 
-export async function syncWithFirebasePermission(userConfirmed: boolean = false): Promise<{
+export async function syncWithFirebasePermission(userConfirmed: boolean = true): Promise<{
   success: boolean;
   message: string;
   timestamp: string;
 }> {
-  if (!userConfirmed) {
-    return {
-      success: false,
-      message: 'Explicit user permission required before syncing with Firebase.',
-      timestamp: new Date().toISOString()
-    };
-  }
-
   if (!navigator.onLine) {
     return {
       success: false,
-      message: 'Device is offline. Local data remains saved locally.',
+      message: 'Device is offline.',
       timestamp: new Date().toISOString()
     };
   }
@@ -106,25 +98,21 @@ export async function syncWithFirebasePermission(userConfirmed: boolean = false)
     const nowIso = new Date().toISOString();
     localStorage.setItem(LAST_SYNC_KEY, nowIso);
 
-    // Notify listeners
-    window.dispatchEvent(new CustomEvent('curious_sync_status_updated', {
-      detail: {
-        lastSyncedTimestamp: nowIso,
-        formattedLastSynced: getFormattedLastSynced()
-      }
-    }));
-
     return {
       success: true,
-      message: `Successfully synced ${syncedItemsCount} records with Firebase!`,
+      message: `Synced ${syncedItemsCount} records in background.`,
       timestamp: nowIso
     };
   } catch (err) {
-    console.error('Failed to sync with Firebase:', err);
+    console.warn('Background sync warning:', err);
     return {
       success: false,
       message: `Sync failed: ${err instanceof Error ? err.message : String(err)}`,
       timestamp: new Date().toISOString()
     };
   }
+}
+
+export function autoSyncWithFirebase(): void {
+  syncWithFirebasePermission(true).catch(() => {});
 }

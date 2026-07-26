@@ -59,9 +59,8 @@ import AshokChakra from './components/AshokChakra';
 import PullToRefresh from './components/PullToRefresh';
 import AppUpdateNotifier from './components/AppUpdateNotifier';
 import { isFeatureEnabled, loadFeatureFlags } from './utils/featureFlags';
-import { getLocalData, saveLocalData } from './utils/localPersistence';
+import { getLocalData, saveLocalData, autoSyncWithFirebase } from './utils/localPersistence';
 import { logAnalyticsEvent } from './utils/analyticsEngine';
-import FirebaseSyncBanner from './components/FirebaseSyncBanner';
 import { playSound } from './utils/audio';
 import { dbService } from './lib/firebase';
 import { getProxiedImageUrl } from './utils/imageUrl';
@@ -628,9 +627,21 @@ export default function App() {
         setOwnerProfile(INITIAL_OWNER_PROFILE);
         saveLocalData('owner_profile', INITIAL_OWNER_PROFILE);
       }
+
+      // Initial silent background sync
+      autoSyncWithFirebase();
     };
 
     bootstrapData();
+
+    // Silent background sync interval every 30s
+    const syncInterval = setInterval(() => {
+      autoSyncWithFirebase();
+    }, 30000);
+
+    return () => {
+      clearInterval(syncInterval);
+    };
   }, []);
 
   const handleManualSync = async () => {
@@ -1044,9 +1055,6 @@ export default function App() {
 
           {/* Quick study widgets */}
           <div className="flex items-center gap-2 sm:gap-3">
-            
-            {/* Local Data Sync Banner with explicit user permission */}
-            <FirebaseSyncBanner compact={true} />
 
             {/* PWA Install Button */}
             {isInstallable && (

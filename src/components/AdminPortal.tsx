@@ -42,7 +42,6 @@ import defaultBatchThumbnail from '../assets/images/curious_bharat_banner_178462
 import { getProxiedImageUrl } from '../utils/imageUrl';
 import { isFeatureEnabled } from '../utils/featureFlags';
 import { getRealAnalyticsSummary, logAnalyticsEvent } from '../utils/analyticsEngine';
-import FirebaseSyncBanner from './FirebaseSyncBanner';
 
 interface AdminPortalProps {
   courses: Course[];
